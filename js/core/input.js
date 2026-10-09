@@ -15,11 +15,24 @@ export const GENERATORS = {
   organ: { label: 'organ pipe', param: null, make: n => { const a = []; for (let i = 0; i < n; i += 2) a.push(i); for (let i = n - 1 - (n % 2 ? 1 : 0); i > 0; i -= 2) a.push(i); return a; } },
   sawtooth: { label: 'sawtooth (k runs)', param: { name: 'k', def: 4 }, make: (n, next, k) => { k = Math.max(1, Math.min(n || 1, Math.round(k))); const a = []; for (let j = 0; j < k; j++) for (let x = j; x < n; x += k) a.push(x); return a; } },
   disorder: { label: 'exact disorder', param: { name: 'd', def: 0.2 }, make: (n, next, d) => exactDisorder(n, Math.min(1, Math.max(0, d)), next) },
+  valley: { label: 'down then up', param: null, make: n => GENERATORS.organ.make(n).map(v => n - 1 - v) },
+  interleave: { label: 'interleaved halves', param: null, make: n => { const h = Math.ceil(n / 2), a = []; for (let i = 0; i < h; i++) { a.push(i); if (h + i < n) a.push(h + i); } return a; } },
+  nearrev: { label: 'nearly reversed (k swaps)', param: { name: 'k', def: 3 }, make: (n, next, k) => GENERATORS.nearly.make(n, next, k).map(v => n - 1 - v) },
+  perm: { label: 'one order (the seed picks which)', param: null, make: (n, next, p, seed) => nthPermutation(n, seed) },
 };
+
+// The k-th of the n! orders, in lexicographic order (k wraps around).
+export function nthPermutation(n, k) {
+  let f = 1; for (let i = 2; i <= n; i++) f *= i;
+  k = ((Math.floor(k) % f) + f) % f;
+  const pool = [...Array(n).keys()], out = [];
+  for (let i = n; i > 0; i--) { f /= i; out.push(pool.splice(Math.floor(k / f), 1)[0]); k %= f; }
+  return out;
+}
 
 export function generate(kind, n, seed, param) {
   const g = GENERATORS[kind]; if (!g) throw new Error('unknown generator ' + kind);
-  return g.make(n, rng(seed), param ?? g.param?.def);
+  return g.make(n, rng(seed), param ?? g.param?.def, seed);
 }
 
 // Exact disorder d: a random Lehmer code with exactly round(d·n(n−1)/2) inversions.

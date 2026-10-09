@@ -2,6 +2,12 @@
 
 ## 2026-10-09, fewer buttons
 
+- **13 more stacks** (26 in all): 1 number, 2 in order, 2 swapped, every order of 3 and of 5
+  (stamped by the worst, which picking the stack plays), Smallest at the bottom, Down then up,
+  Interleaved halves, Nearly reversed, Twenty runs, exact disorder at 25/50/75 %, and Nearly
+  sorted and Rotated at 500. They already split cards apart: Turk spends 197 moves where one
+  `rra` would do, and LSD Radix fails both 2-number stacks.
+- **The class badge** takes the tier colours too.
 - **New tier colours:** S fancy gold with a light sweep and a twinkle, A vibrant purple with a
   light sweep, B pale blue, C pale green, D grey, on the cards, in Inspect and on the Meta page.
 - **Learn, Stats, Compare and Share are gone** from the Table's left panel, with what only

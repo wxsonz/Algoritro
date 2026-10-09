@@ -18,6 +18,10 @@
 | rotated sorted | offset | disorder up to about 0.5 (0.505 at n=100 for an offset of n/2), yet a few rotations sort it: exposes the inversion metric |
 | organ pipe | — | ascending then descending |
 | sawtooth | k runs | a natural-runs test, good for Tape Merge |
+| down then up | — | descending then ascending: organ pipe upside down |
+| interleaved halves | — | 0, h, 1, h+1, …: hard for cards that move chunks of ranks |
+| nearly reversed | k swaps | reversed, then k random swaps |
+| one order | — | the seed picks one of the n! orders (lexicographic); with n ≤ 5 a stack can run every order |
 | manual | text | paste any values |
 
 ## Always shown

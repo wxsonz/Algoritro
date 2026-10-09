@@ -23,11 +23,15 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 - **Wide screens fit the window** like a game screen (from 1100 × 620): only the stack list,
   the slot row and the overlays scroll. Narrower screens stack the panels and the page scrolls;
   on a phone the hand becomes a scrolling row.
-- **Stacks**, the starting stack A to sort, from easy to hard. Easy: Already sorted (0
-  moves), One swap, Nearly sorted (3 swaps), 3 numbers (3 reversed, at most 3 moves), 5
-  numbers (at most 12 moves). Medium: Random 100, Reversed 100, Rotated 100 (sorted, rotated
-  by 37), Up then down (organ pipe), Four runs. Hard: Random 500, Reversed 500, Up then down
-  500. Seeded stacks use seed 42, and a custom stack is one more entry. Each stack carries
+- **Stacks**, the starting stack A to sort, from easy to hard (26 in all). Easy: 1 number and
+  2 in order (0 moves), 2 swapped (1 move), 3 numbers every order (at most 3 moves) and 5
+  numbers every order (at most 12), Already sorted (0 moves), One swap, Nearly sorted (3
+  swaps), Smallest at the bottom (one `rra` away). Medium: Random 100, Reversed 100, Rotated
+  100 (by 37), Up then down, Four runs, Down then up, Interleaved halves, Nearly reversed,
+  Twenty runs, and exact disorder at 25 %, 50 % and 75 %. Hard: Random 500, Reversed 500, Up
+  then down 500, Nearly sorted 500 (10 swaps), Rotated 500 (by 137). Seeded stacks use seed
+  42. An "every order" stack runs all n! orders, is stamped by the worst, and picking it plays
+  that worst order. A custom stack is one more entry. Each stack carries
   the current hand's moves and a stamp (★ EXCELLENT or perfect, ✓ GOOD or PASS, ✕ FAIL),
   measured in a background worker whenever the hand changes. After a change, each stack also
   shows how many moves the change saved or cost there, and a line sums it up ("On every stack:

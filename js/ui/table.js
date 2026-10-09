@@ -143,7 +143,7 @@ function stackList() {
     box.append(el('div.tierhead.l-' + level, {}, title));
     for (const b of STACKS.filter(x => x.level === level)) {
       const st = S.stamps[b.id], d = st?.d;
-      const tip = `${b.name}: ${b.desc}` + (st?.ops != null ? `\n${st.ops} moves (${st.s})` + (d ? `, ${signed(d)} after the last change` : d === 0 ? ', unchanged by the last change' : '') : '');
+      const tip = `${b.name}: ${b.desc}` + (st?.ops != null ? `\n${b.seeds ? 'worst order: ' : ''}${st.ops} moves (${st.s})` + (d ? `, ${signed(d)} after the last change` : d === 0 ? ', unchanged by the last change' : '') : '');
       box.append(el('button', { className: `brow l-${level}${S.stack?.id === b.id ? ' on' : ''}`, title: tip, onclick: () => pickStack(b), dataset: { id: b.id } },
         el('span.disc', {}, b.icon), el('span.bname', {}, b.name),
         el('span', { className: 'bdelta' + (d < 0 ? ' good' : d > 0 ? ' bad' : '') }, d ? signed(d) : ''),
@@ -170,7 +170,8 @@ function stackSummary() {
 function pickStack(b) {
   $('manual').value = ''; $('n').value = b.n; $('gen').value = b.gen; syncParam();
   if (b.param != null) $('param').value = b.param;
-  $('seed').value = SEED; draw();
+  // A set of inputs plays its worst one for this hand, once known.
+  $('seed').value = b.seeds ? S.known.get(S.stampKey)?.[b.id]?.worst ?? b.seeds[0] : SEED; draw();
 }
 function sidePlate() {
   const b = S.stack;
@@ -200,15 +201,19 @@ function stampStacks() {
   stackList();
   if (!todo.length) return;
   const job = b => S.meta === 'adaptive'
-    ? { kind: 'build', build: adaptiveBuild(), n: b.n, gen: b.gen, param: b.param, seeds: [SEED], thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric }
-    : { kind: 'hand', hand: S.hand, n: b.n, gen: b.gen, param: b.param, seeds: [SEED] };
+    ? { kind: 'build', build: adaptiveBuild(), n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [SEED], thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric }
+    : { kind: 'hand', hand: S.hand, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [SEED] };
   todo.sort((x, y) => x.n - y.n);   // the long ones (n=500) can take seconds for the search cards
   const mine = S.stampJob = { cancel() { this.dead = true; this.inner?.cancel(); } };
   (async () => {
     for (const b of todo) {
       if (mine.dead) return;
       mine.inner = runAll([job(b)], null, 'stacks');
-      try { const [r] = await mine.inner.promise; known[b.id] = { s: r.invalid ? 'FAIL' : stamp(b, r.ops[0]), ops: r.ops[0] }; put(b, known[b.id]); }
+      try {
+        // A set of inputs is stamped by its worst one, and remembers which it was.
+        const [r] = await mine.inner.promise, w = r.ops.indexOf(Math.max(...r.ops)), ops = r.ops[w];
+        known[b.id] = { s: r.invalid ? 'FAIL' : stamp(b, ops), ops, worst: b.seeds ? b.seeds[w] : null }; put(b, known[b.id]);
+      }
       catch (e) { if (mine.dead) return; S.stamps[b.id] = { s: '—', why: e.message }; }
       if (!mine.dead) stackList();
     }
