@@ -17,7 +17,7 @@ opening `index.html` from disk will not work.
 
 | page | what it is for |
 | --- | --- |
-| **Table** (`index.html`) | a card table: pick a blind, play an algorithm card from the deck, play techniques from your hand, step through the result, compare hands, run Paths and Challenges |
+| **Table** (`index.html`) | a card table: pick a blind, play an algorithm card from the deck, play techniques from your hand, step through the result |
 | **Codex** (`codex.html`) | every card, its text, measured stats and the Grasp × Craft grid; Cursed cards |
 | **Meta** (`meta.html`) | tiers, builds, Pareto front, technique value, interactions, class check |
 | **Lab** (`lab.html`) | scaling, disorder map, param sweep, optimality gap (in a Web Worker) |

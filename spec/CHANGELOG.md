@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-09, fewer buttons
+
+- **Learn, Stats, Compare and Share are gone** from the Table's left panel, with what only
+  they reached: the Challenges, the op-count and many-inputs Stats overlay, side-by-side
+  Compare and the copy-link button. The URL still shares the hand, and Paths open from Codex
+  links. The hand is also dealt once on load, and a dealt card no longer shows before its
+  flight lands.
+
 ## 2026-10-09, built-in cards, and a lighter table
 
 - **Built-in cards say so** ([08-views.md §8.1](08-views.md#81-table-indexhtml-the-play-page)):

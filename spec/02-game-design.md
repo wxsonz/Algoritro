@@ -100,8 +100,7 @@ Everything happens on one page, the **Table**, laid out like a card table ([08-v
    change in moves, so a card's pros and cons across inputs show at once.
 5. **Optional Finisher and Meta.** Play a Finisher, or wrap the hand in Portfolio to race its
    variants.
-6. **Read the result** in the same view (§2.6). Step through it, or race it against another
-   hand.
+6. **Read the result** in the same view (§2.6) and step through it.
 
 The hand can be saved as a **Deck** (a named combo) and shared as a URL fragment, for
 example `#deck=turk+rb-sink+peephole-cancel&n=100&seed=42`.
@@ -153,8 +152,6 @@ It sits on the same page, below or beside the hand:
 - **Board:** stacks A and B with the transport bar (first, previous, play, next, scrubber,
   speed, next phase). Each step shows its op, its phase tag, why it happens, and the card's
   overlay (cost table, chunk ranges, LIS set, partition tree, radix bit).
-- **Over many inputs:** the same hand on S seeds, as mean, min, max and a histogram, so one
-  lucky input does not mislead.
 
 ## 2.7 Grades
 
@@ -189,9 +186,6 @@ Rarity reflects **how often peers use the card**. It is not a measure of strengt
 ## 2.9 Modes
 
 - **Sandbox:** no slot limits, everything unlocked. The Table always plays this way.
-- **Challenge:** a scenario with a constraint, for example "Reach EXCELLENT at n=100 with
-  Craft ≤ 6", "Beat 5000 at n=500 using only Bucket-family cards", or "Find an input where
-  Turk loses to Radix". The challenges are teaching prompts and have no leaderboard.
 - **Path:** a guided learning sequence. Each step unlocks the next card and explains what it
   fixes about the previous one. For example: Bubble Wheel → Min Extract → Simple Insertion →
   LIS Insertion → Turk. See [08-views.md](08-views.md).

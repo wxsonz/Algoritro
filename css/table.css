@@ -157,7 +157,6 @@
 .mark.EXCELLENT { background: #2f9e44; } .mark.GOOD { background: #1c7ed6; } .mark.PASS { background: #d97706; } .mark.FAIL { background: #c92a2a; } .mark.none { background: transparent; }
 
 /* buttons */
-.sidebtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btn { display: inline-grid; place-items: center; border: 0; border-radius: 10px; padding: 7px 10px; color: #fff; font-size: 20px; line-height: 1; text-decoration: none; cursor: pointer;
   background: var(--bc, var(--b-grey)); box-shadow: 0 4px 0 color-mix(in srgb, var(--bc, var(--b-grey)) 55%, #000); transition: transform .08s, box-shadow .08s, filter .1s; }
 .table-page a.btn { color: #fff; }
@@ -351,9 +350,6 @@
 .vgrid .tcg { --cw: var(--vcw); transition: translate .15s; }
 .vgrid .tcg:not(.off):hover { translate: 0 -6px; }
 .deckboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
-#hist { background: var(--plate-2); aspect-ratio: 900 / 120; margin-top: 8px; }
-.challenge { margin: 10px 0; }
-.challenge p { margin: 2px 0 4px; }
 
 /* ---- juice ---- */
 .bump { animation: bump .35s ease-out; }
@@ -401,7 +397,6 @@
   .brow .bops { display: none; }
   .brow .disc { width: 24px; height: 24px; font-size: 13px; }
   .brow .bname { font-size: 17px; }
-  .sidebtns { grid-template-columns: repeat(4, 1fr); }
   .btn { font-size: 18px; padding: 7px 4px; }
   .rightpanel { --pw: 72px; gap: 10px; }
   .pilelabel .small, .book-sub { display: none; }

@@ -15,8 +15,8 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 │ delta chip       │ │(click: read)│ │ phase timeline, overlays  │ │ technique   │
 │ stacks: easy,    │ └─────────────┘ └───────────────────────────┘ │ deck        │
 │ medium, hard,    │ your hand: the techniques that fit, fanned    │ browse·draw │
-│ Learn Stats      │                                               │ Book of     │
-│ Compare Share    │                                               │ Codex       │
+│ custom stack     │                                               │ Book of     │
+│                  │                                               │ Codex       │
 └──────────────────┴───────────────────────────────────────────────┴─────────────┘
 ```
 
@@ -59,10 +59,9 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   change in moves at 100 and 500, or that the card has it built in or comes with it. Then
   its pros and cons, a **Measured** table of its change on every card it fits (the played card
   highlighted) with the study's notes, and the technical part. Cards have no back to flip.
-- **Tools** open as overlays: Custom input, Learn (Paths and Challenges), Stats (op counts,
-  many seeds with a histogram, and the technical-details switch) and the Meta card's setup.
-- **Compare:** pin the current hand, change a card, and see both side by side, stepping
-  together. Each run keeps its own length, and a finished run stays on its final state.
+- **Overlays:** the custom stack and the Meta card's setup. The left panel holds no tool
+  buttons: Learn, Stats, Compare and Share were removed as out of place on a card table. The
+  address bar still carries the hand (#deck=…), so a copied URL shares it.
 - **Overlays** follow the cards in play: the cost table over candidates for Cheapest Pick,
   chunk ranges for Chunks, kept bars for anchors, the partition tree for Divide cards, the
   current bit for Radix.
@@ -71,8 +70,7 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   Shift+←/→, Home and End do the same. **Speed** is in moves per second, from 0.25 to 200 000:
   scroll or drag the dial, step it with ‹ › or [ ], or type a number ("250", "1.5k"). **Auto**,
   the default, fits the whole run into about 6 seconds. Below 25 moves a second every move is
-  animated: a push slides across, a swap trades places, a rotation wraps around. In Compare,
-  one console drives both boards.
+  animated: a push slides across, a swap trades places, a rotation wraps around.
 - **Effects while it plays** (FX): a banner for each new phase, a combo counter for streaks
   of the same move that catches fire on long ones, sparks where moves land in slow motion, a
   milestone every 100 moves, and a finale (a stamp, a quake, and confetti when it sorted).
@@ -114,7 +112,8 @@ The analysis tools, all running in a Web Worker with progress and cancel:
 ## 8.5 Paths
 
 Guided sequences for peers. Each step plays a deck on the Table, asks one question, and
-explains what the next card fixes.
+explains what the next card fixes. A path opens from its card's Codex page (a link with
+`&path=…&step=…`); the Table no longer lists them itself.
 
 | path | steps |
 | --- | --- |

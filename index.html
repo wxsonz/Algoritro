@@ -42,12 +42,6 @@
         <p id="stackSum" class="small stacksum"></p>
         <div id="stacks" class="stacks"></div>
       </section>
-      <nav class="sidebtns" aria-label="Tools">
-        <button class="btn orange" data-open="learn">Learn</button>
-        <button class="btn grey" data-open="stats">Stats</button>
-        <button id="pin" class="btn grey" title="Pin this hand, then change a card: both boards step together">Compare</button>
-        <button id="copyDeck" class="btn grey" title="Copy a link to this hand and input">Share</button>
-      </nav>
     </aside>
 
     <!-- Centre: the play mat. Slots on top, the played card and the board, your hand below. -->
@@ -65,10 +59,8 @@
         <div id="played" class="playedwrap"></div>
         <div class="boardplate">
           <div id="busy" class="busy" role="status" hidden></div>
-          <div id="compare" hidden><p id="compareInfo" class="small"></p></div>
           <div id="boardWrap" class="boardwrap">
             <div id="board" class="boardbox"></div>
-            <div id="board2" class="boardbox"></div>
           </div>
           <div id="movelog" class="movelog" aria-label="Move log"></div>
           <div id="console" class="consoledock"></div>
@@ -150,40 +142,6 @@
         <p id="inputError" class="error" role="alert"></p>
         <p id="inputInfo" class="small"></p>
         <p id="rankView" class="dim mono small"></p>
-      </div>
-    </section>
-  </div>
-
-  <div class="overlay" id="ov-learn" hidden>
-    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="learnTitle" tabindex="-1">
-      <header class="sheethead"><h2 id="learnTitle">Learn</h2><button class="close" aria-label="Close">✕</button></header>
-      <div class="sheetbody">
-        <p class="small dim">A path walks you through a few hands, one question at a time. Challenges are small puzzles about the table in front of you.</p>
-        <div class="row">
-          <select id="pathSel" aria-label="Paths"></select>
-          <button id="challengeBtn" class="ghost">Challenges</button>
-        </div>
-        <div id="challenges" class="challenges" hidden></div>
-      </div>
-    </section>
-  </div>
-
-  <div class="overlay" id="ov-stats" hidden>
-    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="statsTitle" tabindex="-1">
-      <header class="sheethead"><h2 id="statsTitle">Stats</h2><button class="close" aria-label="Close">✕</button></header>
-      <div class="sheetbody">
-        <label class="toggle"><input id="nerd" type="checkbox"> Show technical details on cards</label>
-        <p id="legend" class="small"></p>
-        <p id="handTotals" class="small"></p>
-        <div class="tablewrap"><table class="counts"><thead><tr id="countHead"></tr></thead><tbody><tr id="countRow"></tr></tbody></table></div>
-        <p class="small dim" id="cpu"></p>
-        <h3>Over many inputs</h3>
-        <div class="row">
-          <label>inputs <input id="seeds" type="number" min="1" max="500" value="50"></label>
-          <button id="runSeeds">Run the hand on these inputs</button>
-        </div>
-        <div id="seedStats" class="small">Same size and shape, seeds 1…S, run in the background.</div>
-        <canvas id="hist" width="900" height="120" aria-label="Histogram of move counts"></canvas>
       </div>
     </section>
   </div>

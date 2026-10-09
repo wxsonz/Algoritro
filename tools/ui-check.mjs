@@ -44,16 +44,7 @@ check('swapping a default: Four-Way Cost → Two-Way Cost', /Four-Way Cost → T
 check('an incompatible card is greyed with a reason', /no retrieval role/.test(await ev(`${card('#techViewer .tcg.tech', 'Max Retrieval')}.title`)));
 await ev(`${card('#techViewer .tcg.tech', 'Two-Way Cost')}.click()`); await sleep(300);
 check('removing it restores the default', (await total()) === turkOps, `${await total()} vs ${turkOps}`);
-// Compare
-await click('#pin'); await sleep(300);
-await ev(`${card('#techViewer .tcg.tech', 'LIS Anchor')}.click()`); await sleep(400);
-check('Compare: two boards, info line', !(await ev(`document.getElementById('compare').hidden`)) && /pinned:.*current:.*difference/.test(await ev(T('compareInfo'))), await ev(T('compareInfo')));
-await ev(`document.querySelector('#console button[aria-label=Last]').click()`); await sleep(200);
-check('boards step together', (await ev(`document.querySelector('#board2 .stepinfo b').textContent`)).split(' / ')[0] === (await ev(`document.querySelector('#console .stepinfo b').textContent`)).split(' / ')[0] || true);
-await click('#pin');
-// Many seeds in the worker
-await set('#seeds', 20); await click('#runSeeds'); await sleep(3000);
-check('many seeds run in a Web Worker', /20 seeds.*mean/.test(await ev(T('seedStats'))), (await ev(T('seedStats'))).slice(0, 120));
+check('the side tools are gone (Learn, Stats, Compare, Share)', !(await ev(`!!document.querySelector('#pin, #copyDeck, #ov-learn, #ov-stats, #compare, [data-open]')`)));
 // Meta: Portfolio and Adaptive
 await set('#metaSel', 'portfolio'); await sleep(300);
 await ev(`[...document.querySelectorAll('#metaPanel button')].find(b => b.textContent.includes('add this hand')).click()`); await sleep(400);
@@ -63,16 +54,11 @@ check('Adaptive picks a regime by disorder', /Adaptive: input 52.30 % messy.*com
 check('the strong build complies', /every regime meets/.test(await ev(T('metaPanel'))));
 await set('#metaSel', 'none'); await sleep(300);
 // Paths
-await set('#pathSel', 'insertion-ladder'); await sleep(800);
+await go('index.html#deck=simple-insertion&n=100&gen=uniform&seed=42&path=insertion-ladder&step=0');   // as a Codex link opens it
 check('Path: Insertion Ladder starts on Simple Insertion', /Path: Insertion Ladder/.test(await ev(T('pathPanel'))) && (await ev('location.hash')).includes('deck=simple-insertion&'), await ev('location.hash'));
 await ev(`[...document.querySelectorAll('#pathPanel button')].find(b => b.textContent.includes('next step')).click()`); await sleep(600);
 check('Path step 2 adds LIS Anchor', (await ev('location.hash')).includes('deck=simple-insertion+lis-anchor'), await ev('location.hash'));
 await ev(`[...document.querySelectorAll('#pathPanel button')].find(b => b.title === 'Leave the path').click()`);
-// Challenges
-await go('index.html#deck=turk&n=5&gen=uniform&seed=1');
-await click('#challengeBtn'); await sleep(200);
-await ev(`[...document.querySelectorAll('.challenge')].find(c => c.textContent.includes('Turk loses')).querySelector('button').click()`); await sleep(500);
-check('a challenge checks the table', /Turk \d+ ops, LSD Radix \d+ ops/.test(await ev(`[...document.querySelectorAll('.challenge')].find(c => c.textContent.includes('Turk loses')).textContent`)));
 // Manual input and validation
 await set('#manual', '1 2 2'); await sleep(200);
 check('manual: duplicate error', /appears twice/.test(await ev(T('inputError'))));

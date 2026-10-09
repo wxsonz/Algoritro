@@ -2,26 +2,25 @@
 // score and every stack to choose from; the right panel holds the algorithm deck, the technique
 // deck and the Book of Codex; the mat in the middle has the slots, the played card, the board and
 // your hand.
-// The technical tools (custom input, stats, paths, the meta card) open as overlays.
+// The custom input and the meta card open as overlays.
 import { ALGOS, TECHS, byId, techById, FAMILIES, ROLES, label } from '../cards/index.js';
 import { DECKS, deckById, BUILDS } from '../cards/decks.js';
 import { GENERATORS, generate, parseManual, describe } from '../core/input.js';
 import { runHand, resolve, fits, parseDeck, deckString } from '../core/hand.js';
 import { runPortfolio, runAdaptive, METRICS, buildCompliance } from '../core/meta-run.js';
-import { counts, grade, stats, passRate, thresholds } from '../core/metrics.js';
-import { OPS } from '../core/machine.js';
+import { grade, thresholds } from '../core/metrics.js';
 import { useDpTables } from '../cards/engines/divide.js';
 import { loadData } from '../core/data.js';
 import { $, el, esc, css, topBar, cardsData, metaData, f0, pct, signed, gradeName, dots, store, RARITY } from './common.js';
 import { markdown, sections } from './markdown.js';
 import { mini } from './card.js';
-import { Board, link } from './board.js';
+import { Board } from './board.js';
 import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, codexBook, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, PS_TIER_TEXT } from './tcg.js';
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
-import { run as runJob, runAll } from './worker-client.js';
+import { runAll } from './worker-client.js';
 import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack } from './stacks.js';
-import { PATHS, CHALLENGES } from './paths.js';
+import { PATHS } from './paths.js';
 
 let shown = null, countTimer = 0;   // the move counter's displayed value
 const S = {
@@ -44,9 +43,8 @@ const SLOT_ICON = r => r === 'extra' ? 'prep' : r;
 const MARK = { EXCELLENT: '★', PERFECT: '★', GOOD: '✓', PASS: '✓', FAIL: '✕', '…': '…', '—': '—' };
 let DOC = null, META = null;
 
-topBar('Table', () => { board.render(); board2?.render(); });
+topBar('Table', () => board.render());
 const board = new Board($('board'), { dock: $('console'), log: $('movelog') });
-let board2 = null;
 bindCardFx();
 bindTips();
 // The played card fits the height of its row. The row is measured here, not with container units:
@@ -55,22 +53,12 @@ bindTips();
 new ResizeObserver(([e]) => e.target.style.setProperty('--midH', `${Math.round(e.contentRect.height)}px`)).observe(document.querySelector('.mid'));
 
 // ---- setup ----------------------------------------------------------------------------------
-document.body.classList.toggle('nerd', store.get('table:nerd') === '1');
-$('nerd').checked = document.body.classList.contains('nerd');
-$('nerd').onchange = e => { document.body.classList.toggle('nerd', e.target.checked); store.set('table:nerd', e.target.checked ? '1' : ''); };
 for (const q of QUICK) $('quick').append(el('button', { onclick: () => { $('n').value = q; $('manual').value = ''; draw(); } }, q));
 for (const [k, g] of Object.entries(GENERATORS)) $('gen').append(new Option(g.label, k));
-$('countHead').innerHTML = OPS.map(o => `<th>${o}</th>`).join('');
 $('gen').onchange = () => { syncParam(); draw(); };
 for (const id of ['n', 'seed', 'param', 'manual']) $(id).onchange = draw;
 $('reroll').onclick = () => { $('seed').value = Math.floor(Math.random() * 2 ** 31); draw(); };
-$('runSeeds').onclick = runSeeds;
-$('pin').onclick = pin;
-$('copyDeck').onclick = () => { navigator.clipboard?.writeText(location.href).then(() => { $('copyDeck').textContent = 'Copied ✓'; setTimeout(() => { $('copyDeck').textContent = 'Share'; }, 1200); }, () => {}); };
 $('metaSel').onchange = e => { S.meta = e.target.value; metaPanel(); replay(false, S.meta === 'none' ? '−meta card' : `+${META_CARDS.find(m => m.id === S.meta).name}`); };
-$('pathSel').append(new Option('Paths…', ''), ...PATHS.map(p => new Option(p.name, p.id)));
-$('pathSel').onchange = e => { const p = PATHS.find(x => x.id === e.target.value); if (p) { closeOverlay(); startPath(p, 0); } e.target.value = ''; };
-$('challengeBtn').onclick = () => { const d = $('challenges'); d.hidden = !d.hidden; if (!d.hidden) challengesPanel(); };
 $('familyFilter').append(...[['all', 'All'], ...Object.entries(FAMILIES).map(([k, f]) => [k, f.name])].map(([k, t]) =>
   el('button.chip', { dataset: { f: k }, onclick: () => { S.family = k; markAlgoViewer(); } }, k === 'all' ? '' : el('span.pxi', { html: icon(k) }), t)));
 $('techFilter').append(...[['all', 'Whole deck'], ['fits', 'Fits the played card']].map(([k, t]) =>
@@ -88,7 +76,6 @@ function openOverlay(name) {
   if (o.hidden) S.opener = document.activeElement;
   o.hidden = false;
   if (name === 'algo') markAlgoViewer();
-  if (name === 'stats' && S.hist) requestAnimationFrame(() => histogram(...S.hist));
   o.querySelector('.sheet')?.focus({ preventScroll: true });
 }
 function closeOverlay(o = [...document.querySelectorAll('.overlay:not([hidden])')].pop()) {
@@ -143,7 +130,6 @@ function draw() {
   $('inputInfo').innerHTML = `${d.n} numbers · ${messy(d.disorder)} <span class="nerdy">· disorder ${(100 * d.disorder).toFixed(2)} % (${d.regime}) · LIS ${d.lis} · ${d.runs} run${d.runs === 1 ? '' : 's'}</span>`;
   $('rankView').textContent = d.n <= 40 ? `ranks: ${d.ranks.join(' ')}` : '';
   const t = thresholds(Math.max(2, d.n)), ap = t.approx ? '~' : '';
-  $('legend').innerHTML = d.n >= 2 ? `Grade bars at n=${d.n}: <span class="g EXCELLENT">EXCELLENT &lt; ${ap}${f0(t.EXCELLENT)}</span> · <span class="g GOOD">GOOD &lt; ${ap}${f0(t.GOOD)}</span> · <span class="g PASS">PASS &lt; ${ap}${f0(t.PASS)}</span>` : '';
   replay(true);
 }
 function inputKey() { return { n: S.input?.n ?? +$('n').value, gen: $('gen').value, param: $('param').value, seed: +$('seed').value, manual: !!$('manual').value.trim() }; }
@@ -251,7 +237,6 @@ function replay(fresh = false, change = null) {
     S.delta = { fresh: true, text: change, d: now - before.ops, g0: before.grade, g1: grade(n, now), dg: S.resolved.grasp - before.R.grasp, dc: S.resolved.craft - before.R.craft };
   } else if (fresh) S.delta = null;
   board.load(S.input.ranks, S.result);
-  if (S.pinned) { S.pinned.result = runSafe(S.pinned.hand); board2.load(S.input.ranks, S.pinned.result); comparePanel(); }
   scoreboard(); writeHash(); pathPanel(); stampStacks();
 }
 function fail(msg) { $('runError').textContent = msg; S.result = null; board.load(S.input.ranks, null); scoreboard(); stampStacks(); }
@@ -262,7 +247,7 @@ function renderAll() { renderPlayed(); renderSlots(); renderHand(); renderTechVi
 
 function scoreboard() {
   const r = S.result;
-  if (!r || !S.input) { $('total').textContent = '–'; $('totalShow').textContent = '–'; shown = null; $('gradeBadge').replaceChildren(); $('gradeBadge').dataset.s = ''; $('valid').textContent = ''; $('cpu').textContent = ''; $('countRow').innerHTML = ''; renderDelta(); $('metaNote').textContent = ''; return; }
+  if (!r || !S.input) { $('total').textContent = '–'; $('totalShow').textContent = '–'; shown = null; $('gradeBadge').replaceChildren(); $('gradeBadge').dataset.s = ''; $('valid').textContent = ''; renderDelta(); $('metaNote').textContent = ''; return; }
   const n = S.input.n, ops = r.ops.length;
   const st = S.stack ? stamp(S.stack, ops) : n >= 2 ? grade(n, ops).replace('~', '') : null;
   $('total').textContent = ops; countUp(ops);
@@ -271,10 +256,6 @@ function scoreboard() {
   $('gradeBadge').dataset.s = st || '';
   if (st && st !== prevStamp) juice($('gradeBadge').firstChild, 'stampin');
   $('valid').textContent = r.valid ? '✓ sorted, checked by an independent replay' : '✗ ' + r.error; $('valid').className = 'valid small ' + (r.valid ? 'yes' : 'no');
-  $('cpu').textContent = `planner ${r.ms.toFixed(1)} ms`;
-  const c = counts(r.ops); $('countRow').innerHTML = OPS.map(o => `<td>${c[o]}</td>`).join('');
-  const R = S.resolved;
-  $('handTotals').innerHTML = `Hand Grasp <b>${R.handGrasp}</b> of 10 <span class="dots">${dots(Math.min(10, R.handGrasp), 10)}</span> · Hand Craft <b>${R.handCraft}</b> of 10 <span class="dots">${dots(Math.min(10, R.handCraft), 10)}</span> · slots ${R.slotsUsed} / ${R.algo.slots}`;
   renderDelta(r.removed?.filter(([, k]) => k).map(([id, k]) => `${label(id)} −${k}`).join(' · '));
   $('metaNote').textContent = S.meta === 'portfolio' ? `Portfolio: member ${r.chosen + 1} of ${r.all.length} won (${r.all.join(' / ')} moves)` : S.meta === 'adaptive' ? `Adaptive: input ${(100 * r.disorder).toFixed(2)} % messy (${METRICS[S.adaptive.metric].name}) → ${r.regime} hand` : '';
 }
@@ -856,55 +837,7 @@ function metaPanel() {
   } else box.append(el('p.small.dim', {}, 'No meta card in play. Pick Portfolio or Adaptive Selector above.'));
 }
 
-// ---- over many inputs (Web Worker) ------------------------------------------------------------
-function runSeeds() {
-  const label0 = 'Run the hand on these inputs';
-  if (S.seedJob) { S.seedJob.cancel(); S.seedJob = null; $('runSeeds').textContent = label0; $('seedStats').textContent = 'Cancelled.'; return; }
-  const k = Math.max(1, Math.min(500, +$('seeds').value || 50));
-  if ($('manual').value.trim()) { $('seedStats').textContent = 'Clear your own numbers to run over generated inputs.'; return; }
-  if (!S.input || !S.resolved?.ok) return;
-  const n = S.input.n, gen = $('gen').value, param = $('param').value === '' ? undefined : +$('param').value, seeds = Array.from({ length: k }, (_, i) => i + 1);
-  const job = S.meta === 'adaptive' ? { kind: 'build', build: adaptiveBuild(), n, gen, param, seeds, thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric } : { kind: 'hand', hand: S.hand, n, gen, param, seeds };
-  $('runSeeds').textContent = 'Cancel';
-  S.seedJob = runJob(job, p => { $('seedStats').textContent = `Running… ${Math.round(100 * p)} %`; });
-  S.seedJob.promise.then(res => {
-    S.seedJob = null; $('runSeeds').textContent = label0;
-    if (res.invalid) { $('seedStats').textContent = `${res.invalid} invalid streams`; return; }
-    const xs = res.ops, st = stats(xs), pr = passRate(n, xs), name = S.meta === 'adaptive' ? 'Adaptive build' : deckString(S.hand);
-    const reg = res.regimes?.length ? ` · regimes: ${['simple', 'medium', 'complex'].map(r => `${r} ${pct(res.regimes.filter(x => x === r).length / res.regimes.length)}`).join(', ')}` : '';
-    $('seedStats').innerHTML = `<b>${name}</b>, n = ${n}, ${k} seeds of “${GENERATORS[gen].label}”: mean <b>${st.mean.toFixed(1)}</b> (${grade(n, st.mean)}) · min ${st.min} · max ${st.max} · sd ${st.sd.toFixed(1)} · spread ${st.spread.toFixed(3)}<br>runs under the bars: EXCELLENT ${pct(pr.EXCELLENT)} · GOOD ${pct(pr.GOOD)} · PASS ${pct(pr.PASS)}${thresholds(n).approx ? ' (interpolated bars)' : ''}${reg}`;
-    S.hist = [xs, n]; histogram(xs, n);
-  }).catch(e => { S.seedJob = null; $('runSeeds').textContent = label0; if (e.message !== 'cancelled') $('seedStats').textContent = e.message; });
-}
-function histogram(xs, n) {
-  const cv = $('hist'), dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
-  cv.width = w * dpr; cv.height = h * dpr;
-  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-  const lo = Math.min(...xs), hi = Math.max(...xs), bins = 30, cnt = new Array(bins).fill(0);
-  for (const x of xs) cnt[Math.min(bins - 1, Math.floor((x - lo) / ((hi - lo) || 1) * bins))]++;
-  const mx = Math.max(...cnt), bw = w / bins; g.fillStyle = css('--accent');
-  cnt.forEach((c, i) => { const bh = (h - 18) * c / mx; g.fillRect(i * bw + 1, h - 14 - bh, bw - 2, bh); });
-  g.fillStyle = css('--muted'); g.font = '11px system-ui'; g.fillText(lo, 2, h - 2); const t = String(hi); g.fillText(t, w - g.measureText(t).width - 2, h - 2);
-  const t2 = thresholds(n);
-  for (const [k, v] of [['EXCELLENT', '--exc'], ['GOOD', '--good']]) { const ex = t2[k]; if (ex > lo && ex < hi) { const x = (ex - lo) / (hi - lo) * w; g.strokeStyle = css(v); g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h - 14); g.stroke(); g.fillStyle = css(v); g.fillText(k, x + 3, 10); } }
-}
-
-// ---- Compare --------------------------------------------------------------------------------
-function pin() {
-  if (S.pinned) { S.pinned = null; $('compare').hidden = true; $('pin').textContent = 'Compare'; $('pin').classList.remove('on'); board.peers = []; $('boardWrap').classList.remove('two'); return; }
-  S.pinned = { hand: structuredClone(S.hand) };
-  $('compare').hidden = false; $('pin').textContent = 'Unpin'; $('pin').classList.add('on'); $('boardWrap').classList.add('two');
-  if (!board2) board2 = new Board($('board2'), { follower: true });
-  link(board, board2);
-  S.pinned.result = runSafe(S.pinned.hand); board2.load(S.input.ranks, S.pinned.result); comparePanel(); board.goAll(board.step);
-}
-function comparePanel() {
-  const p = S.pinned; if (!p) return;
-  const a = p.result?.ops.length, b = S.result?.ops.length;
-  $('compareInfo').innerHTML = `pinned: <b>${deckString(p.hand)}</b> → ${a ?? '—'} ops · current: <b>${deckString(S.hand)}</b> → ${b ?? '—'} ops${a != null && b != null ? ` · difference ${signed(b - a)}` : ''}`;
-}
-
-// ---- Paths and Challenges --------------------------------------------------------------------
+// ---- Paths (opened from a Codex link: #…&path=…&step=…) --------------------------------------------------------------------
 function startPath(p, i) { S.path = p; S.step = i; applyStep(); }
 function applyStep() {
   const st = S.path.steps[S.step];
@@ -913,7 +846,6 @@ function applyStep() {
   if (st.gen) { $('gen').value = st.gen; syncParam(); }
   S.meta = st.meta || 'none'; $('metaSel').value = S.meta; metaPanel();
   draw();
-  if (st.compare) { if (S.pinned) pin(); const cur = S.hand; S.hand = { ...parseDeck(st.compare), sandbox: true, params: {}, presets: {} }; replay(); pin(); S.hand = cur; replay(); }
 }
 function pathPanel() {
   const box = $('pathPanel');
@@ -925,25 +857,6 @@ function pathPanel() {
     el('button.ghost', { onclick: () => { S.path = null; pathPanel(); }, title: 'Leave the path' }, '✕')),
     el('p', {}, st.q), st.link ? el('p', {}, el('a', { href: st.link }, 'Open it →')) : '', st.next ? el('p.small.dim', {}, 'Next: ' + st.next) : el('p.small.dim', {}, 'End of the path.'));
 }
-function challengesPanel() {
-  const box = $('challenges'); box.innerHTML = '';
-  const ctx = () => ({ hand: S.hand, resolved: S.resolved, n: S.input?.n,
-    runs: async (n, k) => (await runJob({ kind: 'hand', hand: S.hand, n, gen: 'uniform', seeds: Array.from({ length: k }, (_, i) => 1000 + i) }).promise).ops,
-    mean: async (n, k) => stats((await runJob({ kind: 'hand', hand: S.hand, n, gen: 'uniform', seeds: Array.from({ length: k }, (_, i) => 1000 + i) }).promise).ops).mean,
-    runOn: id => { try { return runHand({ algo: id, techs: [], sandbox: true }, S.input.ranks, { keepSteps: false }).ops.length; } catch { return NaN; } } });
-  box.append(el('p.small.dim', {}, 'Teaching prompts with no leaderboard. Set up the hand and the input, then check.'));
-  for (const c of CHALLENGES) {
-    const out = el('span.result');
-    box.append(el('div.challenge', {}, el('b', {}, c.name), el('p.small.dim', {}, c.hint), el('button', { onclick: async e => {
-      if (!S.resolved?.ok || !S.input) { out.textContent = 'Play a valid hand first.'; return; }
-      e.target.disabled = true; out.textContent = 'checking…';
-      try { const [ok, why] = await c.check(ctx()); out.className = 'result ' + (ok ? 'good' : 'bad'); out.textContent = (ok ? '✓ done: ' : '✕ not yet: ') + why; store.set('challenge:' + c.id, ok ? '1' : ''); }
-      catch (err) { out.textContent = err.message; }
-      e.target.disabled = false;
-    } }, 'check'), ' ', out, store.get('challenge:' + c.id) ? el('span.good', {}, ' ✓') : ''));
-  }
-}
-
 // ---- share link: #deck=card+tech…&n=…&gen=…&seed=…&p=…&P.k=…&preset.k=… -------------------------
 function writeHash() {
   if ($('manual').value.trim()) return;
