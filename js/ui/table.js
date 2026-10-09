@@ -49,6 +49,10 @@ const board = new Board($('board'), { dock: $('console'), log: $('movelog') });
 let board2 = null;
 bindCardFx();
 bindTips();
+// The played card fits the height of its row. The row is measured here, not with container units:
+// a size container restyles the card inside it with every layout of the board beside it, which is
+// every move during playback.
+new ResizeObserver(([e]) => e.target.style.setProperty('--midH', `${Math.round(e.contentRect.height)}px`)).observe(document.querySelector('.mid'));
 
 // ---- setup ----------------------------------------------------------------------------------
 document.body.classList.toggle('nerd', store.get('table:nerd') === '1');
@@ -338,7 +342,7 @@ function emptyFace(role, text = 'empty') {
     el('div.tcg-body', {}, el('div.face.front', {}, el('span.pxi', { html: icon(SLOT_ICON(role)) }), el('b', {}, SLOT_NAMES[role] || role), el('small', {}, text))));
 }
 function slotBox(role, card, kind, title, onClick) {
-  const s = el('div', { className: `slot ${kind} role-${role}`, dataset: { role }, title: title || '' }, el('span.slotname', { html: `${icon(SLOT_ICON(role))}<span>${SLOT_NAMES[role] || role}</span>` }), card);
+  const s = el('div', { className: `slot ${kind} role-${role}`, dataset: { role }, title: title || '' }, el('span.slotname', { html: `${icon(SLOT_ICON(role))}<span>${SLOT_NAMES[role] || role}</span>${kind === 'native' ? `<span class="tablock">${icon('lock')}</span>` : ''}` }), card);
   if (onClick) s.onclick = e => { if (e.target.closest('.tcg-btn')) return; onClick(e); };
   s.ondragover = e => { e.preventDefault(); s.classList.add('target'); };
   s.ondragleave = () => s.classList.remove('target');
@@ -386,21 +390,28 @@ function renderSlots() {
   const roles = [...Object.keys(a.natives), ...a.open.filter(r => !a.natives[r])];
   for (const role of roles) {
     const u = R.use?.[role], native = a.natives[role], t = u && techById[u.id];
-    const src = native ? 'built in' : u?.source === 'played' ? 'played' : u ? 'default' : '';
-    const card = t ? techFace(t, { doc: DOC?.techniques?.[u.id], src, needs: needsOf(t) }) : u ? plainFace(role, label(u.id), src) : emptyFace(role);
     const kind = native ? 'native' : u?.source === 'played' ? 'played' : u ? 'default' : 'empty';
-    const title = (native ? `${ROLE_NAMES[role]}: built into ${a.name}` : u?.source === 'played' ? 'Click to take it back into your hand' : `${ROLE_NAMES[role]}: ${ROLE_HINT[role]}. Play a ${ROLE_NAMES[role]} card from your hand.`) + (nb[role] ? `\nNeeded by ${nb[role].join(', ')}` : '');
-    const s = slotBox(role, card, kind, title, native ? null : u?.source === 'played' ? () => returnTech(u.id, card) : () => wantRole(role));
+    const state = { native: kind === 'native', isDefault: kind === 'default', played: kind === 'played' };
+    const card = t ? techFace(t, { doc: DOC?.techniques?.[u.id], state, needs: needsOf(t) }) : u ? plainFace(role, label(u.id), { native: kind === 'native' }) : emptyFace(role);
+    const name = plain(label(u?.id || '')), rn = ROLE_NAMES[role];
+    const title = (kind === 'native' ? `Built into ${a.name}\n${name} is what makes ${a.name} work, so it stays in.`
+      : kind === 'played' ? 'Click to take it back into your hand'
+      : kind === 'default' ? `${a.name}'s default ${rn}\nPlay another ${rn} card from your hand to swap it out.`
+      : `${rn}: ${ROLE_HINT[role]}\nPlay ${/^[AEIOU]/.test(rn) ? 'an' : 'a'} ${rn} card from your hand.`) + (nb[role] ? `\nNeeded by ${nb[role].join(', ')}` : '');
+    const s = slotBox(role, card, kind, title, kind === 'native' ? () => locked(card, `${name} is built into ${a.name}: it is what makes the card work, so it stays in.`)
+      : kind === 'played' ? () => returnTech(u.id, card)
+      : () => wantRole(role, kind === 'default' ? `${name} is ${a.name}'s default ${rn}. Play another ${rn} card to swap it out.` : ''));
     linkMarks(s, t, nb[role]);
     box.append(s);
   }
   if (a.finishers || a.finisher !== undefined || a.finisherNote) {
-    const f = R.finisher, fixed = !a.finishers?.length, mine = f && S.hand.techs.includes(f.id);
-    const card = f ? techFace(f, { doc: DOC?.techniques?.[f.id], src: fixed ? 'fixed' : mine ? 'played' : 'default' }) : a.finisherNote ? plainFace('leaf', a.finisherNote, 'built in') : emptyFace('leaf');
+    const f = R.finisher, mine = f && S.hand.techs.includes(f.id), removable = f && !mine && a.finisher === f.id && !String(a.finisher).startsWith('built');
+    const state = { native: !!f && !mine && !removable, isDefault: !!removable, played: !!mine };
+    const card = f ? techFace(f, { doc: DOC?.techniques?.[f.id], state }) : a.finisherNote ? plainFace('leaf', a.finisherNote) : emptyFace('leaf');
     let click = () => wantRole('leaf'), title = 'Finisher: solves the last few numbers. Play a Finisher card from your hand.';
     if (mine) { click = () => returnTech(f.id, card); title = 'Click to take it back into your hand'; }
-    else if (f && a.finisher === f.id && !String(a.finisher).startsWith('built')) { click = () => { S.hand.finisher = null; replay(false, `−${label(f.id)}`); }; title = 'Click to empty the Finisher slot'; }
-    else if (f) { click = null; title = 'Fixed: this card always finishes this way'; }
+    else if (removable) { click = () => { S.hand.finisher = null; replay(false, `−${label(f.id)}`); }; title = 'Click to empty the Finisher slot'; }
+    else if (f) { click = () => locked(card, `${plain(label(f.id))} is built into ${a.name}: it always finishes this way.`); title = `Built into ${a.name}\nIt always finishes this way.`; }
     box.append(slotBox('leaf', card, mine ? 'played' : f ? 'default' : 'empty', title, click));
   }
   // Prep and post cards take no slot: they stack in Extras.
@@ -436,10 +447,17 @@ function renderKnobs(a, R) {
   }
 }
 // Point at the hand cards that fit a slot.
-function wantRole(role) {
+// Clicking a slot that a hand card could fill: the cards that fit it wiggle. note: why the slot's
+// default stays until one is played.
+function wantRole(role, note = '') {
   const cards = [...$('hand').children].filter(c => role === 'extra' ? ['prep', 'post'].includes(c.dataset.role) : c.dataset.role === role);
-  if (!cards.length) { $('handInfo').textContent = role === 'extra' ? 'No prep or post card left in your hand.' : `No ${ROLE_NAMES[role]} card in your hand fits ${byId[S.hand.algo].name}.`; return; }
+  if (!cards.length) { $('handInfo').textContent = (role === 'extra' ? 'No prep or post card left in your hand.' : `No ${ROLE_NAMES[role]} card in your hand fits ${byId[S.hand.algo].name}.`) + (note ? ' The default stays.' : ''); return; }
+  if (note) $('handInfo').textContent = note;
   for (const c of cards) juice(c, 'want');
+}
+// A card that cannot leave its slot says why, with a shake.
+function locked(card, why) {
+  $('handInfo').textContent = why; juice(card, 'nope');
 }
 // While a hand card is hovered or dragged: light its own slot, and the slots it needs (green when
 // they are filled, red when they are not) or clashes with.
@@ -747,7 +765,7 @@ function inspect(kind, id) {
   if (kind === 'algo') {
     const a = byId[id], doc = DOC?.algorithms?.[id], st = META?.cards?.[id], sec = sections(doc?.doc || ''), src = doc?.source;
     sheet.className = `sheet inspect fam-${a.family}`;
-    const face = algoFace(a, { stats: st }); face.style.setProperty('--cw', '290px');
+    const face = algoFace(a, { stats: st, cls: 'focus' }); face.style.setProperty('--cw', '290px');
     $('inspectTitle').textContent = a.name;
     const canPlay = !(a.maxN != null && S.input?.n > a.maxN);
     const actions = el('div.iactions', {},
@@ -778,12 +796,13 @@ function inspect(kind, id) {
   } else {
     const t = techById[id], doc = DOC?.techniques?.[id], src = doc?.source, sec = sections(doc?.doc || ''), a = byId[S.hand.algo], f = fits(a, t);
     const active = activeIds().has(id), mine = S.hand.techs.includes(id) || (id === 'double-op-sharing' && S.hand.sharing), eff = effectOn(t, a);
+    const native = a.natives[t.role] === id, dflt = !mine && (a.defaults[t.role] === id || (t.role === 'leaf' && S.resolved?.finisher?.id === id));
     sheet.className = `sheet inspect role-${t.role}`;
-    const face = techFace(t, { doc, state: { ...f, played: active }, effect: eff?.text, sign: eff?.sign, needs: f.ok ? needsOf(t) : [] }); face.style.setProperty('--cw', '260px');
+    const face = techFace(t, { doc, state: { ...f, played: active && !native && !dflt, native, isDefault: dflt }, effect: eff?.text, sign: eff?.sign, needs: f.ok ? needsOf(t) : [] });
+    face.style.setProperty('--cw', '260px'); face.classList.add('focus');
     $('inspectTitle').textContent = label(id).replace(/`/g, '');
     const { text, notes } = splitNotes(sec['Under the hood'] || '');
     const hostEff = META?.techniques?.[id]?.effects?.find(e => e.host === a.id), table = effectTable(id, a);
-    const native = a.natives[t.role] === id, dflt = !mine && (a.defaults[t.role] === id || (t.role === 'leaf' && S.resolved?.finisher?.id === id));
     const seeds = META?.seeds || { 100: 50, 500: 20 };
     const actions = el('div.iactions', {},
       mine ? el('button.btn.grey', { onclick: () => { closeOverlay($('ov-inspect')); removeTech(id); } }, 'Take it back')

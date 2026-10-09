@@ -12,6 +12,16 @@
 - **Deterministic.** The same input, hand and params always give the same stream.
 - **Independent validation.** `core/replay.js` re-derives every state from the input and the
   op list, and shares no code with `core/machine.js`.
+- **Light to draw.** Anything that moves on its own moves by `transform` or `opacity`, which
+  the compositor animates without repainting, and card effects run only on the card in focus.
+  Nothing animates a blur or an inherited custom property: a moving blur is redone every frame,
+  and an inherited property restyles every element under it. The felt is painted once and
+  overlays dim without a backdrop blur. During playback the board draws into an offscreen
+  canvas (a font change on a canvas in the page forces a layout of the page), keeps its sizes
+  from `ResizeObserver` instead of reading them every move, and the move log is
+  layout-contained. The played card takes its size from a measured row height, not from
+  container units, which would restyle it with every move. The goal is 60 fps while playing,
+  even without GPU compositing.
 
 ## 6.2 Layout
 

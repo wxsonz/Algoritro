@@ -42,18 +42,21 @@
 
 /* ---- the felt ---- */
 .table-page { background: var(--felt-lo); color: var(--on-felt); }
-.table-page::before {            /* a slow swirl under everything */
-  content: ''; position: fixed; inset: -40%; z-index: -2; pointer-events: none;
-  background: conic-gradient(from 0deg at 50% 50%, var(--felt-hi), var(--felt), var(--felt-lo), var(--felt), var(--felt-hi), var(--felt-lo), var(--felt-hi));
-  filter: blur(70px); animation: swirl 90s linear infinite;
+.table-page::before {            /* soft pools of light on the felt, painted once: no blur, no motion */
+  content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(55% 60% at 16% 8%, var(--felt-hi), transparent 72%),
+    radial-gradient(45% 50% at 88% 18%, color-mix(in srgb, var(--felt-hi) 70%, transparent), transparent 70%),
+    radial-gradient(60% 55% at 62% 62%, color-mix(in srgb, var(--felt-hi) 45%, transparent), transparent 70%),
+    radial-gradient(80% 60% at 30% 100%, var(--felt-lo), transparent 75%),
+    var(--felt);
 }
 .table-page::after {             /* vignette */
   content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(0, 0, 0, .38) 100%);
 }
-@keyframes swirl { to { transform: rotate(360deg); } }
 
-.table-page .top { background: rgba(0, 0, 0, .28); border-bottom: 2px solid rgba(0, 0, 0, .25); backdrop-filter: blur(4px); padding: 6px 16px; }
+.table-page .top { background: color-mix(in srgb, var(--felt-lo) 78%, black); border-bottom: 2px solid rgba(0, 0, 0, .25); padding: 6px 16px; }
 .table-page .brand { color: var(--on-felt); font-family: var(--pixel); font-size: 24px; font-weight: 400; letter-spacing: .03em; }
 .table-page .logo { color: #ffd45a; }
 .table-page .pages a { color: var(--on-felt-dim); font-family: var(--pixel); font-size: 20px; }
@@ -191,7 +194,13 @@
 .slotname { position: absolute; z-index: 4; top: -9px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 2px 8px 1px; border-radius: 99px; white-space: nowrap;
   font: 400 14px/1 var(--pixel); color: var(--on-felt); text-transform: uppercase; letter-spacing: .06em; background: #26302f; box-shadow: 0 2px 0 rgba(0, 0, 0, .3); pointer-events: none; }
 .slotname svg { width: 13px; height: 13px; color: color-mix(in srgb, var(--rc, #fff) 60%, white); }
+/* a slot whose card is built into the played card: a gold tab with a lock, a bigger seal and ribbon */
+.slot.native .slotname { background: #8a6d1d; }
+.slotname .tablock svg { width: 12px; height: 12px; color: #ffe08a; }
+.slot .tcg .lockseal { width: 26px; height: 26px; left: -9px; top: -9px; }
+.slot .tcg .ribbon { font-size: max(12px, 9cqw); padding: 2px 8px 1px; }
 .slot.played .tcg:hover .tcg-body { translate: 0 -4px; }
+.slot .tcg.on .tcg-body::after { content: none; }   /* the ribbon says it is in play; no breathing glow in the slot row */
 .slot.target .tcg-body { box-shadow: 0 0 0 3px #ffd45a, 0 0 22px rgba(255, 212, 90, .6); }
 .slotname .chain { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 2px; border-radius: 50%; }
 .slotname .chain svg { width: 11px; height: 11px; }
@@ -306,7 +315,7 @@
 .pilebtns { display: flex; gap: 6px; }
 
 /* ---- overlays: decks spread on the felt, tools on a plate ---- */
-.overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 3vh 3vw; background: rgba(6, 18, 14, .62); backdrop-filter: blur(3px); }
+.overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 3vh 3vw; background: rgba(6, 18, 14, .74); }
 .overlay[hidden] { display: none; }
 #ov-inspect { z-index: 60; }
 .sheet {
@@ -356,8 +365,7 @@
 .slam { animation: slam .4s cubic-bezier(.2, 1.4, .4, 1); }
 @keyframes slam { from { scale: 1.18; rotate: -5deg; opacity: .3; } }
 @media (prefers-reduced-motion: reduce) {
-  .table-page::before { animation: none; }
-  .table-page *, .table-page *::before { transition: none !important; animation: none !important; }
+  .table-page *, .table-page *::before, .table-page *::after { transition: none !important; animation: none !important; }
 }
 
 /* ---- wide screens: the whole table fits the window, like a game screen ---- */
@@ -368,8 +376,7 @@
   .game { flex: 1 1 auto; min-height: 0; --slotH: clamp(150px, 22vh, 236px); --handH: clamp(168px, 27vh, 300px); }
   .leftpanel { overflow: hidden; }
   .mat { grid-template-rows: auto var(--slotH) minmax(0, 1fr) var(--handH); }
-  .mid { container-type: size; }
-  .playedwrap .tcg { --cw: min(300px, calc((100cqh - 14px) * 5 / 7)); }
+  .playedwrap .tcg { --cw: min(300px, calc((var(--midH, 420px) - 14px) * 5 / 7)); }   /* --midH: the row's height, set from table.js */
   .boardbox canvas.board { flex: 1 1 0; min-height: 60px; aspect-ratio: auto; height: auto; }
 }
 @media (min-width: 1100px) and (min-height: 620px) and (max-height: 820px) {
@@ -442,8 +449,12 @@
 .flames b { position: absolute; bottom: 8px; left: calc(12% + var(--i) * 24%); width: 3px; height: 3px; border-radius: 1px; background: #ffc35a; box-shadow: 0 0 4px #ff8a1a; animation: ember 1.3s linear infinite; animation-delay: calc(var(--i) * .33s); }
 @keyframes flame { 0% { transform: scale(1.05, .62) translateY(2px); opacity: .75; } 50% { transform: scale(.88, 1.08); } 100% { transform: scale(1, .82) translateY(-1px); opacity: 1; } }
 @keyframes ember { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(7px, -34px); opacity: 0; } }
-.manarow.onfire .gems i.full { animation: hot .45s ease-in-out infinite alternate; }
-@keyframes hot { to { background: radial-gradient(circle at 35% 30%, #fff1a8, #ff8a2a 60%, #c2361a); } }
+.manarow.onfire .gems i.full { position: relative; }
+.manarow.onfire .gems i.full::after {   /* the heat pulses through its opacity: no repaint */
+  content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+  background: radial-gradient(circle at 35% 30%, #fff1a8, #ff8a2a 60%, #c2361a); animation: hot .45s ease-in-out infinite alternate;
+}
+@keyframes hot { to { opacity: 1; } }
 .manarow.onfire .mval { color: #ff5a1f; text-shadow: 0 0 6px rgba(255, 120, 30, .9); animation: throb .5s ease-in-out infinite alternate; }
 @keyframes throb { to { transform: scale(1.22); } }
 .ignite { animation: ignite .5s ease-out; }
@@ -456,7 +467,7 @@
 .boardplate.withlog > .boardwrap { grid-column: 1; grid-row: 3; }
 .boardplate.withlog > .movelog { grid-column: 2; grid-row: 2 / 4; }
 .boardplate.withlog > .consoledock { grid-column: 1 / -1; grid-row: 4; }
-.movelog { min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding: 6px 8px; border-radius: 10px; background: var(--plate-2); box-shadow: inset 0 2px 0 rgba(0, 0, 0, .08); font-size: 12px; }
+.movelog { contain: strict; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding: 6px 8px; border-radius: 10px; background: var(--plate-2); box-shadow: inset 0 2px 0 rgba(0, 0, 0, .08); font-size: 12px; }
 .movelog[hidden] { display: none; }
 .logempty { margin: auto 0; opacity: .7; }
 .logrow { display: grid; grid-template-columns: 3.6ch auto minmax(0, 1fr); align-items: center; gap: 6px; min-height: 20px; opacity: .62; white-space: nowrap; }

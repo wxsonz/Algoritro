@@ -16,8 +16,7 @@
 .r-common    { --metal: linear-gradient(145deg, #d3cbbb, #8e8576 55%, #675f53); }
 .r-uncommon  { --metal: linear-gradient(145deg, #ffffff, #bcc8d4 45%, #7c8b99); }
 .r-rare      { --metal: linear-gradient(145deg, #fff4bd, #e7b53b 45%, #a3700a); }
-.r-legendary { --metal: conic-gradient(from var(--spin, 200deg), #ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); }
-@property --spin { syntax: '<angle>'; inherits: true; initial-value: 200deg; }
+.r-legendary { --metal: conic-gradient(from 200deg, #ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); }
 
 /* ---- the card object ---- */
 .tcg {
@@ -36,8 +35,12 @@
 .tcg .face { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
 .tcg:focus-visible .tcg-body { box-shadow: 0 0 0 3px #ffd45a, 0 8px 18px rgba(0, 0, 0, .3); }
 .tcg.on .tcg-body { box-shadow: 0 0 0 3px #ffd45a, 0 0 24px rgba(255, 212, 90, .6), 0 8px 18px rgba(0, 0, 0, .3); }
-.tcg.on:not(.flying) .tcg-body { animation: inplay 2.4s ease-in-out infinite; }
-@keyframes inplay { 50% { box-shadow: 0 0 0 3px #ffe58a, 0 0 34px rgba(255, 212, 90, .85), 0 8px 18px rgba(0, 0, 0, .3); } }
+.tcg.on .tcg-body::after {     /* the glow breathes through its opacity: no repaint */
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 3px #ffe58a, 0 0 34px rgba(255, 212, 90, .85);
+}
+.tcg.on:not(.flying) .tcg-body::after { animation: inplay 2.4s ease-in-out infinite; }
+@keyframes inplay { 50% { opacity: 1; } }
 .tcg .pxi { display: inline-block; width: 1em; height: 1em; flex: none; }
 .tcg .pxi svg, .tcg .socket svg, .tcg .medallion svg { width: 100%; height: 100%; display: block; }
 .tcg .name { font-family: var(--pixel); font-weight: 400; letter-spacing: .01em; overflow-wrap: anywhere; }
@@ -110,7 +113,7 @@
 /* ---- technique, meta and plain cards: a metal trim (rarity) around a cream card ---- */
 .tcg.tech .front, .tcg.meta .front { padding: 2.2cqw; background: var(--metal); }
 .tcg-inner {
-  height: 100%; display: grid; grid-template-rows: 18cqw 30cqw 9cqw minmax(0, 1fr) auto auto auto; overflow: hidden; border-radius: 4.2cqw;
+  position: relative; height: 100%; display: grid; grid-template-rows: 18cqw 30cqw 9cqw minmax(0, 1fr) auto auto auto; overflow: hidden; border-radius: 4.2cqw;
   background: linear-gradient(#fffaf0, #f1e4c8); box-shadow: inset 0 0 0 .5cqw rgba(0, 0, 0, .12);
 }
 .tcg-head { display: flex; align-items: center; gap: 2cqw; min-width: 0; padding: 0 2.6cqw; background: linear-gradient(var(--rc), color-mix(in srgb, var(--rc) 68%, black)); color: #fff; }
@@ -138,29 +141,47 @@
 .tcg.meta { --rc: #5b3fa8; }
 .tcg.plain .tcg-art { background: repeating-linear-gradient(45deg, rgba(0, 0, 0, .05) 0 2cqw, transparent 2cqw 4cqw), linear-gradient(#d8ccb2, #b9aa8b); }
 
-/* ---- rarity you can see: shine (uncommon), holo and sparkles (rare), a living rim (legendary) ---- */
-.shine, .foil, .sparkles { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
-.shine { background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .55) 50%, transparent 62%) -150% 0 / 250% 100% no-repeat; animation: sweep 5.5s ease-in-out infinite; }
-@keyframes sweep { 0%, 62% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
+/* ---- rarity you can see: shine (uncommon), holo and sparkles (rare), a turning rim (legendary) ----
+   Every effect moves by transform or opacity, which the compositor animates without repainting the
+   card. Only the cards in focus play them (on the mat, in Inspect, under the pointer); the rest
+   hold still, so a hand full of rare cards costs nothing per frame. */
+.shine, .foil, .sparkles { position: absolute; pointer-events: none; }
+.shine { inset: 0 auto 0 0; width: 300%; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, .55) 50%, transparent 60%); transform: translateX(-62%); animation: sweep 5.5s ease-in-out infinite; }
+@keyframes sweep { 0%, 62% { transform: translateX(-62%); } 100% { transform: translateX(-5%); } }
 .foil {
-  mix-blend-mode: color-dodge; opacity: .42;
+  inset: -100%; mix-blend-mode: color-dodge; opacity: .42; transition: opacity .25s;
   background: linear-gradient(115deg, transparent 15%, rgba(255, 255, 255, .5) 34%, rgba(255, 80, 220, .45) 44%, rgba(80, 220, 255, .45) 54%, rgba(120, 255, 140, .4) 62%, transparent 82%);
-  background-size: 300% 300%; background-position: var(--mx, 30%) var(--my, 30%); animation: holo 7s ease-in-out infinite alternate; transition: opacity .25s;
+  transform: translate(13%, 13%); animation: holo 7s ease-in-out infinite alternate;
 }
-@keyframes holo { to { background-position: 85% 70%; } }
-.tcg:hover .foil { opacity: .9; animation-play-state: paused; }
+@keyframes holo { from { transform: translate(13%, 13%); } to { transform: translate(-23%, -13%); } }
 .tcg.r-legendary .foil { opacity: .6; }
-.sparkles i { position: absolute; width: 5cqw; height: 5cqw; opacity: 0; animation: twinkle 2.8s ease-in-out infinite;
-  background: radial-gradient(circle, #fff 0 18%, transparent 20%), conic-gradient(from 45deg, transparent 0 10%, #fff 12% 13%, transparent 15% 35%, #fff 37% 38%, transparent 40% 60%, #fff 62% 63%, transparent 65% 85%, #fff 87% 88%, transparent 90%);
-  border-radius: 50%; filter: drop-shadow(0 0 1cqw rgba(255, 240, 180, .9)); }
-.sparkles i:nth-child(1) { left: 10%; top: 18%; } .sparkles i:nth-child(2) { left: 78%; top: 12%; animation-delay: .7s; }
-.sparkles i:nth-child(3) { left: 62%; top: 66%; animation-delay: 1.4s; } .sparkles i:nth-child(4) { left: 24%; top: 70%; animation-delay: 2.1s; }
+.sparkles { inset: 0; }
+.sparkles i { position: absolute; width: 5cqw; height: 5cqw; border-radius: 50%; opacity: 0; animation: twinkle 2.8s ease-in-out infinite;
+  background: radial-gradient(circle, #fff 0 16%, rgba(255, 236, 170, .7) 24%, transparent 50%), conic-gradient(from 45deg, transparent 0 10%, #fff 12% 13%, transparent 15% 35%, #fff 37% 38%, transparent 40% 60%, #fff 62% 63%, transparent 65% 85%, #fff 87% 88%, transparent 90%); }
+.sparkles i:nth-child(1) { left: 10%; top: 18%; animation-delay: -.84s; } .sparkles i:nth-child(2) { left: 78%; top: 12%; animation-delay: -1.54s; }
+.sparkles i:nth-child(3) { left: 62%; top: 66%; animation-delay: -2.24s; } .sparkles i:nth-child(4) { left: 24%; top: 70%; animation-delay: -.5s; }
 @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0deg); } 30% { opacity: 1; transform: scale(1) rotate(45deg); } 55% { opacity: 0; transform: scale(.4) rotate(90deg); } }
 .tcg.algo.r-legendary .front { box-shadow: inset 0 0 0 .8cqw rgba(255, 255, 255, .3), inset 0 0 0 1.9cqw rgba(0, 0, 0, .16); }
-.tcg.algo.r-legendary .tcg-body::before { content: ''; position: absolute; inset: -.9cqw; z-index: -1; border-radius: inherit; background: conic-gradient(from var(--spin), #ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); animation: spin 5s linear infinite; }
-.tcg.r-legendary .front { animation: spin 5s linear infinite; }
-@keyframes spin { to { --spin: 560deg; } }
+.tcg .rim { position: absolute; inset: -.9cqw; z-index: -1; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.tcg .rim::before { content: ''; position: absolute; inset: -60%; background: conic-gradient(#ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); animation: rimspin 5s linear infinite; }
+@keyframes rimspin { to { transform: rotate(1turn); } }
+.tcg.tech .rim, .tcg.meta .rim { inset: 0; z-index: 0; }   /* on these the rim is the trim, under the cream face */
 @keyframes shimmer { to { background-position: 200% 0; } }
+/* who plays them */
+.shine, .foil, .sparkles i, .tcg .rim::before, .badge.ps.tier-S::after { animation-play-state: paused; }
+.tcg:is(.onmat, .focus, :hover) :is(.shine, .sparkles i), .tcg:is(.onmat, .focus) .foil,
+.tcg:is(.onmat, .focus, :hover) .rim::before, .tcg:is(.onmat, .focus, :hover) .badge.ps.tier-S::after { animation-play-state: running; }
+.tcg:hover .foil { opacity: .9; animation-play-state: paused; }   /* the pointer moves it instead */
+
+/* a card built into the played card: a lock seal on its corner, and a shake when it is asked to leave */
+.tcg .lockseal {
+  position: absolute; z-index: 3; left: -2.6cqw; top: -2.6cqw; width: max(20px, 13cqw); height: max(20px, 13cqw); display: grid; place-items: center; border-radius: 50%;
+  color: #4a3200; background: radial-gradient(circle at 35% 30%, #fff1b8, #e8b730 55%, #a8780e);
+  box-shadow: inset 0 0 0 max(1.5px, .8cqw) rgba(255, 255, 255, .45), 0 max(2px, 1cqw) 0 rgba(0, 0, 0, .35);
+}
+.tcg .lockseal svg { width: 55%; height: 55%; display: block; }
+.tcg.nope { animation: nope .32s; }
+@keyframes nope { 20% { translate: -5px 0; } 45% { translate: 5px 0; } 70% { translate: -3px 0; } }
 
 /* ---- ribbons, banners and states ---- */
 .tcg .ribbon {
@@ -283,7 +304,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tcg-body, .pile .layer, .book-cover, .deckbox { transition: none; }
-  .shine, .foil, .sparkles i, .tcg .front, .tcg-body, .tcg-body::before, .badge::after { animation: none !important; }
+  .shine, .foil, .sparkles i, .tcg .rim::before, .tcg-body::after, .tcg.nope, .badge::after { animation: none !important; }
 }
 
 .tcg-effect.why { background: #e4ddd0; color: #4a4239; font-style: italic; }

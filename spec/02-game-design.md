@@ -66,7 +66,9 @@ a fanned hand. The anatomy borrows from card games peers already know:
   and in your hand the same change sits big in the top-left corner. A card that needs another
   shows a chain line ("needs Four Ends"), green when it is met and red when it is not.
 - **Rarity shows:** uncommon cards shine now and then, rare cards are holo and sparkle, and
-  legendary cards have a slowly turning prismatic rim.
+  legendary cards have a slowly turning prismatic rim. The effects play on the card in focus
+  (on the mat, in Inspect, or under the pointer); elsewhere they hold still, so a full hand
+  stays light.
 - **Icons** are 12×12 pixel bitmaps drawn as SVG, so they look the same on every system.
 
 A card has no back to flip. Clicking it opens it up close in **Inspect**, told top-down so
@@ -110,7 +112,11 @@ example `#deck=turk+rb-sink+peephole-cancel&n=100&seed=42`.
   Radix has none, Turk has 3, Simple Insertion and Quick 2-Way have 4. A slot holds a
   technique you add or swap in. A card's **natives** (locked, such as Turk's Cheapest Pick)
   and **defaults** (pre-filled but replaceable, such as Turk's Keep Three) are part of the
-  card and use no slot. The count tells you how much a card is meant to be tuned. It is
+  card and use no slot. A native is what makes the card what it is: Turk without Cheapest
+  Pick is Simple Insertion. A default fills a role the card cannot run without, until another
+  card of that role replaces it. On the Table a native's slot has a gold tab with a lock, and
+  the card wears a lock seal and a **built in** ribbon; a default wears a **default** ribbon.
+  Clicking either says why it stays. The count tells you how much a card is meant to be tuned. It is
   **not** a real-world limit, and the Table, a sandbox, never enforces it.
 - **Roles.** Each slot role (anchor, pick, cost, sweep, band, retrieval, ends, split, pivot,
   order) holds one card. Prep and post cards stack and use no slot, and the Finisher has its

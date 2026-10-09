@@ -40,6 +40,10 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   red when they are not. In the slot row, a chain on a slot's tab marks a card that another
   card in play relies on, or, in red, a card that is missing what it needs.
 - **The Table is a sandbox:** a card's slot count is shown, never enforced.
+- **Built in and default.** A slot whose card is built into the played card has a gold tab
+  with a lock, and its card a lock seal and a "built in" ribbon. Clicking it shakes the card
+  and says why it stays. A default card wears a "default" ribbon; clicking it points at the
+  hand cards that can replace it.
 - **Hand totals past 10 catch fire:** the Grasp or Craft row burns, and the number throbs.
 - **Tooltips** sit above the pointer in the table's colours, with a heading and a few lines.
   Hand cards have none: hovering one enlarges it instead.

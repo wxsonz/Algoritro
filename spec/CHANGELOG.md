@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-09, built-in cards, and a lighter table
+
+- **Built-in cards say so** ([08-views.md §8.1](08-views.md#81-table-indexhtml-the-play-page)):
+  a gold slot tab with a lock, a lock seal and a "built in" ribbon. Clicking one shakes it and
+  says why it stays; clicking a default points at the cards that can replace it.
+- **Faster table** ([06-architecture.md §6.1](06-architecture.md#61-ground-rules)). Measured in
+  headless Chromium without a GPU at 1920 × 1080: idle 28 → 60 fps, Inspect open 11 → 60, a
+  legendary card on the mat 12 → 60, playback 25 → 44, with layout during playback down from
+  1.2 s to 0.24 s per 2 s. The causes were a 70 px blur on a turning background, a legendary rim
+  animated through an inherited property (it restyled the whole card every frame), holo and
+  shine animated by repainting, frosted-glass blurs over moving content, a canvas font change
+  that forced a page layout several times a frame, and the played card sized in container
+  units. The felt is now still; card effects play only on the card in focus.
+
 ## 2026-10-09, cards told top-down, and Inspect on the felt
 
 - **The project is called Algoritro**, "a push_swap card table", and lives in git.

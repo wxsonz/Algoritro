@@ -8,7 +8,7 @@
 // While it plays the board shows off (FX, which can be switched off): a banner for each new
 // phase, a combo counter for streaks of the same move, sparks where moves land, and a finale.
 // A move log beside the board lists the moves up to the current one (LOG).
-import { el, css, store } from './common.js';
+import { el, store } from './common.js';
 import { icon } from './pixel.js';
 import { Machine } from '../core/machine.js';
 import { grade } from '../core/metrics.js';
@@ -46,6 +46,16 @@ function applyOp(a0, b0, o) {
 const place = (A, B) => { const m = new Map(); A.forEach((v, i) => m.set(v, [0, i])); B.forEach((v, i) => m.set(v, [1, i])); return m; };
 const fam = p => (p || '').replace(/\s*[\d[].*$/, '') || p;   // "chunk 3/5" and "chunk 4/5" share a colour
 
+// The theme's colours for the canvas, read once per theme: each read is a style lookup, and the
+// board draws every move.
+const COLOURS = ['--muted', '--ink', '--bg', '--pixel', '--accent', '--line', '--exc', '--pass', '--good', '--focus', '--ok', '--bad'];
+let paletteKey = null, paletteVal = {};
+function palette() {
+  const key = `${document.documentElement.dataset.theme || ''}|${matchMedia('(prefers-color-scheme: dark)').matches}`;
+  if (key !== paletteKey) { const cs = getComputedStyle(document.documentElement); paletteVal = Object.fromEntries(COLOURS.map(v => [v, cs.getPropertyValue(v).trim()])); paletteKey = key; }
+  return paletteVal;
+}
+
 export class Board {
   constructor(root, { follower = false, dock = null, log = null, onStep } = {}) {
     Object.assign(this, { root, onStep, follower, ranks: [], result: null, step: 0, frac: 0, pos: 0, playing: false, peers: [], checkpoints: [], names: [] });
@@ -81,7 +91,9 @@ export class Board {
       this.bindKeys();
       this.showSpeed();
     }
-    new ResizeObserver(() => this.render()).observe(this.canvas);
+    // The canvas and the log keep their sizes here: reading them while playing would force a layout every move.
+    new ResizeObserver(([e]) => { this.cw = e.contentRect.width; this.ch = e.contentRect.height; this.render(); }).observe(this.canvas);
+    if (this.logBox) new ResizeObserver(([e]) => { this.logH = e.contentRect.height; this.renderLog(); }).observe(this.logBox);
   }
   get total() { return this.result ? this.result.ops.length : 0; }
   endStep() { return Math.max(this.total, ...this.peers.map(p => p.total)); }
@@ -296,7 +308,7 @@ export class Board {
     const box = this.logBox; if (!box || !this.logOn) return;
     const ops = this.result?.ops, st = this.result?.steps;
     if (!ops) { box.replaceChildren(el('p.logempty', {}, 'Play a hand: its moves show up here.')); return; }
-    const rows = Math.max(4, Math.floor((box.clientHeight || 300) / 22)), end = this.step + (this.frac ? 1 : 0), start = Math.max(0, end - rows);
+    const rows = Math.max(4, Math.floor((this.logH || 300) / 22)), end = this.step + (this.frac ? 1 : 0), start = Math.max(0, end - rows);
     const out = [];
     let last = start > 0 ? st?.[start - 1]?.phase : undefined;
     for (let k = start; k < end; k++) {
@@ -382,17 +394,23 @@ export class Board {
 
   // ---- drawing ---------------------------------------------------------------------------------
   render() {
-    const cv = this.canvas, dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+    const cv = this.canvas, dpr = devicePixelRatio || 1, w = this.cw ?? cv.clientWidth, h = this.ch ?? cv.clientHeight, P = palette();
     if (!w || !h) return;
     if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
-    const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    // Draw into an offscreen buffer, then copy it over. On the page's own canvas every font change
+    // makes the browser resolve the canvas's style, and inside the size-contained mat that forces a
+    // layout of the whole page, several times a frame.
+    if (typeof OffscreenCanvas === 'function' && !this.buf) this.buf = new OffscreenCanvas(cv.width, cv.height);
+    const buf = this.buf;
+    if (buf && (buf.width !== cv.width || buf.height !== cv.height)) { buf.width = cv.width; buf.height = cv.height; }
+    const g = (buf || cv).getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
     const n = Math.max(1, this.ranks.length), half = w / 2, top = 28, rowH = (h - top - 6) / n;
     this.geo = { n, half, top, rowH };
     const tween = this.frac > 0 && !!this.result && this.step < this.total;
     const [A, B] = this.stateAt(this.step);
     const k = tween ? this.step : this.step - 1, op = k >= 0 ? this.result?.ops?.[k] || '' : '', st = k >= 0 ? this.result?.steps?.[k] : null;
     const ov = st?.ov, focus = st?.focus;
-    const muted = css('--muted'), ink = css('--ink'), dark = css('--bg').startsWith('#1'), font = css('--pixel') || 'system-ui, sans-serif';
+    const muted = P['--muted'], ink = P['--ink'], dark = P['--bg'].startsWith('#1'), font = P['--pixel'] || 'system-ui, sans-serif';
     g.textBaseline = 'alphabetic';
     g.fillStyle = muted; g.font = `19px ${font}`;
     g.fillText(`A · ${A.length}`, 8, 20); g.fillText(`B · ${B.length}`, half + 8, 20);
@@ -402,8 +420,8 @@ export class Board {
     else if (ov?.kind === 'range') label = `ranks [${ov.data[0]}, ${ov.data[1]})`;
     else if (ov?.kind === 'keep') label = `kept: ${ov.data.size}`;
     else if (ov?.kind === 'partition') label = `chunk [${ov.data.lo}, ${ov.data.hi}) at the ${LOC[ov.data.loc]}`;
-    if (label) { g.fillStyle = css('--accent'); const tw = g.measureText(label).width; g.fillText(label, half - tw - 8, 20); }
-    g.strokeStyle = css('--line'); g.lineWidth = 1; g.beginPath(); g.moveTo(half, 0); g.lineTo(half, h); g.stroke();
+    if (label) { g.fillStyle = P['--accent']; const tw = g.measureText(label).width; g.fillText(label, half - tw - 8, 20); }
+    g.strokeStyle = P['--line']; g.lineWidth = 1; g.beginPath(); g.moveTo(half, 0); g.lineTo(half, h); g.stroke();
     const touchA = !tween && /a$|^(ss|rr|rrr|pa|pb)$/.test(op), touchB = !tween && /b$|^(ss|rr|rrr|pa|pb)$/.test(op);
     const inOv = v => !ov ? true : ov.kind === 'range' ? v >= ov.data[0] && v < ov.data[1] : ov.kind === 'partition' ? v >= ov.data.lo && v < ov.data.hi : true;
     const dim = ov && (ov.kind === 'range' || ov.kind === 'partition');
@@ -417,9 +435,9 @@ export class Board {
       box(x0 + 8, y, len);
       g.globalAlpha = alpha;
       if (ov?.kind === 'keep' && ov.data.has(v)) { g.fillStyle = ink; g.fillRect(x0 + 2, y, 4, bh); }
-      if (ov?.kind === 'partition' && ov.data.cuts && on) { const c = ov.data.cuts; g.fillStyle = v >= c[1] ? css('--exc') : v >= c[0] ? css('--pass') : css('--good'); g.fillRect(x0 + 2, y, 4, bh); }
-      if (focus && (v === focus.mover || v === focus.target)) { g.strokeStyle = v === focus.mover ? css('--focus') : ink; g.lineWidth = 2; g.strokeRect(x0 + 8, y, len, Math.max(2, bh)); }
-      else if (touched) { g.strokeStyle = css('--focus'); g.lineWidth = 1.5; g.strokeRect(x0 + 8, y, len, Math.max(1, bh)); }
+      if (ov?.kind === 'partition' && ov.data.cuts && on) { const c = ov.data.cuts; g.fillStyle = v >= c[1] ? P['--exc'] : v >= c[0] ? P['--pass'] : P['--good']; g.fillRect(x0 + 2, y, 4, bh); }
+      if (focus && (v === focus.mover || v === focus.target)) { g.strokeStyle = v === focus.mover ? P['--focus'] : ink; g.lineWidth = 2; g.strokeRect(x0 + 8, y, len, Math.max(2, bh)); }
+      else if (touched) { g.strokeStyle = P['--focus']; g.lineWidth = 1.5; g.strokeRect(x0 + 8, y, len, Math.max(1, bh)); }
       if (n <= 30) { g.fillStyle = ink; g.font = `${Math.round(Math.min(16, rowH - 2))}px ${font}`; g.fillText(v, x0 + 13 + len, y + rowH * .74); }
       g.globalAlpha = 1;
     };
@@ -444,10 +462,11 @@ export class Board {
     if (this.result && this.step >= this.total && !tween) {
       const ok = this.result.valid, t = ok ? `sorted in ${this.total} moves` : 'not sorted';
       g.font = `22px ${font}`; const tw = g.measureText(t).width + 26, bx = w - tw - 10, by = h - 42;
-      g.fillStyle = ok ? css('--ok') : css('--bad'); g.globalAlpha = .95;
+      g.fillStyle = ok ? P['--ok'] : P['--bad']; g.globalAlpha = .95;
       if (g.roundRect) { g.beginPath(); g.roundRect(bx, by, tw, 32, 9); g.fill(); } else g.fillRect(bx, by, tw, 32);
       g.globalAlpha = 1; g.fillStyle = '#fff'; g.fillText(t, bx + 13, by + 23);
     }
+    if (buf) { const v = cv.getContext('2d'); v.setTransform(1, 0, 0, 1, 0, 0); v.clearRect(0, 0, cv.width, cv.height); v.drawImage(buf, 0, 0); }
   }
 }
 // Link boards so they step together; each keeps its own length.

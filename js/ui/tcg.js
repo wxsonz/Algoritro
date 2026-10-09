@@ -32,6 +32,11 @@ function rarityFx(r) {
   if (r === 'rare' || r === 'legendary') return [el('span.foil'), el('span.sparkles', {}, el('i'), el('i'), el('i'), el('i'))];
   return '';
 }
+// The legendary rim: a prismatic ring that turns. It is its own element so a transform can turn
+// it, which costs no repaint.
+const rim = r => r === 'legendary' ? el('span.rim') : '';
+// The seal on a card that is built into the played card and cannot be taken out.
+const lockSeal = () => el('span.lockseal', { html: icon('lock'), 'aria-label': 'built in' });
 
 // ---- the three badges of an Algorithm card --------------------------------------------------
 const CLASS_COLOUR = { '1': '#6b7a90', 'n log n': '#2c9f5b', 'n√n': '#12959b', 'n²': '#d97a1c', heuristic: '#8a5cd6', exponential: '#c92a2a' };
@@ -92,7 +97,7 @@ export function algoFace(a, { stats, cls = '' } = {}) {
     el('div.tcg-text.quote', {}, el('p.flavor', {}, `“${a.tagline}”`)),
     el('div.badges', {}, classBadge(a), slotBadge(a), psBadge(a, stats)));
   const card = el('div', { className: `tcg algo fam-${a.family} r-${a.rarity}${a.research ? ' research' : ''}${a.lesson ? ' lesson' : ''}${cls ? ' ' + cls : ''}`, tabIndex: 0, dataset: { id: a.id, kind: 'algo' } },
-    el('div.tcg-body', {}, front),
+    el('div.tcg-body', {}, rim(a.rarity), front),
     a.research ? el('span.ribbon.exp', {}, 'research') : a.lesson ? el('span.ribbon.lesson', {}, 'lesson') : '');
   card.append(el('button.tcg-btn.peek', { title: 'Inspect', 'aria-label': `Inspect ${a.name}` }, '?'));
   return card;
@@ -107,7 +112,7 @@ export function techFace(t, { doc, state = {}, effect, sign = 0, src, needs = []
   const role = t.role, name = plainName(label(t.id));
   const tag = doc?.tagline || t.tagline;
   const off = state.ok === false && !state.played;
-  const front = el('div.face.front', {}, el('div.tcg-inner', {},
+  const front = el('div.face.front', {}, rim(t.rarity), el('div.tcg-inner', {},
     el('div.tcg-head', {}, el('span.socket', { html: icon(role) }), el('b', { className: 'name' + (name.length > 14 ? ' long' : '') }, name)),
     el('div.tcg-art', {}, px(role, 'big'), rarityFx(t.rarity)),
     el('div.tcg-type', {}, el('span.tt', {}, ROLE_NAMES[role] || role), el('span.costs', {}, t.grasp ? cost('grasp', t.grasp) : '', t.craft ? cost('craft', t.craft) : ''), rgem(t.rarity)),
@@ -120,7 +125,7 @@ export function techFace(t, { doc, state = {}, effect, sign = 0, src, needs = []
   if (state.played) cls.push('on'); if (state.isDefault) cls.push('default'); if (state.native) cls.push('native'); if (off) cls.push('off'); if (state.open) cls.push('open'); if (t.lesson) cls.push('lesson');
   const card = el('div', { className: cls.join(' '), tabIndex: 0, title: tip, dataset: { id: t.id, kind: 'tech', role } }, el('div.tcg-body', {}, front));
   if (off) card.append(el('div.tcg-banner', {}, state.open ? 'open space' : 'won’t fit'));
-  else if (state.native) card.append(el('span.ribbon.native', { html: icon('lock') + ' built in' }));
+  else if (state.native) card.append(el('span.ribbon.native', { html: icon('lock') + ' built in' }), lockSeal());
   else if (state.always) card.append(el('span.ribbon.native', {}, 'always on'));
   else if (state.isDefault) card.append(el('span.ribbon.default', {}, 'default'));
   else if (state.played) card.append(el('span.ribbon.inplay', {}, 'in play'));
@@ -135,15 +140,15 @@ export function needsEl(needs) {
     el('span.pxi', { html: icon(x.clash ? 'cross' : 'link') }), el('span.ntext', {}, x.text), x.clash ? '' : el('b.nmark', {}, x.ok ? '✓' : '!'))));
 }
 // A native or default written in plain words: there is no technique card to show.
-export function plainFace(role, text, src) {
-  return el('div', { className: `tcg tech plain role-${role} r-common native`, dataset: { kind: 'plain', role }, title: `${plainName(text)}\nPart of the algorithm itself.` },
+export function plainFace(role, text, { native = true } = {}) {
+  const hint = native ? 'Part of the algorithm itself.' : 'Comes with the algorithm.';
+  return el('div', { className: `tcg tech plain role-${role} r-common ${native ? 'native' : 'default'}`, dataset: { kind: 'plain', role }, title: `${plainName(text)}\n${hint}` },
     el('div.tcg-body', {}, el('div.face.front', {}, el('div.tcg-inner', {},
       el('div.tcg-head', {}, el('span.socket', { html: icon(role) }), el('b.name', {}, plainName(text))),
       el('div.tcg-art', {}, px(role, 'big')),
       el('div.tcg-type', {}, el('span.tt', {}, ROLE_NAMES[role] || role)),
-      el('div.tcg-text', {}, el('p.plainhint', {}, 'Part of the algorithm itself.')),
-      el('div.tcg-src', {}, src)))),
-    el('span.ribbon.native', { html: icon('lock') + ' built in' }));
+      el('div.tcg-text', {}, el('p.plainhint', {}, hint))))),
+    native ? [el('span.ribbon.native', { html: icon('lock') + ' built in' }), lockSeal()] : el('span.ribbon.default', {}, 'default'));
 }
 
 // ---- Meta cards and named decks ------------------------------------------------------------
@@ -153,7 +158,7 @@ export const META_CARDS = [
 ];
 export function metaFace(m, { on = false } = {}) {
   return el('div', { className: `tcg meta r-legendary${on ? ' on' : ''}`, tabIndex: 0, dataset: { id: m.id, kind: 'meta' }, title: `${m.name}\n${m.text}` },
-    el('div.tcg-body', {}, el('div.face.front', {}, el('div.tcg-inner', {},
+    el('div.tcg-body', {}, el('div.face.front', {}, rim('legendary'), el('div.tcg-inner', {},
       el('div.tcg-head', {}, el('span.socket', { html: icon('meta') }), el('b.name', {}, m.name)),
       el('div.tcg-art', {}, px('meta', 'big'), rarityFx('legendary')),
       el('div.tcg-type', {}, el('span.tt', {}, 'Meta card'), rgem('legendary')),
@@ -193,8 +198,8 @@ export function codexBook() {
 export function bindCardFx(root = document) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   root.addEventListener('pointermove', e => {
-    const c = e.target.closest?.('.tcg.r-rare, .tcg.r-legendary'); if (!c) return;
+    const c = e.target.closest?.('.tcg.r-rare, .tcg.r-legendary'), f = c?.querySelector('.foil'); if (!f) return;
     const r = c.getBoundingClientRect();
-    c.style.setProperty('--mx', `${((e.clientX - r.left) / r.width * 100).toFixed(1)}%`); c.style.setProperty('--my', `${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`);
-  });
+    f.style.translate = `${((.5 - (e.clientX - r.left) / r.width) * 24).toFixed(1)}% ${((.5 - (e.clientY - r.top) / r.height) * 24).toFixed(1)}%`;
+  }, { passive: true });
 }
