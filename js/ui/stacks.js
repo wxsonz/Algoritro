@@ -35,9 +35,11 @@ export const STACKS = [
   { id: 'nearly-500', level: 'hard', icon: '≈', name: 'Nearly sorted 500', n: 500, gen: 'nearly', param: 10, desc: '500 numbers in order, except ten pairs swapped.' },
   { id: 'rotated-500', level: 'hard', icon: '↻', name: 'Rotated 500', n: 500, gen: 'rotated', param: 137, desc: '500 numbers already sorted, but starting in the middle.' },
 ];
-export const SEED = 42;
+export const SEED = 1000;   // the default global seed: the study's first, so Random 100 is its first graded input
 function range(k) { return Array.from({ length: k }, (_, i) => i); }
 const RANDOM = new Set(['uniform', 'nearly', 'disorder', 'nearrev']);   // generators that use the seed
+// A stack the global seed changes: a seeded shape that is not a fixed set of orders.
+export const seeded = b => RANDOM.has(b.gen) && !b.seeds;
 export const stackById = Object.fromEntries(STACKS.map(b => [b.id, b]));
 // A stack's input at a seed; a set of orders gives its first.
 export const stackRanks = (b, seed = SEED) => ranks(generate(b.gen, b.n, b.seeds ? b.seeds[0] : seed, b.param));
@@ -64,6 +66,6 @@ export function goal(b) {
   if (b.limit != null) return `Goal: at most ${b.limit} moves${b.best != null && b.best < b.limit ? ` · Best possible: ${b.best}` : ''}.`;
   return b.n === 100 ? 'Pass under 2 000 · Excellent under 700' : b.n === 500 ? 'Pass under 12 000 · Excellent under 5 500' : '';
 }
-// The stack matching an input, if any.
-export const matchStack = ({ n, gen, param, seed, manual }) => manual ? null
-  : STACKS.find(b => b.n === n && b.gen === gen && (b.param == null || +b.param === +param) && (b.seeds ? b.seeds.includes(+seed) : !RANDOM.has(b.gen) || seed === SEED)) || null;
+// The stack matching an input, if any: a seeded stack only at the global seed.
+export const matchStack = ({ n, gen, param, seed, manual }, gseed = SEED) => manual ? null
+  : STACKS.find(b => b.n === n && b.gen === gen && (b.param == null || +b.param === +param) && (b.seeds ? b.seeds.includes(+seed) : !RANDOM.has(b.gen) || +seed === +gseed)) || null;

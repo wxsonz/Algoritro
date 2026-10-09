@@ -14,11 +14,11 @@ export const tests = [
     eq(routeOf(generate('reversed', 6, 1)).route, 'complex');
     eq([tinyCard(3), tinyCard(4), tinyCard(5)], ['hardcoded-three', 'oracle', 'oracle']);
   }],
-  ['the 26 stacks route as objective.md lists them, at seed 42', () => {
-    const by = {}; for (const b of STACKS) (by[stackRoute(b, 42).route] ||= []).push(b.id);
-    eq([by.tiny.length, by.simple.length, by.medium.length, by.complex.length], [5, 5, 8, 8]);
+  ['the 26 stacks route as objective.md lists them, at the default seed 1000', () => {
+    const by = {}; for (const b of STACKS) (by[stackRoute(b, 1000).route] ||= []).push(b.id);
+    eq([by.tiny.length, by.simple.length, by.medium.length, by.complex.length], [5, 5, 9, 7]);
     ok(by.medium.includes('peak-100') && by.complex.includes('valley-100'), 'mirror shapes split across 0.5');
-    ok(by.complex.includes('random-100') && by.complex.includes('random-500') && by.complex.includes('messy50-100'), 'random and exactly half messy go to complex');
-    ok(by.simple.includes('sorted') && by.simple.includes('nearly-500'), 'nearly sorted goes to simple');
+    ok(by.complex.includes('random-100') && by.medium.includes('random-500'), 'random stacks straddle 0.5: at seed 1000, Random 100 goes to complex and Random 500 to medium');
+    ok(by.complex.includes('messy50-100') && by.simple.includes('sorted') && by.simple.includes('nearly-500'), 'exactly half messy goes to complex; nearly sorted to simple');
   }],
 ];

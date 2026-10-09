@@ -82,15 +82,15 @@ stacks, each with its route:           | route: Reversed 500 · 1.00 → --compl
 - Each seat shows a **summary** of its stacks, such as "sorts 8 stacks · 7 ★ 1 ✓", so a weak
   seat stands out.
 
-Today's 26 stacks route like this at seed 42. The global seed (section 9) moves the nine random
-ones:
+Today's 26 stacks route like this at the default seed, 1000 (Python's own random, step 5). The
+global seed (section 9) moves the nine random ones:
 
 | seat | stacks |
 | --- | --- |
 | tiny (5) | 1 number, 2 in order, 2 swapped, 3 numbers every order, 5 numbers every order |
-| `--simple` (5) | Already sorted 0.000, One swap 0.006, Smallest at the bottom 0.020, Nearly sorted 500 0.026, Nearly sorted 0.027 |
-| `--medium` (8) | Interleaved halves 0.247, A quarter messy 0.250, Four runs 0.364, Twenty runs 0.384, Rotated 500 0.399, Rotated 100 0.471, Up then down 0.495, Up then down 500 0.499 |
-| `--complex` (8) | Half messy 0.500, Down then up 0.505, Random 100 0.523, Random 500 0.528, Three quarters messy 0.750, Nearly reversed 0.973, Reversed 100 1.000, Reversed 500 1.000 |
+| `--simple` (5) | Already sorted 0.000, One swap 0.001, Smallest at the bottom 0.020, Nearly sorted 500 0.020, Nearly sorted 0.025 |
+| `--medium` (9) | Interleaved halves 0.247, A quarter messy 0.250, Four runs 0.364, Twenty runs 0.384, Rotated 500 0.399, Rotated 100 0.471, Random 500 0.472, Up then down 0.495, Up then down 500 0.499 |
+| `--complex` (7) | Half messy 0.500, Down then up 0.505, Random 100 0.536, Three quarters messy 0.750, Nearly reversed 0.975, Reversed 100 1.000, Reversed 500 1.000 |
 
 Mirror shapes split across the line: Up then down is 0.495 (`--medium`) and Down then up 0.505
 (`--complex`).

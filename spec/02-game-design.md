@@ -120,7 +120,7 @@ levels (Easy, Medium, Hard) have nothing to do with the flags.
 
 A hand can be saved as a **Deck** (a named combo). The whole build is shared as a URL fragment,
 one deck string per seat, for example
-`#s=lis-insertion+four-way-cost&m=bucket-insertion&c=four-end-quicksort&n=100&gen=uniform&seed=42`.
+`#s=lis-insertion+four-way-cost&m=bucket-insertion&c=four-end-quicksort&n=100&gen=uniform&seed=1000&gs=1000` (`gs` is the global seed).
 An older one-hand link (`#deck=…`) puts that hand in every seat.
 
 ## 2.5 Slots, interactions and conflicts

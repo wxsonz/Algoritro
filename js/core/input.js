@@ -1,12 +1,14 @@
 // Inputs: generators, manual parsing with push_swap's rules, rank compression, and the
 // measurements the Table always shows.
-import { rng, randInt, shuffle } from './rng.js';
+import { rng, randInt } from './rng.js';
+import { Random } from './pyrandom.js';
 
 const INT_MIN = -2147483648, INT_MAX = 2147483647;
 
 // Generators return values (ranks 0..n-1 here; manual input can be any int32).
 export const GENERATORS = {
-  uniform: { label: 'uniform', param: null, make: (n, next) => shuffle([...Array(n).keys()], next) },
+  // Python's own: random.Random(seed).sample(range(-100000, 100000), n), the study's and the testers' input.
+  uniform: { label: 'uniform', param: null, make: (n, next, p, seed) => new Random(seed).sampleRange(-100000, 100000, n) },
   nearly: { label: 'nearly sorted (k swaps)', param: { name: 'k', def: 3 },
     make: (n, next, k) => { const a = [...Array(n).keys()]; for (let t = 0; t < k && n > 1; t++) { const i = randInt(next, n), j = randInt(next, n); [a[i], a[j]] = [a[j], a[i]]; } return a; } },
   reversed: { label: 'reversed', param: null, make: n => [...Array(n).keys()].reverse() },

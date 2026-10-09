@@ -34,7 +34,7 @@ const go = async (url, wait = 2000) => { await send('Page.navigate', { url: 'abo
 const total = async () => +(await ev(T('total')));
 
 // Table
-await go('index.html#deck=lsd-radix&n=100&gen=uniform&seed=42');
+await go('index.html#deck=lsd-radix&n=100&gen=uniform&seed=1000');
 check('LSD Radix from the hash: 1084', (await total()) === 1084, await ev(T('total')));
 await ev(`${card('#techViewer .tcg.tech', 'Peephole Cancel')}.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))`); await sleep(300);
 check('Peephole Cancel trims radix and the delta strip says so', (await total()) < 1084 && /Peephole Cancel: −\d+ moves/.test(await ev(T('delta'))), await ev(T('delta')));
@@ -72,6 +72,14 @@ const shown = async () => ev(`Object.fromEntries([...document.querySelectorAll('
 for (let i = 0; i < 60 && Object.values(await shown()).some(v => v == null); i++) await sleep(250);
 const got = await shown(), off = STACKS.filter(b => got[b.id] !== expected[b.id]).map(b => `${b.id} ${got[b.id]} vs ${expected[b.id]}`);
 check('every stack\'s stamp matches --adaptive run outside the page', !off.length, off.join('; '));
+// The global seed: rolling it changes exactly the nine seeded stacks.
+const SEEDED = STACKS.filter(b => ['uniform', 'nearly', 'disorder', 'nearrev'].includes(b.gen) && !b.seeds).map(b => b.id);
+const before = await shown();
+await set('#gseed', 1001); await sleep(300);
+for (let i = 0; i < 60 && Object.values(await shown()).some(v => v == null); i++) await sleep(250);
+const after = await shown(), moved = STACKS.filter(b => after[b.id] !== before[b.id]).map(b => b.id);
+check('rolling the global seed changes only the nine seeded stacks', SEEDED.length === 9 && moved.every(id => SEEDED.includes(id)) && moved.length >= 5 && /gs=1001/.test(await ev('location.hash')), `${moved.length} moved: ${moved.join(', ')}`);
+await set('#gseed', 1000); await sleep(300);
 // Browse places cards: a seat can be filled from it alone, without the hand.
 await click('#buildbar .seat[data-seat="medium"] .seatswap'); await sleep(300);
 check('a seat\'s button opens the algorithm deck choosing for that seat', !(await ev(`document.getElementById('ov-algo').hidden`)) && /choosing for --medium/.test(await ev(T('algoTitle'))), await ev(T('algoTitle')));
@@ -85,7 +93,7 @@ await ev(`[...document.querySelectorAll('#techPane button')].find(b => /Play on 
 check('the technique pane plays a card on the seat on the mat', /Second-Max/.test(await ev(T('slots'))), (await ev(T('slots'))).slice(0, 120));
 await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`); await sleep(150);
 // Paths
-await go('index.html#deck=simple-insertion&n=100&gen=uniform&seed=42&path=insertion-ladder&step=0');   // as a Codex link opens it
+await go('index.html#deck=simple-insertion&n=100&gen=uniform&seed=1000&path=insertion-ladder&step=0');   // as a Codex link opens it
 check('Path: Insertion Ladder starts on Simple Insertion, in every seat', /Path: Insertion Ladder/.test(await ev(T('pathPanel'))) && (await ev('location.hash')).includes('s=simple-insertion&m=simple-insertion&c=simple-insertion&'), await ev('location.hash'));
 await ev(`[...document.querySelectorAll('#pathPanel button')].find(b => b.textContent.includes('next step')).click()`); await sleep(600);
 check('Path step 2 adds LIS Anchor', (await ev('location.hash')).includes('c=simple-insertion+lis-anchor'), await ev('location.hash'));
@@ -104,7 +112,7 @@ check('cards have no flip button', !(await ev(`!!document.querySelector('.tcg-bt
 await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`);
 await shot('table.png');
 // The card table: the hand, the slots, the blinds, the decks and Inspect
-await go('index.html#deck=turk&n=100&gen=uniform&seed=42', 2500);
+await go('index.html#deck=turk&n=100&gen=uniform&seed=1000', 2500);
 const has = sel => ev(`!!document.querySelector(${JSON.stringify(sel)})`);
 check('the hand holds the cards that fit', (await ev(`document.querySelectorAll('#hand .tcg.tech').length`)) >= 10, await ev(`document.querySelectorAll('#hand .tcg.tech').length`));
 check('a built-in card says so: a lock tab, a seal and a ribbon', (await has('#slots .slot.native .tablock')) && (await has('#slots .slot.native .tcg .lockseal')) && (await has('#slots .slot.native .ribbon.native')));
@@ -149,10 +157,10 @@ check('the played card shows class, slot tier and push_swap tier', (await ev(`[.
 check('Grasp and Craft carry a bulb and a hammer', (await ev(`document.querySelectorAll('#played .gem svg').length`)) === 2);
 check('tooltips are the themed kind', await has('body > .tip'));
 check('the move log lists the moves', (await ev(`document.querySelectorAll('#movelog .logrow').length`)) >= 1);
-await go('index.html#deck=four-end-quicksort+pivot-by-leaf-count+bfs-leaf+peephole-cancel+peephole-fuse&n=100&gen=uniform&seed=42', 2500);
+await go('index.html#deck=four-end-quicksort+pivot-by-leaf-count+bfs-leaf+peephole-cancel+peephole-fuse&n=100&gen=uniform&seed=1000', 2500);
 check('a hand past 10 catches fire', (await ev(`document.querySelectorAll('.manarow.onfire .flames i').length`)) === 18, await ev(T('mana')));
 // The playback console: the speed dial (type, scroll, auto), the keyboard, the timeline
-await go('index.html#deck=turk&n=100&gen=uniform&seed=42', 2500);
+await go('index.html#deck=turk&n=100&gen=uniform&seed=1000', 2500);
 const speed = () => ev(`document.querySelector('#console .speedval').value`), stepNow = async () => +(await ev(`document.querySelector('#console .stepno').textContent`)).split(' / ')[0];
 check('the speed starts on auto', (await ev(`document.querySelector('#console .auto').classList.contains('on')`)) && +(await speed()) > 0, await speed());
 await ev(`(() => { const i = document.querySelector('#console .speedval'); i.focus(); i.value = '250'; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); })()`);

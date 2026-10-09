@@ -24,6 +24,14 @@
   `--seat`** and **Take it back** place it; each seat has a button that opens the deck choosing
   for it, and a double-click places a card at once. Stamps and previews share one measure, so
   nothing is measured twice.
+- **Step 5, Python's own seeds and a global seed.** Uniform input is now generated exactly as
+  Python does it, `random.Random(seed).sample(range(-100000, 100000), n)`, bit for bit (a port of
+  the push_swap visualizer's MT19937): a seed names the same input here, in the study's builds
+  and in a peer's Python tester. One global seed, top right (`seed 1000 🎲`), drives the nine
+  seeded stacks; it starts at 1000, the study's first seed, and rolling it changes all nine and
+  their routes. At 1000, Random 100 goes to `--complex` (0.536) and Random 500 to `--medium`
+  (0.472). The Meta data was regenerated on these inputs. Links saved before this open a
+  different random stack.
 - **Playback lays out only the board.** Every move was laying out the whole page, stack list and
   hand included: containment on the board plate did nothing, because Chrome never lets a grid
   item be a layout boundary. The board now sits in a plain block. Layout during playback went

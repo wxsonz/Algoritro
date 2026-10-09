@@ -28,9 +28,10 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   swaps), Smallest at the bottom (one `rra` away). Medium: Random 100, Reversed 100, Rotated
   100 (by 37), Up then down, Four runs, Down then up, Interleaved halves, Nearly reversed,
   Twenty runs, and exact disorder at 25 %, 50 % and 75 %. Hard: Random 500, Reversed 500, Up
-  then down 500, Nearly sorted 500 (10 swaps), Rotated 500 (by 137). Seeded stacks use seed
-  42. An "every order" stack runs all n! orders, is stamped by the worst, and picking it plays
-  that worst order. Each row also shows the stack's **route**: its disorder, the flag it goes
+  then down 500, Nearly sorted 500 (10 swaps), Rotated 500 (by 137). Seeded stacks (the nine that
+  use randomness) follow the **global seed**, top right, which starts at 1000: rolling it changes
+  all nine at once, and their routes follow. An "every order" stack runs all n! orders, is
+  stamped by the worst, and picking it plays that worst order. Each row also shows the stack's **route**: its disorder, the flag it goes
   to (`--simple` below 0.2, `--medium` up to 0.5, `--complex` from 0.5, or `tiny` for 5 numbers or
   fewer, whatever the disorder) and the icon of the card that sorted it. The flags have their
   own colours, never the stack levels'. A stack with a hard limit is graded against its optimum (the worst

@@ -4,13 +4,14 @@
 
 - **n:** 1–1000 in the UI, with quick buttons for 3, 5, 7, 20, 100 and 500. Offline tools allow
   more.
-- **seed:** 32-bit, shown, editable, with a reroll button. The same (generator, n, seed,
-  params) always gives the same input.
+- **seed:** shown, editable, with a reroll button. The same (generator, n, seed, params) always
+  gives the same input. On the Table one **global seed** (top right, `seed 1000 🎲`) drives every
+  seeded stack; it starts at 1000, the study's first seed. A custom stack has its own seed box.
 - **generator:**
 
 | generator | param | why it is useful |
 | --- | --- | --- |
-| uniform | — | the grading case. Its disorder is 0.500 ± 0.034 at n=100 and ± 0.015 at n=500, so about half the graded inputs go to the medium hand under `--adaptive` |
+| uniform | — | the grading case, generated exactly as Python does: `random.Random(seed).sample(range(-100000, 100000), n)`, bit for bit (`core/pyrandom.js`, ported from the push_swap visualizer). A seed names the same input here, in the study's builds and in a peer's Python tester. Its disorder is 0.500 ± 0.034 at n=100 and ± 0.015 at n=500, so about half the graded inputs go to the medium hand under `--adaptive` |
 | exact disorder | d ∈ [0, 1] | the Disorder map and Adaptive thresholds. A random Lehmer code with exactly d·n(n−1)/2 inversions: not uniform among inputs with that disorder, and easier than uniform input at the same level (sim) |
 | nearly sorted | k swaps | shows which cards exploit existing order |
 | reversed | — | among the cheapest inputs for insertion and selection cards (about 3n ops, against ~1460 at n=100 for random input), and worse than random for Bubble Wheel, Butterfly and Quick 2-Way (sim) |

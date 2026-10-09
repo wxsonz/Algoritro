@@ -23,7 +23,7 @@ opening `index.html` from disk will not work.
 | **Lab** (`lab.html`) | scaling, disorder map, param sweep, optimality gap (in a Web Worker) |
 
 The URL keeps the hand and the input, for example
-`index.html#deck=four-end-quicksort+pivot-by-leaf-count+bfs-leaf+peephole-cancel+peephole-fuse&n=500&gen=uniform&seed=42`.
+`index.html#deck=four-end-quicksort+pivot-by-leaf-count+bfs-leaf+peephole-cancel+peephole-fuse&n=500&gen=uniform&seed=1000`.
 
 ## Test and regenerate
 
