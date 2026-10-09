@@ -17,4 +17,4 @@ createServer(async (req, res) => {
     const body = await readFile(file);
     res.writeHead(200, { 'content-type': (TYPES[extname(file)] || 'application/octet-stream') + '; charset=utf-8', 'cache-control': 'no-store' }).end(body);
   } catch { res.writeHead(404).end('not found'); }
-}).listen(PORT, '127.0.0.1', () => console.log(`push_swap explorer: http://127.0.0.1:${PORT}/`));
+}).listen(PORT, '127.0.0.1', () => console.log(`Algoritro: http://127.0.0.1:${PORT}/`));

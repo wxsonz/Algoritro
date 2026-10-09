@@ -1,8 +1,8 @@
 {
-  "name": "push-swap-explorer",
+  "name": "algoritro",
   "version": "0.1.0",
   "private": true,
-  "description": "Explore push_swap algorithms as a card game. Static, no dependencies.",
+  "description": "Algoritro: a push_swap card table. Explore push_swap algorithms as a card game. Static, no dependencies.",
   "type": "module",
   "engines": { "node": ">=18" },
   "scripts": {

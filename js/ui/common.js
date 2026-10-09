@@ -32,7 +32,7 @@ export function topBar(current, onTheme) {
     const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
     r.dataset.theme = dark ? 'light' : 'dark'; store.set('theme', r.dataset.theme); onTheme?.();
   };
-  const bar = el('header.top', {}, el('a.brand', { href: 'index.html' }, el('span.logo', {}, '◆'), ' push_swap explorer'), nav, theme);
+  const bar = el('header.top', {}, el('a.brand', { href: 'index.html', title: 'Algoritro: a push_swap card table' }, el('span.logo', {}, '◆'), ' Algoritro'), nav, theme);
   document.body.prepend(bar);
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => onTheme?.());
   return bar;

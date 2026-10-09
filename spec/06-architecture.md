@@ -16,7 +16,7 @@
 ## 6.2 Layout
 
 ```
-push_swap_explorer/
+algoritro/  (the repository; the local folder may still be push_swap_explorer/)
 ├── spec/                  this spec; spec/sim/ is the reference simulator behind its numbers
 ├── index.html             the Table: a card table with stacks, decks, slots and a hand
 ├── codex.html             all cards, card pages and the Grasp × Craft grid

@@ -1,8 +1,9 @@
-# push_swap explorer
+# Algoritro
 
-A static, dependency-free tool for 42 peers to explore push_swap algorithms as a card game. Play
-an Algorithm card, fill its slots with Technique cards, and watch the result on the same page.
-Every number in it is measured. The design is in [spec/](spec/README.md).
+*A push_swap card table.* A static, dependency-free tool for 42 peers to explore push_swap
+algorithms as a card game. Play an Algorithm card, fill its slots with Technique cards, and
+watch the result on the same page. Every number in it is measured. The design is in
+[spec/](spec/README.md).
 
 ## Run
 

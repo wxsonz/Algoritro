@@ -1,11 +1,11 @@
-# push_swap explorer — spec index
+# Algoritro: spec index
 
 Status: built, 2026-10-09. Milestones 1–7 are implemented in the repository root (see
 [11-milestones.md](11-milestones.md)); milestone 8, publishing, waits for a decision. Changes are
 listed in
 [CHANGELOG.md](CHANGELOG.md).
 
-push_swap explorer is a card-game-themed tool for **exploring push_swap algorithms and
+Algoritro (a push_swap card table) is a card-game-themed tool for **exploring push_swap algorithms and
 techniques before you build one**. You play a main **Algorithm card**. The game shows which
 **Technique cards** fit it. You add techniques and the result plays out on the same page.
 A **Meta** page ranks the combinations.
