@@ -88,14 +88,24 @@ defined in [03-stats.md](03-stats.md).
 
 ## 2.4 The play loop: the Table
 
-Everything happens on one page, the **Table**, laid out like a card table ([08-views.md §8.1](08-views.md#81-table-indexhtml-the-play-page)):
+Everything happens on one page, the **Table**, laid out like a card table ([08-views.md §8.1](08-views.md#81-table-indexhtml-the-play-page)).
+The Table plays a **build**, the way the subject grades a push_swap: three **seats**, one hand per
+flag, chosen by the input's disorder (`--simple` below 0.2, `--medium` from 0.2 to 0.5,
+`--complex` from 0.5), plus the built-in **tiny seat** for 5 numbers or fewer (Hardcoded Three for
+3 or fewer, the Oracle's search for 4 or 5). Every stack goes to exactly one seat. The stack
+levels (Easy, Medium, Hard) have nothing to do with the flags.
 
 1. **Pick a stack.** The left panel lists the **stacks** to sort, from easy (Already
-   sorted, 3 numbers) through medium (Random 100, Reversed 100) to hard (Random 500). A
-   custom stack (n, generator, seed, or your own numbers) is one more entry
-   ([07-inputs.md](07-inputs.md)). Every stack is open; there is no progression.
-2. **Play an Algorithm card** from the algorithm deck beside your hand: spread it out and
-   pick one. The table runs it at once, with its natives and defaults.
+   sorted, 3 numbers) through medium (Random 100, Reversed 100) to hard (Random 500), each with
+   its route: its disorder, its flag and the card that sorts it. A custom stack (n, generator,
+   seed, or your own numbers) is one more entry ([07-inputs.md](07-inputs.md)). Every stack is
+   open; there is no progression. Picking a stack puts its seat on the mat, and picking a seat
+   moves the board to one of its stacks, so the board always shows the real route.
+2. **Put an Algorithm card in the seat** from the algorithm deck beside your hand: spread it
+   out and pick one, or deal a named deck into the seat, or a named build into all three. The
+   table runs it at once, with its natives and defaults. Each seat shows whether its card meets
+   the flag's class target: O(n²) for `--simple`, O(n√n) for `--medium`, O(n log n) for
+   `--complex`.
 3. **Your hand is dealt.** Every technique that fits the played card is dealt into your hand
    (see [04-compatibility.md](04-compatibility.md)). The rest stay in the technique deck,
    face up but greyed, each with a one-line reason ("Radix never searches for a target, so a
@@ -105,12 +115,13 @@ Everything happens on one page, the **Table**, laid out like a card table ([08-v
    it back. Each change re-runs instantly, and a chip shows the **delta**: moves, grade,
    Grasp and Craft. Every stack's moves and stamp update in the background, each with the
    change in moves, so a card's pros and cons across inputs show at once.
-5. **Optional Finisher and Meta.** Play a Finisher, or wrap the hand in Portfolio to race its
-   variants.
+5. **Optional Finisher.** Play a Finisher in its own slot.
 6. **Read the result** in the same view (§2.6) and step through it.
 
-The hand can be saved as a **Deck** (a named combo) and shared as a URL fragment, for
-example `#deck=turk+rb-sink+peephole-cancel&n=100&seed=42`.
+A hand can be saved as a **Deck** (a named combo). The whole build is shared as a URL fragment,
+one deck string per seat, for example
+`#s=lis-insertion+four-way-cost&m=bucket-insertion&c=four-end-quicksort&n=100&gen=uniform&seed=42`.
+An older one-hand link (`#deck=…`) puts that hand in every seat.
 
 ## 2.5 Slots, interactions and conflicts
 

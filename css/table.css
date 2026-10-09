@@ -149,10 +149,11 @@
 .brow > .bdelta { grid-column: 4; } .brow > .bops { grid-column: 5; } .brow > .mark { grid-column: 6; }
 .brow .bops { font: 400 16px/1 var(--pixel); opacity: .8; }
 /* the route: the stack's disorder, the flag it picks, and the card that sorted it */
-.route { display: inline-flex; align-items: center; gap: 4px; --fc: var(--f-tiny); }
-.route.f-simple { --fc: var(--f-simple); } .route.f-medium { --fc: var(--f-medium); } .route.f-complex { --fc: var(--f-complex); }
+.f-tiny { --fc: var(--f-tiny); } .f-simple { --fc: var(--f-simple); } .f-medium { --fc: var(--f-medium); } .f-complex { --fc: var(--f-complex); }
+.rflag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 5px 1px; border-radius: 6px; background: var(--fc, var(--f-tiny)); color: #fff; font: 400 13px/1 var(--pixel); letter-spacing: .02em; white-space: nowrap; }
+.rflag svg { width: 11px; height: 11px; display: block; }
+.route { display: inline-flex; align-items: center; gap: 4px; }
 .route .rd { min-width: 3.4ch; font: 400 13px/1 var(--pixel); text-align: right; opacity: .7; }
-.route .rflag { padding: 2px 5px 1px; border-radius: 6px; background: var(--fc); color: #fff; font: 400 13px/1 var(--pixel); letter-spacing: .02em; white-space: nowrap; }
 .route .rcard { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 5px; background: var(--fb, #5e6e74); color: #fff; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .25); }
 .route .rcard svg { width: 12px; height: 12px; display: block; }
 .brow .bdelta { font: 400 15px/1 var(--pixel); padding: 2px 5px 1px; border-radius: 6px; }
@@ -242,13 +243,11 @@
 .playedwrap .tcg { --cw: 260px; }
 .boardslot { align-self: stretch; min-width: 0; min-height: 0; }
 .boardplate { height: 100%; display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px; border-radius: 14px; background: var(--plate); color: var(--ink); border: 2px solid var(--plate-line); box-shadow: 0 5px 0 var(--shadow); }
-.boardplate #compare p { margin: 0 0 6px; }
 .boardplate { position: relative; }
 .busy { position: absolute; z-index: 5; left: 50%; top: 40%; transform: translate(-50%, -50%); max-width: 90%; padding: 10px 18px; border-radius: 12px;
   background: #26302f; color: #fff; font: 400 22px/1.2 var(--pixel); text-align: center; box-shadow: 0 4px 0 rgba(0, 0, 0, .35); }
 .busy[hidden] { display: none; }
 .boardwrap { flex: 1 1 auto; min-height: 0; display: grid; gap: 10px; }
-.boardwrap.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .boardbox { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .boardbox canvas.board { background: var(--bg); aspect-ratio: 900 / 420; }
 
@@ -427,8 +426,6 @@
   .vgrid { --vcw: 148px; gap: 20px 12px; }
   .overlay { padding: 8px; }
 }
-.boardwrap.two .boardbox::before { content: 'current hand'; flex: none; margin: 0 0 4px 2px; font: 400 15px/1 var(--pixel); text-transform: uppercase; letter-spacing: .08em; opacity: .65; }
-.boardwrap.two #board2::before { content: 'pinned'; }
 
 /* ---- tooltips: above the pointer, in the table's colours ---- */
 .tip {
@@ -473,7 +470,6 @@
 /* ---- the move log beside the board ---- */
 .boardplate.withlog { display: grid; grid-template-columns: minmax(0, 1fr) clamp(170px, 15vw, 250px); grid-template-rows: auto auto minmax(0, 1fr) auto; column-gap: 10px; }
 .boardplate.withlog > #busy { grid-column: 1; grid-row: 3; }
-.boardplate.withlog > #compare { grid-column: 1 / -1; grid-row: 1; }
 .boardplate.withlog > .boardwrap { grid-column: 1; grid-row: 3; }
 .boardplate.withlog > .movelog { grid-column: 2; grid-row: 2 / 4; }
 .boardplate.withlog > .consoledock { grid-column: 1 / -1; grid-row: 4; }
@@ -620,4 +616,47 @@
   .icard { position: static; }
   .ipanels { grid-template-columns: minmax(0, 1fr); }
   .ipanel.idea .big { font-size: 17px; }
+}
+
+/* ---- the build: one seat per flag, and the built-in tiny seat ---- */
+.mattop { grid-row: 1; display: grid; gap: 8px; min-width: 0; }
+.buildbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, .85fr); gap: 8px; padding-top: 8px; }
+.table-page .seat {
+  position: relative; display: grid; gap: 5px; min-width: 0; padding: 7px 10px; border: 2px solid transparent; border-radius: 12px;
+  background: rgba(0, 0, 0, .2); color: var(--on-felt); text-align: left; font: inherit; cursor: pointer; transition: background .12s, transform .12s;
+}
+.table-page .seat:hover { background: rgba(255, 255, 255, .09); transform: translateY(-1px); }
+.table-page .seat.on { background: var(--plate); color: var(--ink); border-color: var(--fc); box-shadow: 0 4px 0 var(--shadow), 0 0 0 3px color-mix(in srgb, var(--fc) 30%, transparent); cursor: default; transform: none; }
+.seathead, .seatbody { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.seatrange { font-size: 12px; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seattarget { margin-left: auto; flex: none; padding: 2px 6px 1px; border-radius: 6px; color: #fff; font: 400 13px/1 var(--pixel); white-space: nowrap; }
+.seattarget.ok { background: #2f9e44; } .seattarget.bad { background: #c92a2a; }
+.seatlock { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font: 400 13px/1 var(--pixel); opacity: .8; white-space: nowrap; }
+.seatlock svg { width: 12px; height: 12px; display: block; }
+.seatcard { display: grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 6px; background: var(--fb, #5e6e74); color: #fff; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .25); }
+.seatcard svg { width: 14px; height: 14px; display: block; }
+.seatname { min-width: 0; font: 400 18px/1 var(--pixel); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seatplus { flex: none; font: 400 14px/1 var(--pixel); opacity: .7; }
+.seatsum { margin-left: auto; flex: none; font: 400 14px/1 var(--pixel); opacity: .8; white-space: nowrap; }
+.seatnow { position: absolute; right: 10px; top: -10px; padding: 2px 8px 1px; border-radius: 99px; background: var(--fc); color: #fff; font: 400 13px/1 var(--pixel); white-space: nowrap; box-shadow: 0 2px 0 rgba(0, 0, 0, .3); pointer-events: none; }
+/* the route banner above the board: this stack → why → the flag → the card that sorts it */
+.routebar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 8px; padding: 5px 8px 5px 12px; border-radius: 10px; background: var(--plate-2); box-shadow: inset 4px 0 0 var(--fc, var(--f-tiny)); font-size: 14px; }
+.routebar:empty { display: none; }
+.routebar .rstack { font: 400 19px/1 var(--pixel); }
+.routebar .rwhy { opacity: .75; }
+.routebar .rarrow { opacity: .5; font-weight: 700; }
+.table-page .routecard { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border: 0; border-radius: 8px; background: var(--fb, #5e6e74); color: #fff; font: 400 16px/1 var(--pixel); cursor: pointer; box-shadow: 0 2px 0 rgba(0, 0, 0, .25); }
+.table-page .routecard:hover { filter: brightness(1.1); border: 0; }
+.routecard .pxi { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; background: rgba(255, 255, 255, .2); }
+.routecard .pxi svg { width: 12px; height: 12px; display: block; }
+.boardplate.withlog > #route { grid-column: 1 / -1; grid-row: 1; }
+/* the tiny seat on the mat: nothing to tune */
+.tinynote { display: flex; align-items: center; gap: 12px; align-self: center; max-width: 640px; padding: 14px 16px; border-radius: 12px; background: rgba(0, 0, 0, .2); color: var(--on-felt); font-size: 14px; line-height: 1.45; }
+.tinynote .pxi { width: 22px; height: 22px; flex: none; color: #ffd45a; }
+.tinynote .pxi svg { width: 100%; height: 100%; display: block; }
+@media (max-width: 760px) {
+  .buildbar { grid-template-columns: 1fr 1fr; }
+  .seatrange { display: none; }
+  .seatbody { flex-wrap: wrap; }
+  .seatsum { flex-basis: 100%; margin-left: 0; }
 }

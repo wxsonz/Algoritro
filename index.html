@@ -34,7 +34,6 @@
         <div id="valid" class="valid small"></div>
       </section>
       <div id="delta" class="delta" aria-live="polite"></div>
-      <p id="metaNote" class="small note"></p>
       <p id="notes" class="small note"></p>
       <p id="runError" class="error" role="alert"></p>
       <section class="stacklist" aria-label="Choose a stack">
@@ -46,7 +45,11 @@
 
     <!-- Centre: the play mat. Slots on top, the played card and the board, your hand below. -->
     <main class="mat" aria-label="Play mat">
-      <div id="pathPanel" class="quest" hidden></div>
+      <div class="mattop">
+        <div id="pathPanel" class="quest" hidden></div>
+        <!-- The build: one hand per flag, and the built-in tiny seat. Click a seat to put it on the mat. -->
+        <div id="buildbar" class="buildbar" role="group" aria-label="Your push_swap build"></div>
+      </div>
       <section class="slotbar" aria-label="Slots">
         <div class="slothead">
           <span class="eyebrow">Slots</span>
@@ -59,6 +62,7 @@
         <div id="played" class="playedwrap"></div>
         <!-- A plain block around the board: a grid item can never bound a layout, this can. -->
         <div class="boardslot"><div class="boardplate">
+          <div id="route" class="routebar" aria-live="polite"></div>
           <div id="busy" class="busy" role="status" hidden></div>
           <div id="boardWrap" class="boardwrap">
             <div id="board" class="boardbox"></div>
@@ -91,11 +95,11 @@
       <div class="sheetbody">
         <div id="algoViewer" class="viewer"></div>
         <h3 class="vhead">Prebuilt hands</h3>
-        <p class="small dim">Named decks from the spec, ready to play.</p>
+        <p class="small dim">Named decks from the spec: click one to put it in the seat on the mat.</p>
         <div id="decksView" class="deckboxes"></div>
-        <h3 class="vhead">Meta cards</h3>
-        <p class="small dim">A meta card wraps your whole hand. Pick one, then set it up.</p>
-        <div id="metaView" class="vgrid"></div>
+        <h3 class="vhead">Builds</h3>
+        <p class="small dim">A hand in every seat at once: a whole push_swap.</p>
+        <div id="buildsView" class="deckboxes"></div>
       </div>
     </section>
   </div>
@@ -131,22 +135,6 @@
         <p id="inputError" class="error" role="alert"></p>
         <p id="inputInfo" class="small"></p>
         <p id="rankView" class="dim mono small"></p>
-      </div>
-    </section>
-  </div>
-
-  <div class="overlay" id="ov-meta" hidden>
-    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="metaTitle" tabindex="-1">
-      <header class="sheethead"><h2 id="metaTitle">Meta card</h2><button class="close" aria-label="Close">✕</button></header>
-      <div class="sheetbody">
-        <div class="row">
-          <select id="metaSel" aria-label="Meta card">
-            <option value="none">none</option>
-            <option value="portfolio">Portfolio: run them all, keep the shortest</option>
-            <option value="adaptive">Adaptive Selector: pick the deck by how messy the input is</option>
-          </select>
-        </div>
-        <div id="metaPanel" class="metapanel"></div>
       </div>
     </section>
   </div>

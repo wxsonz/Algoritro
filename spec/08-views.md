@@ -9,12 +9,12 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 
 ```
 ┌ left panel ──────────┬ play mat ──────────────────────────────────────────────┐
-│ the stack: goal      │ slots: [meta][pick][anchor][cost]…[finisher]  [knobs]  │
-│ moves · stamp        │        [extras]                                        │
-│ Grasp, Craft gems    │ ┌ played card ┐ ┌ board: A | B, transport, ─────────┐  │
-│ delta chip           │ │(click: read)│ │ phase timeline, overlays          │  │
-│ stacks: easy,        │ └─────────────┘ └───────────────────────────────────┘  │
-│ medium, hard,        │ your hand: the techniques that fit, fanned  [algo][tech]│
+│ the stack: goal      │ build: [--simple] [--medium] [--complex] [tiny 🔒]     │
+│ moves · stamp        │ slots of the seat on the mat: [pick][anchor]…[knobs]   │
+│ Grasp, Craft gems    │ ┌ played card ┐ ┌ route: stack · disorder → flag → card┐│
+│ delta chip           │ │(click: read)│ │ board: A | B, transport, timeline   ││
+│ stacks with routes:  │ └─────────────┘ └─────────────────────────────────────┘│
+│ easy, medium, hard,  │ your hand: the techniques that fit, fanned  [algo][tech]│
 │ custom stack         │                                             deck  deck │
 └──────────────────────┴────────────────────────────────────────────────────────┘
 ```
@@ -55,9 +55,18 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 - **Hand totals past 10 catch fire:** the Grasp or Craft row burns, and the number throbs.
 - **Tooltips** sit above the pointer in the table's colours, with a heading and a few lines.
   Hand cards have none: hovering one enlarges it instead.
+- **The build.** Above the slots, four seats: `--simple`, `--medium`, `--complex` and the
+  locked tiny seat. Each shows its range of disorder, its card, whether that card meets the
+  flag's class target (✓ or a red ✕ with the reason), and a tally of its stacks ("8 stacks ·
+  7★ 1✓"). The seat sorting the current stack is lit, with a "sorting: Random 100" tag; clicking
+  another seat puts it on the mat and moves the board to one of its stacks. Stamps are kept
+  per hand, so a change re-measures only the stacks of the seat it touched.
+- **The route banner** above the board names the stack, why it goes where it goes (its
+  disorder, or its size for the tiny seat), the flag, and the card; clicking the card opens
+  Inspect. On the tiny seat the slots say it is built in, and the hand is empty.
 - **Decks.** The two decks sit to the right of the hand. Clicking a pile spreads it in an
-  overlay: algorithm cards by family, with the prebuilt hands and the Meta cards; technique
-  cards by role. There is no Draw: a random card does not fit a sandbox. A slow card says it
+  overlay: algorithm cards by family, which go in the seat on the mat, with the prebuilt hands
+  (into that seat) and the named builds (a hand in every seat); technique cards by role. There is no Draw: a random card does not fit a sandbox. A slow card says it
   is thinking before it runs. The Codex is in the top bar, so the Table has no book of it.
 - **Inspect.** Click the played card, right-click any card, or press its **?**, to see it up
   close on the felt, in panels read top to bottom: **The idea** in plain words, **Step by
@@ -67,9 +76,10 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   change in moves at 100 and 500, or that the card has it built in or comes with it. Then
   its pros and cons, a **Measured** table of its change on every card it fits (the played card
   highlighted) with the study's notes, and the technical part. Cards have no back to flip.
-- **Overlays:** the custom stack and the Meta card's setup. The left panel holds no tool
-  buttons: Learn, Stats, Compare and Share were removed as out of place on a card table. The
-  address bar still carries the hand (#deck=…), so a copied URL shares it.
+- **Overlays:** the custom stack. The left panel holds no tool buttons: Learn, Stats, Compare
+  and Share were removed as out of place on a card table. The address bar carries the whole
+  build (`#s=…&m=…&c=…`), so a copied URL shares it. The Meta slot and Portfolio are gone: the
+  seats are the Adaptive Selector.
 - **Overlays** follow the cards in play: the cost table over candidates for Cheapest Pick,
   chunk ranges for Chunks, kept bars for anchors, the partition tree for Divide cards, the
   current bit for Radix.

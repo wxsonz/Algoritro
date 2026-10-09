@@ -1,45 +1,59 @@
-// The Table (spec/08 §8.1) as a card table. The left panel holds the stack you are sorting, the
-// score and every stack to choose from; the right panel holds the algorithm deck, the technique
-// deck and the Book of Codex; the mat in the middle has the slots, the played card, the board and
-// your hand.
-// The custom input and the meta card open as overlays.
+// The Table (spec/08 §8.1) as a card table that plays a push_swap build: one hand per flag
+// (--simple, --medium, --complex) and the built-in tiny seat. Every stack goes to the seat its
+// size and disorder pick (objective.md §2–§4), and the mat shows that seat. The left panel holds
+// the stack you are sorting, the score, and every stack with its route; the mat has the build,
+// the slots, the played card, the board, and your hand with the two decks beside it.
+// The custom input opens as an overlay.
 import { ALGOS, TECHS, byId, techById, FAMILIES, ROLES, label } from '../cards/index.js';
 import { DECKS, deckById, BUILDS } from '../cards/decks.js';
 import { GENERATORS, generate, parseManual, describe } from '../core/input.js';
-import { runHand, resolve, fits, parseDeck, deckString } from '../core/hand.js';
-import { runPortfolio, runAdaptive, METRICS, buildCompliance, tinyCard } from '../core/meta-run.js';
+import { resolve, fits, parseDeck, deckString } from '../core/hand.js';
+import { runAdaptive, routeOf, tinyCard, TARGETS, meetsTarget, classProblems } from '../core/meta-run.js';
 import { grade, thresholds } from '../core/metrics.js';
 import { useDpTables } from '../cards/engines/divide.js';
 import { loadData } from '../core/data.js';
-import { $, el, esc, css, topBar, cardsData, metaData, f0, pct, signed, gradeName, dots, store, RARITY } from './common.js';
+import { $, el, esc, topBar, cardsData, metaData, f0, signed, gradeName, store } from './common.js';
 import { markdown, sections } from './markdown.js';
 import { mini } from './card.js';
 import { Board } from './board.js';
-import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, CLASS_TIER, PS_TIER_TEXT } from './tcg.js';
+import { algoFace, techFace, plainFace, needsEl, deckBox, pile, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, CLASS_TIER, PS_TIER_TEXT } from './tcg.js';
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
 import { runAll } from './worker-client.js';
-import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack, stackRoute } from './stacks.js';
+import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack, stackRoute, stackById } from './stacks.js';
 import { PATHS } from './paths.js';
 
 let shown = null, countTimer = 0;   // the move counter's displayed value
+const SEATS = ['simple', 'medium', 'complex'];   // one hand per flag; the tiny seat is built in
+const RANGE = { simple: 'below 0.2', medium: '0.2 to 0.5', complex: '0.5 and up', tiny: '≤ 5 numbers' };
+const SEAT_KEY = { simple: 's', medium: 'm', complex: 'c' };   // in share links
 const S = {
-  hand: { algo: 'min-extract', techs: [], sharing: true, sandbox: true, params: {}, presets: {} },
+  build: buildOf(BUILDS.find(b => b.id === 'strong-build')),
+  seat: 'complex', lastStack: {},   // the seat on the mat (the current stack's route), and each seat's last stack
+  // The hand on the mat: the seat's, or the tiny seat's fixed card, which nothing can change.
+  get hand() { return this.seat === 'tiny' ? tinyHand(this.input?.n ?? 3) : this.build[this.seat]; },
+  set hand(h) { if (this.seat !== 'tiny') this.build[this.seat] = h; },
   input: null, result: null, resolved: null, delta: null, stack: null, lastChange: '',
   family: 'all', techFilter: 'all',
-  meta: 'none', portfolio: [], adaptive: { simple: 'long-line', medium: 'careful-crates', complex: 'four-corners', low: 0.2, high: 0.5, metric: 'inversions' },
-  pinned: null, path: null, step: 0, seedJob: null,
-  stamps: {}, stampKey: '', stampJob: null, known: new Map(),   // stack results per hand
-  shownAlgo: '', handEls: new Map(), handKey: '', hist: null, opener: null,
+  path: null, step: 0,
+  stamps: {}, stampKey: '', stampJob: null, known: new Map(),   // stack results per hand: handKey → stack id → result
+  shownAlgo: '', handEls: new Map(), handKey: '', opener: null,
   routes: Object.fromEntries(STACKS.map(b => [b.id, stackRoute(b)])),   // each stack's disorder and flag
 };
+// Hands are copied in, so editing a seat never touches a named deck or build.
+function handOf(h) { return { ...structuredClone(h), sharing: h.sharing ?? true, sandbox: true, params: { ...(h.params || {}) }, presets: { ...(h.presets || {}) } }; }
+function buildOf(b) { return Object.fromEntries(SEATS.map(k => [k, handOf(b[k])])); }
+function fillAll(h) { S.build = Object.fromEntries(SEATS.map(k => [k, handOf(h)])); }   // one hand in every seat
+function tinyHand(n) { return { algo: tinyCard(n), techs: [], sharing: true, sandbox: true, params: {}, presets: {} }; }
+function seatHand(route, n) { return route === 'tiny' ? tinyHand(n) : S.build[route]; }
+function handKey(h) { return JSON.stringify([deckString(h), h.params || {}, h.presets || {}]); }
 const QUICK = [3, 5, 7, 20, 100, 500];
 const ORDER = [...ROLES, 'leaf', 'prep', 'post'];
 const FAMILY_HINT = {
   small: 'tiny inputs, solved outright', selection: 'take the smallest, again and again', insertion: 'place each number where it belongs',
   bucket: 'drop numbers into bands, then gather', digit: 'sort by bits or digits', divide: 'split, conquer, merge', search: 'look ahead and plan',
 };
-const SLOT_NAMES = { ...ROLE_NAMES, meta: 'Meta', extra: 'Extras' };
+const SLOT_NAMES = { ...ROLE_NAMES, extra: 'Extras' };
 const SLOT_ICON = r => r === 'extra' ? 'prep' : r;
 const MARK = { EXCELLENT: '★', PERFECT: '★', GOOD: '✓', PASS: '✓', FAIL: '✕', '…': '…', '—': '—' };
 let DOC = null, META = null;
@@ -59,13 +73,11 @@ for (const [k, g] of Object.entries(GENERATORS)) $('gen').append(new Option(g.la
 $('gen').onchange = () => { syncParam(); draw(); };
 for (const id of ['n', 'seed', 'param', 'manual']) $(id).onchange = draw;
 $('reroll').onclick = () => { $('seed').value = Math.floor(Math.random() * 2 ** 31); draw(); };
-$('metaSel').onchange = e => { S.meta = e.target.value; metaPanel(); replay(false, S.meta === 'none' ? '−meta card' : `+${META_CARDS.find(m => m.id === S.meta).name}`); };
 $('familyFilter').append(...[['all', 'All'], ...Object.entries(FAMILIES).map(([k, f]) => [k, f.name])].map(([k, t]) =>
   el('button.chip', { dataset: { f: k }, onclick: () => { S.family = k; markAlgoViewer(); } }, k === 'all' ? '' : el('span.pxi', { html: icon(k) }), t)));
 $('techFilter').append(...[['all', 'Whole deck'], ['fits', 'Fits the played card']].map(([k, t]) =>
   el('button.chip', { dataset: { f: k }, onclick: () => { S.techFilter = k; renderTechViewer(); } }, t)));
 syncParam();
-metaPanel();
 
 // Overlays: one at a time, except Inspect, which opens on top of a deck.
 for (const o of document.querySelectorAll('.overlay')) o.addEventListener('click', e => { if (e.target === o || e.target.closest('.close')) closeOverlay(o); });
@@ -123,7 +135,9 @@ function draw() {
   }
   S.input = describe(values);
   const d = S.input;
+  S.seat = routeOf(d.ranks).route;   // the real route: the mat shows the seat that sorts this stack
   S.stack = matchStack(inputKey());
+  if (S.stack) S.lastStack[S.seat] = S.stack.id;
   sidePlate();
   $('inputInfo').innerHTML = `${d.n} numbers · ${messy(d.disorder)} <span class="nerdy">· disorder ${(100 * d.disorder).toFixed(2)} % (${d.regime}) · LIS ${d.lis} · ${d.runs} run${d.runs === 1 ? '' : 's'}</span>`;
   $('rankView').textContent = d.n <= 40 ? `ranks: ${d.ranks.join(' ')}` : '';
@@ -153,13 +167,9 @@ function stackList() {
     el('span.disc', {}, '✎'), el('span.bname', {}, 'Custom stack…'), el('span.bdelta'), el('span.bops'), el('span.mark.none')));   // no route: it can be anything
   stackSummary();
 }
-// A stack's route: its disorder, the flag that picks, and the card that sorted it. Under the
-// Adaptive Selector that is the flag's hand, or the tiny card; otherwise the one hand plays all.
+// A stack's route: its disorder, the flag that picks, and the card of that seat, which sorted it.
 function flag(route) { return route === 'tiny' ? 'tiny' : '--' + route; }   // a function: start-up code calls it before a const would exist
-function routeCard(b) {
-  const r = S.routes[b.id].route;
-  return S.meta !== 'adaptive' ? S.hand.algo : r === 'tiny' ? tinyCard(b.n) : adaptiveBuild()[r].algo;
-}
+function routeCard(b) { return seatHand(S.routes[b.id].route, b.n).algo; }
 function routeChip(b) {
   const { d, route } = S.routes[b.id], a = byId[routeCard(b)];
   const why = route === 'tiny' ? `${b.n} numbers or fewer: the tiny seat, whatever the disorder` : `Disorder ${d.toFixed(3)}: ${flag(route)} (${route === 'simple' ? 'below 0.2' : route === 'medium' ? '0.2 to 0.5' : '0.5 and above'})`;
@@ -182,8 +192,15 @@ function stackSummary() {
 function pickStack(b) {
   $('manual').value = ''; $('n').value = b.n; $('gen').value = b.gen; syncParam();
   if (b.param != null) $('param').value = b.param;
-  // A set of inputs plays its worst one for this hand, once known.
-  $('seed').value = b.seeds ? S.known.get(S.stampKey)?.[b.id]?.worst ?? b.seeds[0] : SEED; draw();
+  // A set of inputs plays its worst one for its seat's hand, once known.
+  $('seed').value = b.seeds ? S.known.get(handKey(seatHand(S.routes[b.id].route, b.n)))?.[b.id]?.worst ?? b.seeds[0] : SEED; draw();
+}
+// Clicking a seat puts it on the mat: the board moves to one of its stacks, the last one played
+// there, else the first in the list.
+function pickSeat(k) {
+  if (k === S.seat) return;
+  const b = stackById[S.lastStack[k]] || STACKS.find(x => S.routes[x.id].route === k);
+  if (b) pickStack(b);
 }
 function sidePlate() {
   const b = S.stack;
@@ -194,42 +211,92 @@ function sidePlate() {
   $('target').textContent = b ? goal(b) : '';
   stackList();
 }
-// Stamp every stack for the current hand, in a background lane, and keep each hand's results:
-// going back to a hand seen before is instant, and every stack shows what the last change did.
+// Stamp every stack with its seat's hand, in a background lane. Results are kept per hand, so a
+// change re-measures only the stacks of the seat it touched, and going back to a hand is instant.
+// Every stack also shows what the last change did to it.
 function stampStacks() {
-  const key = JSON.stringify([deckString(S.hand), S.hand.params, S.hand.presets, S.meta, S.adaptive, S.portfolio.length]);
+  const key = JSON.stringify(SEATS.map(k => handKey(S.build[k])));
   if (key === S.stampKey) return;
-  const prev = S.known.get(S.stampKey) || {};
+  const prev = Object.fromEntries(Object.entries(S.stamps).filter(([, x]) => x.ops != null).map(([id, x]) => [id, x.ops]));
   S.stampKey = key; S.stampJob?.cancel(); S.stampJob = null; S.stamps = {};
-  if (!S.resolved?.ok || S.meta === 'portfolio') { stackList(); return; }
-  const a = byId[S.hand.algo], todo = [], known = S.known.get(key) || {};
-  S.known.set(key, known);
-  const put = (b, r) => { const p = prev[b.id]?.ops; S.stamps[b.id] = { ...r, d: p != null ? r.ops - p : null }; };
+  const todo = [], put = (b, r) => { const p = prev[b.id]; S.stamps[b.id] = { ...r, d: p != null ? r.ops - p : null }; };
   for (const b of STACKS) {
-    if (S.meta === 'none' && a.maxN != null && b.n > a.maxN) S.stamps[b.id] = { s: '—', why: `${a.name} handles at most ${a.maxN} numbers` };
-    else if (known[b.id]) put(b, known[b.id]);
-    else { S.stamps[b.id] = { s: '…', why: 'measuring' }; todo.push(b); }
+    const h = seatHand(S.routes[b.id].route, b.n), a = byId[h.algo], hk = handKey(h), R = resolve(h);
+    if (a.maxN != null && b.n > a.maxN) S.stamps[b.id] = { s: '—', why: `${a.name} handles at most ${a.maxN} numbers` };
+    else if (!R.ok) S.stamps[b.id] = { s: '—', why: R.errors.join(' ') };
+    else if (S.known.get(hk)?.[b.id]) put(b, S.known.get(hk)[b.id]);
+    else { S.stamps[b.id] = { s: '…', why: 'measuring' }; todo.push({ b, h, hk }); }
   }
-  stackList();
+  refreshStamps();
   if (!todo.length) return;
-  const job = b => S.meta === 'adaptive'
-    ? { kind: 'build', build: adaptiveBuild(), n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [SEED], thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric }
-    : { kind: 'hand', hand: S.hand, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [SEED] };
-  todo.sort((x, y) => x.n - y.n);   // the long ones (n=500) can take seconds for the search cards
+  todo.sort((x, y) => x.b.n - y.b.n);   // the long ones (n=500) can take seconds for the search cards
   const mine = S.stampJob = { cancel() { this.dead = true; this.inner?.cancel(); } };
   (async () => {
-    for (const b of todo) {
+    for (const { b, h, hk } of todo) {
       if (mine.dead) return;
-      mine.inner = runAll([job(b)], null, 'stacks');
+      mine.inner = runAll([{ kind: 'hand', hand: h, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [SEED] }], null, 'stacks');
       try {
         // A set of inputs is stamped by its worst one, and remembers which it was.
         const [r] = await mine.inner.promise, w = r.ops.indexOf(Math.max(...r.ops)), ops = r.ops[w];
-        known[b.id] = { s: r.invalid ? 'FAIL' : stamp(b, ops), ops, worst: b.seeds ? b.seeds[w] : null }; put(b, known[b.id]);
+        const rec = { s: r.invalid ? 'FAIL' : stamp(b, ops), ops, worst: b.seeds ? b.seeds[w] : null };
+        if (!S.known.has(hk)) S.known.set(hk, {});
+        S.known.get(hk)[b.id] = rec; put(b, rec);
       }
       catch (e) { if (mine.dead) return; S.stamps[b.id] = { s: '—', why: e.message }; }
-      if (!mine.dead) stackList();
+      if (!mine.dead) refreshStamps();
     }
   })();
+}
+function refreshStamps() { stackList(); renderBuild(); }
+
+// ---- the build: one seat per flag, and the built-in tiny seat -------------------------------------
+function seatSummary(k) {
+  const mine = STACKS.filter(b => S.routes[b.id].route === k).map(b => S.stamps[b.id]).filter(Boolean);
+  const count = list => mine.filter(x => list.includes(x.s)).length;
+  const star = count(['EXCELLENT', 'PERFECT']), ok = count(['GOOD', 'PASS']), bad = count(['FAIL']), none = count(['—']), wait = count(['…']);
+  const tally = wait ? ' · measuring…' : `${star ? ` · ${star}★` : ''}${ok ? ` ${ok}✓` : ''}${bad ? ` ${bad}✕` : ''}${none ? ` ${none}—` : ''}`;
+  return { text: `${mine.length} stack${mine.length === 1 ? '' : 's'}${tally}`, weak: bad + none };
+}
+// Does a seat's hand meet its flag's class target (the subject's): O(n²) for --simple, O(n√n) for
+// --medium, O(n log n) for --complex?
+function seatClass(k) {
+  const h = S.build[k], a = byId[h.algo], problems = classProblems(h), ok = meetsTarget(a.claimedClass, TARGETS[k]) && !problems.length;
+  return { ok, why: ok ? `${a.name} meets ${flag(k)}'s class target, O(${TARGETS[k]})` : `${flag(k)} needs O(${TARGETS[k]}) or better: ${a.name} is ${classLabel(a.claimedClass)}${problems.length ? `\n${problems.join('; ')}` : ''}` };
+}
+function renderBuild() {
+  const box = $('buildbar'); box.replaceChildren();
+  for (const k of [...SEATS, 'tiny']) {
+    const on = S.seat === k, sum = seatSummary(k);
+    let card, mark, tip;
+    if (k === 'tiny') {
+      card = [el('span', { className: 'seatcard fam-small', html: icon('small') }), el('b.seatname', {}, 'Hardcoded Three · Oracle')];
+      mark = el('span.seatlock', { html: `${icon('lock')}<span>built in</span>` });
+      tip = 'The tiny seat\nBuilt in: 3 numbers or fewer take the hardcoded cases, 4 or 5 the Oracle\'s search, which is optimal.';
+    } else {
+      const h = S.build[k], a = byId[h.algo], c = seatClass(k);
+      card = [el('span', { className: 'seatcard fam-' + a.family, html: icon(a.family) }), el('b.seatname', {}, a.name), h.techs.length ? el('span.seatplus', {}, `+${h.techs.length}`) : ''];
+      mark = el('span', { className: 'seattarget ' + (c.ok ? 'ok' : 'bad'), title: c.why }, `O(${TARGETS[k]}) ${c.ok ? '✓' : '✕'}`);
+      tip = `${flag(k)}: disorder ${RANGE[k]}\n${deckString(h).replace(/\+/g, ' + ')}`;
+    }
+    box.append(el('button', { className: `seat f-${k}${on ? ' on' : ''}${sum.weak ? ' weak' : ''}`, dataset: { seat: k }, title: tip, onclick: () => pickSeat(k) },
+      el('span.seathead', {}, el('span.rflag', {}, flag(k)), el('span.seatrange', {}, RANGE[k]), mark),
+      el('span.seatbody', {}, ...card, el('span.seatsum', {}, sum.text)),
+      on ? el('span.seatnow', {}, `sorting: ${S.stack ? S.stack.name : 'your stack'}`) : ''));
+  }
+}
+// The route banner above the board: this stack, why it goes where it goes, and the card it meets.
+function renderRoute() {
+  const box = $('route');
+  if (!S.input) { box.replaceChildren(); return; }
+  const { route, d } = routeOf(S.input.ranks), a = byId[S.hand.algo], n = S.input.n;
+  box.className = 'routebar f-' + route;
+  box.replaceChildren(
+    el('b.rstack', {}, S.stack ? S.stack.name : 'Your stack'),
+    el('span.rwhy', {}, route === 'tiny' ? `${n} number${n === 1 ? '' : 's'}` : `disorder ${d.toFixed(2)}`),
+    el('span.rarrow', { 'aria-hidden': 'true' }, '→'),
+    el('span.rflag', { html: flag(route) + (route === 'tiny' ? ` ${icon('lock')}` : '') }),
+    el('span.rarrow', { 'aria-hidden': 'true' }, '→'),
+    el('button', { className: 'routecard fam-' + a.family, title: `${a.name}: click to read it up close`, onclick: () => inspect('algo', a.id) }, el('span.pxi', { html: icon(a.family) }), a.name));
 }
 
 // ---- play ---------------------------------------------------------------------------------
@@ -242,12 +309,9 @@ function replay(fresh = false, change = null) {
   if (!S.input) return;
   const a = byId[S.hand.algo];
   if (!S.resolved.ok) return fail(S.resolved.errors.join(' '));
-  if (a.maxN != null && S.input.n > a.maxN && S.meta === 'none') return fail(`${a.name} handles at most ${a.maxN} numbers. Pick a smaller stack or another card.`);
-  try {
-    if (S.meta === 'portfolio') S.result = runPortfolio([S.hand, ...S.portfolio], S.input.ranks);
-    else if (S.meta === 'adaptive') S.result = runAdaptive(adaptiveBuild(), S.input.ranks, { thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric });
-    else S.result = runHand(S.hand, S.input.ranks);
-  } catch (e) { return fail(e.message); }
+  if (a.maxN != null && S.input.n > a.maxN) return fail(`${a.name} handles at most ${a.maxN} numbers. Put another card in ${flag(S.seat)}.`);
+  try { S.result = runAdaptive(S.build, S.input.ranks); }   // the build, routed: the same seat the mat shows
+  catch (e) { return fail(e.message); }
   if (change) S.lastChange = change;
   if (before && change) {
     const n = S.input.n, now = S.result.ops.length;
@@ -257,14 +321,12 @@ function replay(fresh = false, change = null) {
   scoreboard(); writeHash(); pathPanel(); stampStacks();
 }
 function fail(msg) { $('runError').textContent = msg; S.result = null; board.load(S.input.ranks, null); scoreboard(); stampStacks(); }
-function runSafe(hand) { try { return runHand(hand, S.input.ranks); } catch { return null; } }
-function adaptiveBuild() { const pick = id => id === 'current' ? S.hand : deckById[id].hand; return { simple: pick(S.adaptive.simple), medium: pick(S.adaptive.medium), complex: pick(S.adaptive.complex) }; }
 
-function renderAll() { renderPlayed(); renderSlots(); renderHand(); renderTechViewer(); markAlgoViewer(); mana(); notes(); pileInfo(); }
+function renderAll() { renderBuild(); renderRoute(); renderPlayed(); renderSlots(); renderHand(); renderTechViewer(); markAlgoViewer(); mana(); notes(); pileInfo(); }
 
 function scoreboard() {
   const r = S.result;
-  if (!r || !S.input) { $('total').textContent = '–'; $('totalShow').textContent = '–'; shown = null; $('gradeBadge').replaceChildren(); $('gradeBadge').dataset.s = ''; $('valid').textContent = ''; renderDelta(); $('metaNote').textContent = ''; return; }
+  if (!r || !S.input) { $('total').textContent = '–'; $('totalShow').textContent = '–'; shown = null; $('gradeBadge').replaceChildren(); $('gradeBadge').dataset.s = ''; $('valid').textContent = ''; renderDelta(); return; }
   const n = S.input.n, ops = r.ops.length;
   const st = S.stack ? stamp(S.stack, ops) : n >= 2 ? grade(n, ops).replace('~', '') : null;
   $('total').textContent = ops; countUp(ops);
@@ -274,7 +336,6 @@ function scoreboard() {
   if (st && st !== prevStamp) juice($('gradeBadge').firstChild, 'stampin');
   $('valid').textContent = r.valid ? '✓ sorted, checked by an independent replay' : '✗ ' + r.error; $('valid').className = 'valid small ' + (r.valid ? 'yes' : 'no');
   renderDelta(r.removed?.filter(([, k]) => k).map(([id, k]) => `${label(id)} −${k}`).join(' · '));
-  $('metaNote').textContent = S.meta === 'portfolio' ? `Portfolio: member ${r.chosen + 1} of ${r.all.length} won (${r.all.join(' / ')} moves)` : S.meta === 'adaptive' ? `Adaptive: input ${(100 * r.disorder).toFixed(2)} % messy (${METRICS[S.adaptive.metric].name}) → ${r.regime === 'tiny' ? `small-stack case: ${byId[r.tinyCard].name}` : `${r.regime} hand`}` : '';
 }
 function renderDelta(removed = '') {
   const D = S.delta, box = $('delta'); box.replaceChildren();
@@ -320,8 +381,10 @@ function notes() {
 function pileInfo() {
   const a = byId[S.hand.algo], k = handCards().length;
   $('algoPileInfo').textContent = `${ALGOS.length} cards · ${Object.keys(FAMILIES).length} families`;
-  $('techPileInfo').textContent = `${k} in your hand for ${a.name}`;
+  $('techPileInfo').textContent = S.seat === 'tiny' ? 'the tiny seat takes none' : `${k} in your hand for ${a.name}`;
 }
+// The tiny seat is built in: nothing goes in or out.
+function tinyLocked() { $('handInfo').textContent = 'The tiny seat is built in: pick a stack of 6 numbers or more to work on a flag\'s hand.'; juice($('played').querySelector('.tcg'), 'nope'); }
 
 // ---- the played card, the slots and the knobs -------------------------------------------------
 function renderPlayed() {
@@ -381,10 +444,11 @@ function linkMarks(slot, t, by) {
 }
 function renderSlots() {
   const a = byId[S.hand.algo], R = S.resolved, box = $('slots'), nb = neededBy(); box.replaceChildren();
-  // The meta socket wraps the whole hand.
-  const m = META_CARDS.find(x => x.id === S.meta);
-  box.append(slotBox('meta', m ? metaFace(m, { on: true }) : emptyFace('meta', 'none'), m ? 'played' : 'empty',
-    m ? `${m.name}: click to set it up` : 'Meta card: wraps your whole hand (Portfolio, Adaptive Selector)', () => openOverlay('meta')));
+  if (S.seat === 'tiny') {
+    box.append(el('div.tinynote', {}, el('span.pxi', { html: icon('lock') }), el('span', {}, `The tiny seat is built in: 3 numbers or fewer take the hardcoded cases, 4 or 5 the Oracle's search, which is optimal. There is nothing to tune here.`)));
+    $('slotInfo').textContent = `The tiny seat: ${a.name}, built in`; $('knobs').replaceChildren();
+    return;
+  }
   const roles = [...Object.keys(a.natives), ...a.open.filter(r => !a.natives[r])];
   for (const role of roles) {
     const u = R.use?.[role], native = a.natives[role], t = u && techById[u.id];
@@ -422,7 +486,7 @@ function renderSlots() {
     return c;
   }) : emptyFace('post', 'prep · post'));
   box.append(slotBox('extra', stack, extras.length ? 'played' : 'empty', 'Extras: prep and post cards stack here; they take no slot', extras.length ? null : () => wantRole('extra')));
-  $('slotInfo').textContent = a.slots ? `${a.name} has ${a.slots} slot${a.slots === 1 ? '' : 's'} · ${R.slotsUsed} played · this is a sandbox, so play as many as you like` : `${a.name} has no open slots: try its knobs and the extras`;
+  $('slotInfo').textContent = `${flag(S.seat)} · ` + (a.slots ? `${a.name} has ${a.slots} slot${a.slots === 1 ? '' : 's'} · ${R.slotsUsed} played · this is a sandbox, so play as many as you like` : `${a.name} has no open slots: try its knobs and the extras`);
   renderKnobs(a, R);
 }
 function renderKnobs(a, R) {
@@ -478,6 +542,7 @@ function activeIds() {
   return s;
 }
 function handCards() {
+  if (S.seat === 'tiny') return [];
   const a = byId[S.hand.algo], active = activeIds();
   return TECHS.filter(t => !active.has(t.id) && !t.unbuildable && (t.id === 'double-op-sharing' || (!t.always && fits(a, t).ok)))
     .sort((x, y) => ORDER.indexOf(x.role) - ORDER.indexOf(y.role));
@@ -532,7 +597,7 @@ function renderHand() {
   const keep = new Set(els);
   for (const c of [...box.children]) if (!keep.has(c)) c.remove();
   els.forEach((c, i) => { if (box.children[i] !== c) box.insertBefore(c, box.children[i] || null); });
-  $('handInfo').textContent = cards.length ? `${cards.length} card${cards.length === 1 ? '' : 's'} fit ${a.name} · the corner shows what each one does to the moves · click one, or drag it onto a slot` : `nothing left in your hand that fits ${a.name}`;
+  $('handInfo').textContent = S.seat === 'tiny' ? 'The tiny seat is built in: no cards to play on it.' : cards.length ? `${cards.length} card${cards.length === 1 ? '' : 's'} fit ${a.name} in ${flag(S.seat)} · the corner shows what each one does to the moves · click one, or drag it onto a slot` : `nothing left in your hand that fits ${a.name}`;
   layoutHand();
   void box.offsetWidth;   // apply the new places now, before any flight measures them
   // Deal the new ones from the technique deck.
@@ -596,6 +661,7 @@ function returnTech(id, fromEl) {
 }
 function addTech(id) {
   const t = techById[id]; if (!t) return;
+  if (S.seat === 'tiny') return tinyLocked();
   const a = byId[S.hand.algo];
   if (id === 'double-op-sharing') { if (!S.hand.sharing) { S.hand.sharing = true; replay(false, '+Double-Op Sharing'); } return; }
   if (t.role === 'leaf') { S.hand.techs = S.hand.techs.filter(x => techById[x].role !== 'leaf'); delete S.hand.finisher; }
@@ -621,6 +687,7 @@ function planMs(id, n) {
 }
 function busy(text) { $('busy').textContent = text; $('busy').hidden = !text; }
 function play(id, from = null) {
+  if (S.seat === 'tiny') return tinyLocked();
   if (id === S.hand.algo) return;
   const n = S.input?.n ?? 100, ms = planMs(id, n);
   // A slow card freezes the page while it plans: say so first, then let the browser paint.
@@ -633,7 +700,7 @@ function playNow(id, from) {
   const keep = old.techs.filter(t => { const c = techById[t]; return c.role === 'prep' || c.role === 'post' || fits(byId[id], c).ok; });
   const dropped = old.techs.filter(t => !keep.includes(t));
   S.hand = { ...old, algo: id, techs: keep, params: {}, presets: {}, finisher: undefined };
-  replay(false, `${byId[id].name} played${dropped.length ? ` (${dropped.map(label).join(', ')} did not fit)` : ''}`);
+  replay(false, `${byId[id].name} in ${flag(S.seat)}${dropped.length ? ` (${dropped.map(label).join(', ')} did not fit)` : ''}`);
   if (from) fly($('played').querySelector('.tcg'), from, { dur: 520 });
 }
 // ---- the decks spread out (overlays) -------------------------------------------------------
@@ -652,13 +719,16 @@ function renderAlgoViewer() {
   }
   $('decksView').replaceChildren(...DECKS.map(d => {
     const b = deckBox(d);
-    b.onclick = () => { S.hand = { ...structuredClone({ ...d.hand, params: {}, presets: d.hand.presets || {} }), sandbox: S.hand.sandbox }; closeOverlay($('ov-algo')); replay(false, `${d.name} dealt`); };
+    b.onclick = () => { if (S.seat === 'tiny') return tinyLocked(); S.hand = handOf(d.hand); closeOverlay($('ov-algo')); replay(false, `${d.name} in ${flag(S.seat)}`); };
     return b;
   }));
-  $('metaView').replaceChildren(...META_CARDS.map(m => {
-    const c = metaFace(m, { on: S.meta === m.id });
-    c.onclick = () => { S.meta = S.meta === m.id ? 'none' : m.id; $('metaSel').value = S.meta; metaPanel(); replay(false, S.meta === 'none' ? `−${m.name}` : `+${m.name}`); renderAlgoViewer(); if (S.meta !== 'none') openOverlay('meta'); };
-    return c;
+  $('buildsView').replaceChildren(...BUILDS.map(b => {
+    const box = el('button', { className: 'deckbox buildbox', dataset: { build: b.id }, title: `${b.name}: a hand in every seat` },
+      el('span.lid', { html: icon('meta') }), el('b.name', {}, b.name),
+      ...SEATS.map(k => el('span.dk-techs', {}, `${flag(k)}: ${plain(label(b[k].algo))}${b[k].techs.length ? ` +${b[k].techs.length}` : ''}`)),
+      b.sim ? el('span.dk-num', {}, `${f0(b.sim[0])} · ${f0(b.sim[1])} moves`) : '');
+    box.onclick = () => { S.build = buildOf(b); closeOverlay($('ov-algo')); replay(false, `${b.name} built`); };
+    return box;
   }));
   markAlgoViewer();
 }
@@ -669,8 +739,11 @@ function markAlgoViewer() {
     c.classList.toggle('on', a.id === S.hand.algo); c.classList.toggle('off', big);
     c.querySelector(':scope > .tcg-banner')?.remove();
     if (big) c.append(el('div.tcg-banner', {}, `n ≤ ${a.maxN} only`));
-    c.title = big ? `${a.name} handles at most ${a.maxN} numbers: pick a smaller stack first` : a.id === S.hand.algo ? 'In play' : `Play ${a.name}`;
+    c.title = big ? `${a.name} handles at most ${a.maxN} numbers: pick a smaller stack first` : a.id === S.hand.algo ? 'In play' : S.seat === 'tiny' ? 'The tiny seat is built in' : `Put ${a.name} in ${flag(S.seat)}`;
   }
+  $('algoTitle').textContent = S.seat === 'tiny' ? 'Algorithm deck · the tiny seat is built in' : `Algorithm deck · choosing for ${flag(S.seat)}`;
+  const bs = JSON.stringify(SEATS.map(k => deckString(S.build[k])));
+  for (const b of $('buildsView').children) b.classList.toggle('on', JSON.stringify(SEATS.map(k => deckString(BUILDS.find(x => x.id === b.dataset.build)[k]))) === bs);
   for (const s of $('algoViewer').querySelectorAll('.vsec')) s.hidden = S.family !== 'all' && s.dataset.fam !== S.family;
   for (const b of $('familyFilter').children) b.classList.toggle('on', b.dataset.f === S.family);
   const hs = deckString(S.hand);
@@ -759,9 +832,9 @@ function inspect(kind, id) {
     sheet.className = `sheet inspect fam-${a.family}`;
     const face = algoFace(a, { stats: st, cls: 'focus' }); face.style.setProperty('--cw', '290px');
     $('inspectTitle').textContent = a.name;
-    const canPlay = !(a.maxN != null && S.input?.n > a.maxN);
+    const canPlay = S.seat !== 'tiny' && !(a.maxN != null && S.input?.n > a.maxN);
     const actions = el('div.iactions', {},
-      a.id === S.hand.algo ? el('span.inplay', {}, 'In play') : el('button.btn.blue', { disabled: !canPlay, title: canPlay ? '' : `${a.name} handles at most ${a.maxN} numbers`, onclick: () => { closeOverlay($('ov-inspect')); closeOverlay($('ov-algo')); play(id); } }, 'Play this card'),
+      a.id === S.hand.algo ? el('span.inplay', {}, `In ${flag(S.seat)}`) : el('button.btn.blue', { disabled: !canPlay, title: canPlay ? '' : S.seat === 'tiny' ? 'The tiny seat is built in' : `${a.name} handles at most ${a.maxN} numbers`, onclick: () => { closeOverlay($('ov-inspect')); closeOverlay($('ov-algo')); play(id); } }, `Put in ${flag(S.seat)}`),
       el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'));
     const at = st?.at || {}, n1 = at[100], n5 = at[500], small = !n1 && Object.entries(at)[0];
     const t = n1 && n5 ? psTier(n1.mean, n5.mean) : null, m = modularity(a), mt = modTier(m);
@@ -822,33 +895,14 @@ function inspect(kind, id) {
   $('inspectBody').scrollTop = 0;
 }
 
-// ---- Meta card -----------------------------------------------------------------------------
-function metaPanel() {
-  const box = $('metaPanel'); box.innerHTML = '';
-  if (S.meta === 'portfolio') {
-    box.append(el('p.small', {}, 'Runs the current hand and every member below on each input, and keeps the shortest move list.'),
-      el('ul.members', {}, S.portfolio.map((h, i) => el('li', {}, deckString(h), ' ', el('button.ghost', { onclick: () => { S.portfolio.splice(i, 1); metaPanel(); replay(false, '−member'); } }, '✕')))),
-      el('button', { onclick: () => { S.portfolio.push(structuredClone(S.hand)); metaPanel(); replay(false, '+member'); } }, '＋ add this hand as a member'));
-  } else if (S.meta === 'adaptive') {
-    const opts = sel => [el('option', { value: 'current', selected: sel === 'current' }, 'the current hand'), ...DECKS.map(d => el('option', { value: d.id, selected: d.id === sel }, d.name))];
-    const row = (regime, title) => el('label.param', {}, title + ' ', el('select', { onchange: e => { S.adaptive[regime] = e.target.value; metaPanel(); replay(false, `${regime} hand`); } }, opts(S.adaptive[regime])));
-    const num = (k, t) => el('label.param', {}, t + ' ', el('input', { type: 'number', step: 0.01, min: 0, max: 1, value: S.adaptive[k], onchange: e => { S.adaptive[k] = +e.target.value; replay(false, `threshold ${t}`); } }));
-    const comp = buildCompliance(adaptiveBuild());
-    box.append(row('simple', 'below low → simple'), row('medium', 'below high → medium'), row('complex', 'otherwise → complex'), num('low', 'low'), num('high', 'high'),
-      el('label.param', {}, 'metric ', el('select', { onchange: e => { S.adaptive.metric = e.target.value; replay(false, 'metric'); } }, Object.entries(METRICS).map(([k, m]) => el('option', { value: k, selected: k === S.adaptive.metric }, m.name)))),
-      el('p', { className: comp.ok ? 'good' : 'bad' }, comp.ok ? '✓ every regime meets its class target' : '✕ ' + comp.problems.join('; ')),
-      el('p.small', {}, 'Builds: ', BUILDS.map(b => el('button.ghost', { onclick: () => { const id = h => DECKS.find(d => deckString(d.hand) === deckString(h) && JSON.stringify(d.hand.presets || {}) === JSON.stringify(h.presets || {}))?.id; const s = id(b.simple), m = id(b.medium), c = id(b.complex); if (s && m && c) { Object.assign(S.adaptive, { simple: s, medium: m, complex: c }); metaPanel(); replay(false, b.name); } else $('runError').textContent = `${b.name} uses a hand that is not a named deck.`; } }, b.name))));
-  } else box.append(el('p.small.dim', {}, 'No meta card in play. Pick Portfolio or Adaptive Selector above.'));
-}
-
 // ---- Paths (opened from a Codex link: #…&path=…&step=…) --------------------------------------------------------------------
 function startPath(p, i) { S.path = p; S.step = i; applyStep(); }
 function applyStep() {
   const st = S.path.steps[S.step];
-  S.hand = { ...parseDeck(st.deck), sandbox: true, params: {}, presets: {} };
+  if (st.meta === 'adaptive') S.build = buildOf(BUILDS.find(b => b.id === 'strong-build'));
+  else fillAll({ ...parseDeck(st.deck), params: {}, presets: {} });
   if (st.n != null) { $('n').value = st.n; $('manual').value = ''; }
   if (st.gen) { $('gen').value = st.gen; syncParam(); }
-  S.meta = st.meta || 'none'; $('metaSel').value = S.meta; metaPanel();
   draw();
 }
 function pathPanel() {
@@ -861,25 +915,38 @@ function pathPanel() {
     el('button.ghost', { onclick: () => { S.path = null; pathPanel(); }, title: 'Leave the path' }, '✕')),
     el('p', {}, st.q), st.link ? el('p', {}, el('a', { href: st.link }, 'Open it →')) : '', st.next ? el('p.small.dim', {}, 'Next: ' + st.next) : el('p.small.dim', {}, 'End of the path.'));
 }
-// ---- share link: #deck=card+tech…&n=…&gen=…&seed=…&p=…&P.k=…&preset.k=… -------------------------
+
+// ---- share link: #s=card+tech…&m=…&c=…&n=…&gen=…&seed=…&p=…, each seat's knobs as s.P.k and s.preset.k --
 function writeHash() {
   if ($('manual').value.trim()) return;
   const q = new URLSearchParams();
-  q.set('deck', deckString(S.hand)); q.set('n', $('n').value); q.set('gen', $('gen').value); q.set('seed', $('seed').value);
+  for (const k of SEATS) {
+    const h = S.build[k], p = SEAT_KEY[k];
+    q.set(p, deckString(h));
+    for (const [x, v] of Object.entries(h.params || {})) if (v != null) q.set(`${p}.P.${x}`, v);
+    for (const [x, v] of Object.entries(h.presets || {})) q.set(`${p}.preset.${x}`, v);
+  }
+  q.set('n', $('n').value); q.set('gen', $('gen').value); q.set('seed', $('seed').value);
   if (GENERATORS[$('gen').value].param) q.set('p', $('param').value);
-  for (const [k, v] of Object.entries(S.hand.params || {})) if (v != null) q.set('P.' + k, v);
-  for (const [k, v] of Object.entries(S.hand.presets || {})) q.set('preset.' + k, v);
-  if (S.meta !== 'none') q.set('meta', S.meta);
   history.replaceState(null, '', '#' + q.toString().replace(/%2B/g, '+'));
 }
 function readHash() {
   const raw = location.hash.slice(1); if (!raw) return;
   const h = new URLSearchParams(raw.replace(/\+/g, '%2B'));
+  const val = v => v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v;
+  // An old one-hand link (#deck=…): that hand in every seat.
   const deck = h.get('deck');
-  if (deck) { const p = parseDeck(deck); if (byId[p.algo]) S.hand = { ...S.hand, ...p, params: {}, presets: {} }; }
-  for (const [k, v] of h) { if (k.startsWith('P.')) S.hand.params[k.slice(2)] = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; if (k.startsWith('preset.')) S.hand.presets[k.slice(7)] = v; }
+  if (deck && byId[parseDeck(deck).algo]) {
+    fillAll({ ...parseDeck(deck), params: {}, presets: {} });
+    for (const [x, v] of h) for (const k of SEATS) { if (x.startsWith('P.')) S.build[k].params[x.slice(2)] = val(v); if (x.startsWith('preset.')) S.build[k].presets[x.slice(7)] = v; }
+  }
+  for (const k of SEATS) {
+    const p = SEAT_KEY[k], d = h.get(p);
+    if (!d || !byId[parseDeck(d).algo]) continue;
+    S.build[k] = handOf({ ...parseDeck(d), params: {}, presets: {} });
+    for (const [x, v] of h) { if (x.startsWith(p + '.P.')) S.build[k].params[x.slice(p.length + 3)] = val(v); if (x.startsWith(p + '.preset.')) S.build[k].presets[x.slice(p.length + 8)] = v; }
+  }
   if (h.get('n')) $('n').value = h.get('n'); if (h.get('seed')) $('seed').value = h.get('seed');
   if (h.get('gen') && GENERATORS[h.get('gen')]) { $('gen').value = h.get('gen'); syncParam(); if (h.get('p') !== null) $('param').value = h.get('p'); }
-  if (h.get('meta')) { S.meta = h.get('meta'); $('metaSel').value = S.meta; metaPanel(); }
   const path = PATHS.find(p => p.id === h.get('path')); if (path) { S.path = path; S.step = Math.min(path.steps.length - 1, +h.get('step') || 0); }
 }

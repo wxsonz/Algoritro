@@ -14,7 +14,7 @@ export const PATHS = [
     { deck: 'simple-insertion+lis-anchor+cheapest-pick', n: 100, q: 'The biggest single effect in the deck: about −850. This is the LIS Insertion card. What does it price?', next: 'Four-Way Cost also prices going the long way on one stack.' },
     { deck: 'simple-insertion+lis-anchor+cheapest-pick+four-way-cost', n: 100, q: 'A small gain (−4). On which inputs is it a loss, and why can a cheaper move now be worse later?', next: 'rb Sink splits B into two bands while pushing.' },
     { deck: 'simple-insertion+lis-anchor+cheapest-pick+four-way-cost+rb-sink', n: 500, q: 'rb Sink grows with n: −14 at 100, −616 at 500. Why does a rough order in B help the return?', next: 'Compare with Turk, which keeps three and pushes everything else by cheapest move.' },
-    { deck: 'turk', n: 500, q: 'Pin this hand, step back, and compare Turk with the ladder\'s last hand. Which keeps more values still?', compare: 'lis-insertion+four-way-cost+rb-sink', next: '' },
+    { deck: 'turk', n: 500, q: 'Turk keeps three values still; the ladder\'s last hand kept a whole increasing line. Step back a step and compare the moves: which keeps more values still?', next: '' },
   ] },
   { id: 'buckets', name: 'Buckets', steps: [
     { deck: 'chunks', n: 100, q: 'Chunks pushes ranges of values, sinking each chunk\'s lower half. Where do its ops go: pushing or retrieving?', next: 'One-Way Sweep never reverses inside a chunk.' },
@@ -34,7 +34,7 @@ export const PATHS = [
   { id: 'adaptive', name: 'Adaptive', steps: [
     { deck: 'turk+disorder-meter', n: 100, gen: 'uniform', q: 'The Disorder Meter reads inversions ÷ pairs. Uniform input sits at 0.50 ± 0.03: which regime does it pick?', next: 'The Disorder map shows which hand wins at each level.' },
     { deck: 'turk', n: 100, q: 'Open Lab › Disorder map and draw it for the strong build\'s three hands.', link: 'lab.html#disorder', next: 'The Adaptive Selector dispatches by those thresholds.' },
-    { deck: 'turk', n: 100, meta: 'adaptive', q: 'Here the Table runs the strong build. Change n and the generator: which regime runs?', next: 'Move the thresholds in the Lab and watch the class targets.' },
+    { deck: 'turk', n: 100, meta: 'adaptive', q: 'Here every seat holds the strong build\'s hand. Pick stacks of different shapes: which seat sorts each, and why?', next: 'Move the thresholds in the Lab and watch the class targets.' },
     { deck: 'turk', n: 100, q: 'Back in the Lab, drag the thresholds. Which regimes stop meeting their class target?', link: 'lab.html#disorder', next: '' },
   ] },
 ];

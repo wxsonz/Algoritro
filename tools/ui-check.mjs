@@ -3,6 +3,10 @@
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { runAdaptive } from '../js/core/meta-run.js';
+import { generate, ranks } from '../js/core/input.js';
+import { STACKS, SEED } from '../js/ui/stacks.js';
+import { BUILDS } from '../js/cards/decks.js';
 const SHOTS = process.env.SHOTS || tmpdir(); mkdirSync(SHOTS, { recursive: true });
 const BASE = (process.argv[2] || 'http://127.0.0.1:8765/').replace(/index\.html$/, '');
 const PORT = 9333;
@@ -34,9 +38,9 @@ await go('index.html#deck=lsd-radix&n=100&gen=uniform&seed=42');
 check('LSD Radix from the hash: 1084', (await total()) === 1084, await ev(T('total')));
 await ev(`${card('#techViewer .tcg.tech', 'Peephole Cancel')}.click()`); await sleep(300);
 check('Peephole Cancel trims radix and the delta strip says so', (await total()) < 1084 && /Peephole Cancel: −\d+ moves/.test(await ev(T('delta'))), await ev(T('delta')));
-check('the hash follows the hand', (await ev('location.hash')).includes('deck=lsd-radix+peephole-cancel'), await ev('location.hash'));
+check('an old one-hand link fills every seat, and the hash follows the seat on the mat', /s=lsd-radix&m=lsd-radix&c=lsd-radix\+peephole-cancel&/.test(await ev('location.hash')), await ev('location.hash'));
 await ev(`${card('#algoViewer .tcg.algo', 'Turk')}.click()`); await sleep(500);
-check('playing Turk keeps the post card', (await ev('location.hash')).includes('deck=turk+peephole-cancel'), await ev('location.hash'));
+check('playing Turk keeps the post card', (await ev('location.hash')).includes('c=turk+peephole-cancel'), await ev('location.hash'));
 check('Turk slots: native pick, default anchor and cost, Finisher', /Cheapest Pick/.test(await ev(T('slots'))) && /Keep Three/.test(await ev(T('slots'))) && /Hardcoded Three/.test(await ev(T('slots'))));
 const turkOps = await total();
 await ev(`${card('#techViewer .tcg.tech', 'Two-Way Cost')}.click()`); await sleep(300);
@@ -45,19 +49,34 @@ check('an incompatible card is greyed with a reason', /no retrieval role/.test(a
 await ev(`${card('#techViewer .tcg.tech', 'Two-Way Cost')}.click()`); await sleep(300);
 check('removing it restores the default', (await total()) === turkOps, `${await total()} vs ${turkOps}`);
 check('the side tools are gone (Learn, Stats, Compare, Share)', !(await ev(`!!document.querySelector('#pin, #copyDeck, #ov-learn, #ov-stats, #compare, [data-open]')`)));
-// Meta: Portfolio and Adaptive
-await set('#metaSel', 'portfolio'); await sleep(300);
-await ev(`[...document.querySelectorAll('#metaPanel button')].find(b => b.textContent.includes('add this hand')).click()`); await sleep(400);
-check('Portfolio runs its members', /Portfolio: member \d of 2/.test(await ev(T('metaNote'))), await ev(T('metaNote')));
-await set('#metaSel', 'adaptive'); await sleep(800);
-check('Adaptive picks a regime by disorder', /Adaptive: input 52.30 % messy.*complex hand/.test(await ev(T('metaNote'))), await ev(T('metaNote')));
-check('the strong build complies', /every regime meets/.test(await ev(T('metaPanel'))));
-await set('#metaSel', 'none'); await sleep(300);
+// The build: three seats and the tiny seat; every stack goes to one by size and disorder
+check('the Table plays a build: four seats, and the one sorting this stack is lit', (await ev(`document.querySelectorAll('#buildbar .seat').length`)) === 4 && (await ev(`document.querySelector('#buildbar .seat.on')?.dataset.seat`)) === 'complex' && /sorting: Random 100/.test(await ev(T('buildbar'))));
+check('Turk in --complex misses its class target; LSD Radix in --medium meets it', (await ev(`!!document.querySelector('#buildbar .seat[data-seat="complex"] .seattarget.bad') && !!document.querySelector('#buildbar .seat[data-seat="medium"] .seattarget.ok')`)));
+await click('#stacks .brow[data-id="peak-100"]'); await sleep(500);
+check('picking a stack puts its seat on the mat: Up then down goes to --medium', (await ev(`document.querySelector('#buildbar .seat.on')?.dataset.seat`)) === 'medium' && /Up then down.*--medium/.test(await ev(T('route'))), await ev(T('route')));
+await click('#buildbar .seat[data-seat="simple"]'); await sleep(500);
+check('picking a seat moves the board to one of its stacks', (await ev(`document.querySelector('#buildbar .seat.on')?.dataset.seat`)) === 'simple' && /--simple/.test(await ev(T('route'))), await ev(T('route')));
+await click('#buildbar .seat[data-seat="tiny"]'); await sleep(500);
+check('the tiny seat is built in: nothing to tune, no hand', (await ev(`!!document.querySelector('#slots .tinynote') && document.querySelectorAll('#hand .tcg').length === 0`)) && /tiny/.test(await ev(T('route'))));
+await click('#buildbar .seat[data-seat="complex"]'); await sleep(500);
+await click('#algoPile'); await sleep(200);
+await click('#buildsView .buildbox[data-build="strong-build"]'); await sleep(600);
+check('a named build fills all three seats', /s=lis-insertion\+four-way-cost\+rb-sink&m=bucket-insertion&c=four-end-quicksort\+pivot-by-leaf-count/.test(await ev('location.hash')), await ev('location.hash'));
+const buildHash = await ev('location.hash');
+await go('index.html' + buildHash, 2500);
+check('a build survives a reload through its link', (await ev(`[...document.querySelectorAll('#buildbar .seat .seatname')].map(x => x.textContent).join()`)) === 'LIS Insertion,Bucket Insertion,Four-End Quicksort,Hardcoded Three · Oracle', await ev(`[...document.querySelectorAll('#buildbar .seat .seatname')].map(x => x.textContent).join()`));
+// The stamps are --adaptive itself: the same moves as running the build outside the page.
+const strong = BUILDS.find(b => b.id === 'strong-build');
+const expected = Object.fromEntries(STACKS.map(b => [b.id, Math.max(...(b.seeds || [SEED]).map(s => runAdaptive(strong, ranks(generate(b.gen, b.n, s, b.param))).ops.length))]));
+const shown = async () => ev(`Object.fromEntries([...document.querySelectorAll('#stacks .brow[data-id]')].map(r => [r.dataset.id, (t => t === '' ? null : +t)(r.querySelector('.bops').textContent.replace(/\\D/g, ''))]))`);
+for (let i = 0; i < 60 && Object.values(await shown()).some(v => v == null); i++) await sleep(250);
+const got = await shown(), off = STACKS.filter(b => got[b.id] !== expected[b.id]).map(b => `${b.id} ${got[b.id]} vs ${expected[b.id]}`);
+check('every stack\'s stamp matches --adaptive run outside the page', !off.length, off.join('; '));
 // Paths
 await go('index.html#deck=simple-insertion&n=100&gen=uniform&seed=42&path=insertion-ladder&step=0');   // as a Codex link opens it
-check('Path: Insertion Ladder starts on Simple Insertion', /Path: Insertion Ladder/.test(await ev(T('pathPanel'))) && (await ev('location.hash')).includes('deck=simple-insertion&'), await ev('location.hash'));
+check('Path: Insertion Ladder starts on Simple Insertion, in every seat', /Path: Insertion Ladder/.test(await ev(T('pathPanel'))) && (await ev('location.hash')).includes('s=simple-insertion&m=simple-insertion&c=simple-insertion&'), await ev('location.hash'));
 await ev(`[...document.querySelectorAll('#pathPanel button')].find(b => b.textContent.includes('next step')).click()`); await sleep(600);
-check('Path step 2 adds LIS Anchor', (await ev('location.hash')).includes('deck=simple-insertion+lis-anchor'), await ev('location.hash'));
+check('Path step 2 adds LIS Anchor', (await ev('location.hash')).includes('c=simple-insertion+lis-anchor'), await ev('location.hash'));
 await ev(`[...document.querySelectorAll('#pathPanel button')].find(b => b.title === 'Leave the path').click()`);
 // Manual input and validation
 await set('#manual', '1 2 2'); await sleep(200);

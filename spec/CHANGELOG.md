@@ -9,6 +9,15 @@
 - **Step 2, routes.** Every stack row shows its route: the disorder, the flag it goes to
   (`--simple`, `--medium`, `--complex`, or `tiny` for 5 numbers or fewer) and the icon of the card
   that sorted it. With the Adaptive Selector in play, that is the card it actually chose.
+- **Step 3, the build.** The Table plays a push_swap build: three seats, one hand per flag,
+  plus the built-in tiny seat (Hardcoded Three for 3 numbers or fewer, the Oracle's search for 4
+  or 5). Every stack goes to the seat its size and disorder pick; picking a stack puts its seat on
+  the mat, and picking a seat moves the board to one of its stacks. Seats show their class
+  target, a tally of their stacks and "sorting: …"; a route banner sits above the board. Stamps
+  are kept per hand, so a change re-measures only its own seat's stacks, and they equal
+  `--adaptive` run outside the page (a UI check). The algorithm deck gains the named builds;
+  share links carry all three hands, and old `#deck=` links fill every seat. The Meta slot,
+  Portfolio and the Adaptive Selector's setup are gone: the seats replace them.
 - **Playback lays out only the board.** Every move was laying out the whole page, stack list and
   hand included: containment on the board plate did nothing, because Chrome never lets a grid
   item be a layout boundary. The board now sits in a plain block. Layout during playback went
