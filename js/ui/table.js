@@ -327,7 +327,9 @@ function renderPlayed() {
   if (key === S.shownAlgo) return;
   const first = !S.shownAlgo;
   S.shownAlgo = key;
-  const card = algoFace(a, { stats: META?.cards?.[a.id], doc: DOC?.algorithms?.[a.id], flip: true, cls: 'onmat' });
+  const card = algoFace(a, { stats: META?.cards?.[a.id], doc: DOC?.algorithms?.[a.id], cls: 'onmat' });
+  card.onclick = e => { if (!e.target.closest('.tcg-btn')) inspect('algo', a.id); };   // click it to read it up close
+  card.title = `${a.name}: click to read it up close`;
   $('played').replaceChildren(card);
   if (!first) juice(card, 'slam');
 }
@@ -699,7 +701,7 @@ function inspect(kind, id) {
   const body = $('inspectBody'); body.replaceChildren();
   if (kind === 'algo') {
     const a = byId[id], doc = DOC?.algorithms?.[id], st = META?.cards?.[id], sec = sections(doc?.doc || '');
-    const face = algoFace(a, { stats: st, doc, flip: true }); face.style.setProperty('--cw', '300px');
+    const face = algoFace(a, { stats: st, doc }); face.style.setProperty('--cw', '300px');
     $('inspectTitle').textContent = a.name;
     const nums = st ? Object.entries(st.at).map(([n, s]) => `${n} numbers → ${f0(s.mean)} moves on average (worst ${f0(s.max)}, ${s.grade.replace('~', '')})`) : [];
     body.append(el('div.inspectcard', {}, face), el('div.inspecttext', {},

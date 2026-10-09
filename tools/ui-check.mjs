@@ -80,8 +80,9 @@ await set('#manual', '3 1 2'); await sleep(300);
 check('manual values run', (await total()) > 0);
 await set('#manual', '');
 // Flip a card
-await ev(`document.querySelector('#played .tcg .flip').click()`); await sleep(100);
-check('the played card flips to its back', await ev(`document.querySelector('#played .tcg').classList.contains('flipped') && /How it plays/.test(document.querySelector('#played .tcg .face.back').textContent)`));
+await ev(`document.querySelector('#played .tcg').click()`); await sleep(150);
+check('clicking the played card opens it up close', !(await ev(`document.getElementById('ov-inspect').hidden`)) && /How it plays/.test(await ev(T('inspectBody'))));
+await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`);
 await shot('table.png');
 // The card table: the hand, the slots, the blinds, the decks and Inspect
 await go('index.html#deck=turk&n=100&gen=uniform&seed=42', 2500);
