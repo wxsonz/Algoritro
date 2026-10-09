@@ -17,9 +17,11 @@
   Nothing animates a blur or an inherited custom property: a moving blur is redone every frame,
   and an inherited property restyles every element under it. The felt is painted once and
   overlays dim without a backdrop blur. During playback the board draws into an offscreen
-  canvas (a font change on a canvas in the page forces a layout of the page), keeps its sizes
-  from `ResizeObserver` instead of reading them every move, and the move log is
-  layout-contained. The played card takes its size from a measured row height, not from
+  canvas (a font change on a canvas in the page forces a layout of the page), and keeps its
+  sizes from `ResizeObserver` instead of reading them every move. On wide screens the board
+  plate is a layout boundary (`contain: size layout style`), so a move lays out only the board.
+  It sits in a plain block, `.boardslot`, because Chrome never lets a grid or flex item be a
+  boundary: containment on a grid item does nothing. The played card takes its size from a measured row height, not from
   container units, which would restyle it with every move. The goal is 60 fps while playing,
   even without GPU compositing.
 

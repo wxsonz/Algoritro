@@ -8,16 +8,15 @@ Table as a guided mode (§8.5). Light and dark themes, usable at phone width.
 The main page, laid out like a card table. It follows [02-game-design.md §2.4](02-game-design.md#24-the-play-loop-the-table).
 
 ```
-┌ left panel ──────┬ play mat ─────────────────────────────────────┬ right panel ┐
-│ the stack: goal  │ slots: [meta][pick][anchor][cost]…[finisher]  │ algorithm   │
-│ moves · stamp    │        [extras]                     [knobs]   │ deck        │
-│ Grasp, Craft gems│ ┌ played card ┐ ┌ board: A | B, transport,  ┐ │ browse·draw │
-│ delta chip       │ │(click: read)│ │ phase timeline, overlays  │ │ technique   │
-│ stacks: easy,    │ └─────────────┘ └───────────────────────────┘ │ deck        │
-│ medium, hard,    │ your hand: the techniques that fit, fanned    │ browse·draw │
-│ custom stack     │                                               │ Book of     │
-│                  │                                               │ Codex       │
-└──────────────────┴───────────────────────────────────────────────┴─────────────┘
+┌ left panel ──────────┬ play mat ──────────────────────────────────────────────┐
+│ the stack: goal      │ slots: [meta][pick][anchor][cost]…[finisher]  [knobs]  │
+│ moves · stamp        │        [extras]                                        │
+│ Grasp, Craft gems    │ ┌ played card ┐ ┌ board: A | B, transport, ─────────┐  │
+│ delta chip           │ │(click: read)│ │ phase timeline, overlays          │  │
+│ stacks: easy,        │ └─────────────┘ └───────────────────────────────────┘  │
+│ medium, hard,        │ your hand: the techniques that fit, fanned  [algo][tech]│
+│ custom stack         │                                             deck  deck │
+└──────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
 - **Wide screens fit the window** like a game screen (from 1100 × 620): only the stack list,
@@ -53,10 +52,10 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 - **Hand totals past 10 catch fire:** the Grasp or Craft row burns, and the number throbs.
 - **Tooltips** sit above the pointer in the table's colours, with a heading and a few lines.
   Hand cards have none: hovering one enlarges it instead.
-- **Decks.** Clicking a pile spreads it in an overlay: algorithm cards by family, with the
-  prebuilt hands and the Meta cards; technique cards by role. **Draw** plays a random card
-  that fits, skipping cards that take more than about 1.5 s to plan at this n. A slow card
-  played on purpose says it is thinking before it runs.
+- **Decks.** The two decks sit to the right of the hand. Clicking a pile spreads it in an
+  overlay: algorithm cards by family, with the prebuilt hands and the Meta cards; technique
+  cards by role. There is no Draw: a random card does not fit a sandbox. A slow card says it
+  is thinking before it runs. The Codex is in the top bar, so the Table has no book of it.
 - **Inspect.** Click the played card, right-click any card, or press its **?**, to see it up
   close on the felt, in panels read top to bottom: **The idea** in plain words, **Step by
   step** beside a replay of it sorting 20 numbers, the **Scorecard** (its three badges, each

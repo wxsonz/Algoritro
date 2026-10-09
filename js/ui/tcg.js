@@ -35,6 +35,13 @@ function rarityFx(r) {
 // The legendary rim: a prismatic ring that turns. It is its own element so a transform can turn
 // it, which costs no repaint.
 const rim = r => r === 'legendary' ? el('span.rim') : '';
+// A lesson card is kept to show why an idea loses; a research card has no reference build yet.
+// Each says so with a small icon in the type line, beside the rarity gem.
+function markIcon(c) {
+  if (c.research) return el('span.tmark.research', { html: icon('flask'), title: 'Research\nNo reference build yet: the explorer\'s own measurements are the only ones.' });
+  if (c.lesson) return el('span.tmark.lesson', { html: icon('book'), title: 'Lesson\nKept to show why this idea loses. Inspect explains.' });
+  return '';
+}
 // The seal on a card that is built into the played card and cannot be taken out.
 const lockSeal = () => el('span.lockseal', { html: icon('lock'), 'aria-label': 'built in' });
 
@@ -95,12 +102,12 @@ export function algoFace(a, { stats, cls = '' } = {}) {
       el('div.nameplate', {}, el('b', { className: 'name' + (a.name.length > 15 ? ' long' : '') }, a.name)),
       gem('craft', a.craft, `Craft ${a.craft} of 10\nHow much there is to build: about ${a.lines} lines of C.`)),
     el('div.tcg-art', { html: cover(a.id) }, rarityFx(a.rarity)),
-    el('div.tcg-type', {}, px(a.family), el('span.tt', {}, `${fam.name} algorithm`), rgem(a.rarity)),
+    el('div.tcg-type', {}, px(a.family), el('span.tt', {}, `${fam.name} algorithm`), markIcon(a), rgem(a.rarity)),
     el('div.tcg-text.quote', {}, el('p.flavor', {}, `“${a.tagline}”`)),
     el('div.badges', {}, classBadge(a), slotBadge(a), psBadge(a, stats)));
   const card = el('div', { className: `tcg algo fam-${a.family} r-${a.rarity}${a.research ? ' research' : ''}${a.lesson ? ' lesson' : ''}${cls ? ' ' + cls : ''}`, tabIndex: 0, dataset: { id: a.id, kind: 'algo' } },
     el('div.tcg-body', {}, rim(a.rarity), front),
-    a.research ? el('span.ribbon.exp', {}, 'research') : a.lesson ? el('span.ribbon.lesson', {}, 'lesson') : '');
+    '');
   card.append(el('button.tcg-btn.peek', { title: 'Inspect', 'aria-label': `Inspect ${a.name}` }, '?'));
   return card;
 }
@@ -117,7 +124,7 @@ export function techFace(t, { doc, state = {}, effect, sign = 0, src, needs = []
   const front = el('div.face.front', {}, rim(t.rarity), el('div.tcg-inner', {},
     el('div.tcg-head', {}, el('span.socket', { html: icon(role) }), el('b', { className: 'name' + (name.length > 14 ? ' long' : '') }, name)),
     el('div.tcg-art', {}, px(role, 'big'), rarityFx(t.rarity)),
-    el('div.tcg-type', {}, el('span.tt', {}, ROLE_NAMES[role] || role), el('span.costs', {}, t.grasp ? cost('grasp', t.grasp) : '', t.craft ? cost('craft', t.craft) : ''), rgem(t.rarity)),
+    el('div.tcg-type', {}, el('span.tt', {}, ROLE_NAMES[role] || role), el('span.costs', {}, t.grasp ? cost('grasp', t.grasp) : '', t.craft ? cost('craft', t.craft) : ''), markIcon(t), rgem(t.rarity)),
     el('div.tcg-text', {}, tag ? el('p.flavor', {}, `“${tag}”`) : el('p.plainhint', {}, `${cap(ROLE_HINT[role] || '')}.`), t.effect && !effect ? el('p.nerdy', {}, t.effect) : ''),
     needs.length ? needsEl(needs) : '',
     effect ? el('div.tcg-effect', { className: 'tcg-effect ' + (off ? 'why' : sign < 0 ? 'good' : sign > 0 ? 'bad' : '') }, effect) : '',
@@ -189,13 +196,6 @@ export function pile(kind, { id, count, title }) {
     ...Array.from({ length: layers }, (_, i) => el('span.layer', { style: { '--i': layers - 1 - i } }, backFace(kind))),
     el('span.pilecount', {}, count));
 }
-export function codexBook() {
-  return el('a', { className: 'book', href: 'codex.html', title: 'Open the Book of Codex', 'aria-label': 'Open the Book of Codex' },
-    el('span.book-pages'),
-    el('span.book-cover', {}, el('span.book-emblem', { html: icon('book') }), el('span.book-title', {}, 'CODEX'), el('span.book-sub', {}, 'every card, explained')),
-    el('span.book-spine'));
-}
-
 // ---- Juice: the foil highlight follows the pointer (the card itself stays flat and still) ----
 export function bindCardFx(root = document) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;

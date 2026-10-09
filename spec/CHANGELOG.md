@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-10, the Table plays a push_swap build (objective.md)
+
+- **Step 1, layout.** The right column is gone: the two decks sit to the right of the hand, with
+  no Browse or Draw buttons (click a deck to spread it), and the Book of Codex left the Table
+  (Codex is in the top bar). The left panel is wider. Lesson and research cards wear a book or
+  a flask icon in the type line instead of a ribbon.
+- **Playback lays out only the board.** Every move was laying out the whole page, stack list and
+  hand included: containment on the board plate did nothing, because Chrome never lets a grid
+  item be a layout boundary. The board now sits in a plain block. Layout during playback went
+  from 780 to 173 ms per 2 s (headless, no GPU).
+
 ## 2026-10-09, fewer buttons
 
 - **Adaptive Selector handles tiny stacks first:** 3 or fewer numbers by Hardcoded Three, 5 or

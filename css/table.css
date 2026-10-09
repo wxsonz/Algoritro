@@ -75,18 +75,17 @@
 .table-page a { color: inherit; }
 .table-page label { color: inherit; }
 
-/* ---- the game screen: left panel, play mat, right panel ---- */
+/* ---- the game screen: left panel and play mat ---- */
 .game {
-  --left: clamp(250px, 17vw, 330px); --right: clamp(170px, 11.5vw, 236px);
+  --left: clamp(300px, 22vw, 430px);
   --slotH: 210px; --handH: 270px;
-  display: grid; grid-template-columns: var(--left) minmax(0, 1fr) var(--right); grid-template-areas: "left mat right";
+  display: grid; grid-template-columns: var(--left) minmax(0, 1fr); grid-template-areas: "left mat";
   gap: 14px; padding: 12px 14px 14px; min-width: 0;
 }
 .leftpanel { grid-area: left; display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
 .leftpanel > :not(.stacklist) { flex-shrink: 0; }   /* only the stack list gives up height */
 .table-page main.mat { max-width: none; margin: 0; padding: 0; }
 .mat { grid-area: mat; display: grid; grid-template-rows: auto auto auto auto; gap: 10px; min-width: 0; min-height: 0; }
-.rightpanel { grid-area: right; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; gap: 12px; min-width: 0; min-height: 0; padding: 4px 0; }
 
 /* plates: the chunky panels */
 .plate { background: var(--plate); color: var(--ink); border: 2px solid var(--plate-line); border-radius: 14px; padding: 10px 12px; box-shadow: 0 5px 0 var(--shadow); min-width: 0; }
@@ -231,7 +230,8 @@
 .mid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; min-height: 0; min-width: 0; }
 .playedwrap { display: grid; place-items: center; min-height: 0; }
 .playedwrap .tcg { --cw: 260px; }
-.boardplate { align-self: stretch; display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px; border-radius: 14px; background: var(--plate); color: var(--ink); border: 2px solid var(--plate-line); box-shadow: 0 5px 0 var(--shadow); }
+.boardslot { align-self: stretch; min-width: 0; min-height: 0; }
+.boardplate { height: 100%; display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px; border-radius: 14px; background: var(--plate); color: var(--ink); border: 2px solid var(--plate-line); box-shadow: 0 5px 0 var(--shadow); }
 .boardplate #compare p { margin: 0 0 6px; }
 .boardplate { position: relative; }
 .busy { position: absolute; z-index: 5; left: 50%; top: 40%; transform: translate(-50%, -50%); max-width: 90%; padding: 10px 18px; border-radius: 12px;
@@ -287,7 +287,11 @@
 .console.follow .why { display: none; }
 .console.follow .stepno { font-size: 18px; }
 
-.handzone { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; min-width: 0; }
+.handzone { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr); column-gap: 14px; min-height: 0; min-width: 0; }
+.handzone > .handhead { grid-column: 1; grid-row: 1; } .handzone > .hand { grid-column: 1; grid-row: 2; }
+/* the two decks, beside the hand: click one to spread it out */
+.deckdock { grid-column: 2; grid-row: 1 / 3; display: flex; gap: 16px; align-items: flex-end; padding: 0 2px 4px; --pw: clamp(78px, calc((var(--handH) - 74px) * 5 / 7), 132px); }
+.deckdock .pile { width: var(--pw); }
 .handhead { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; color: var(--on-felt); padding: 0 6px; }
 .hand { --hcw: min(176px, calc((var(--handH) - 62px) * 5 / 7)); position: relative; min-height: calc(var(--hcw) * 1.4 + 26px); min-width: 0; }
 .hand > .tcg {
@@ -303,15 +307,12 @@
 @keyframes want { 50% { translate: 0 -22px; } }
 .hand:empty::after { content: 'Your hand is empty: every card that fits is already on the mat.'; position: absolute; inset: 0; display: grid; place-items: center; color: var(--on-felt-dim); }
 
-/* ---- right panel: the decks and the book ---- */
-.rightpanel { --pw: clamp(92px, min(8.4vw, 15vh), 156px); }
-.deckspot { display: grid; justify-items: center; gap: 7px; }
+/* ---- the decks: piles you click to spread out ---- */
+.deckspot { display: grid; justify-items: center; gap: 6px; }
 .pilespot { padding: 10px 0 0; }
-.rightpanel .pile { width: var(--pw); }
-.rightpanel .book { --bw: calc(var(--pw) * 1.04); }
-.pilelabel { display: grid; justify-items: center; gap: 1px; color: var(--on-felt); text-align: center; }
-.pilelabel b { font: 400 21px/1 var(--pixel); letter-spacing: .03em; }
-.pilebtns { display: flex; gap: 6px; }
+.pilelabel { display: grid; justify-items: center; gap: 1px; max-width: calc(var(--pw) + 30px); color: var(--on-felt); text-align: center; }
+.pilelabel b { font: 400 19px/1 var(--pixel); letter-spacing: .03em; }
+.pilelabel .small { font-size: 12px; line-height: 1.2; }
 
 /* ---- overlays: decks spread on the felt, tools on a plate ---- */
 .overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 3vh 3vw; background: rgba(6, 18, 14, .74); }
@@ -373,6 +374,10 @@
   .leftpanel { overflow: hidden; }
   .mat { grid-template-rows: auto var(--slotH) minmax(0, 1fr) var(--handH); }
   .playedwrap .tcg { --cw: min(300px, calc((var(--midH, 420px) - 14px) * 5 / 7)); }   /* --midH: the row's height, set from table.js */
+  /* The board changes every move. Its size comes from the grid here, so it can be a layout
+     boundary, and a move lays out only the board, not the stack list or the hand. That is why
+     it sits in .boardslot: Chrome never lets a grid or flex item be a boundary. */
+  .boardplate { contain: size layout style; }
   .boardbox canvas.board { flex: 1 1 0; min-height: 60px; aspect-ratio: auto; height: auto; }
 }
 @media (min-width: 1100px) and (min-height: 620px) and (max-height: 820px) {
@@ -381,16 +386,16 @@
   .mana { display: none; }
 }
 
-/* ---- tablets: decks on top of the mat, the page scrolls ---- */
+/* ---- tablets: the page scrolls ---- */
 @media (max-width: 1099px), (max-height: 619px) {
-  .game { grid-template-columns: 270px minmax(0, 1fr); grid-template-areas: "left right" "left mat"; align-items: start; }
-  .rightpanel { flex-direction: row; flex-wrap: wrap; justify-content: space-evenly; align-items: flex-start; gap: 14px; --pw: 86px; }
-  .deckspot { gap: 5px; }
-  .pilelabel b { font-size: 19px; }
+  .game { grid-template-columns: 280px minmax(0, 1fr); align-items: start; }
+  .deckdock { --pw: 86px; }
   .stacks { overflow: visible; }
 }
 @media (max-width: 760px) {
-  .game { grid-template-columns: minmax(0, 1fr); grid-template-areas: "left" "right" "mat"; padding: 10px 16px 16px; }
+  .game { grid-template-columns: minmax(0, 1fr); grid-template-areas: "left" "mat"; padding: 10px 16px 16px; }
+  .handzone { grid-template-columns: minmax(0, 1fr); }
+  .deckdock { grid-column: 1; grid-row: 3; justify-content: center; padding-top: 10px; }
   .stacks { grid-template-columns: 1fr 1fr; }
   .tierhead { grid-column: 1 / -1; }
   .brow { grid-template-columns: 24px minmax(0, 1fr) 20px; gap: 6px; }
@@ -398,9 +403,8 @@
   .brow .disc { width: 24px; height: 24px; font-size: 13px; }
   .brow .bname { font-size: 17px; }
   .btn { font-size: 18px; padding: 7px 4px; }
-  .rightpanel { --pw: 72px; gap: 10px; }
-  .pilelabel .small, .book-sub { display: none; }
-  .book-title { font-size: 15px; letter-spacing: .1em; }
+  .deckdock { --pw: 72px; }
+  .pilelabel .small { display: none; }
   .slotbar { --scw: 92px; grid-template-columns: minmax(0, 1fr); }
   .knobs { width: auto; }
   .mid { grid-template-columns: minmax(0, 1fr); }
@@ -462,7 +466,7 @@
 .boardplate.withlog > .boardwrap { grid-column: 1; grid-row: 3; }
 .boardplate.withlog > .movelog { grid-column: 2; grid-row: 2 / 4; }
 .boardplate.withlog > .consoledock { grid-column: 1 / -1; grid-row: 4; }
-.movelog { contain: strict; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding: 6px 8px; border-radius: 10px; background: var(--plate-2); box-shadow: inset 0 2px 0 rgba(0, 0, 0, .08); font-size: 12px; }
+.movelog { min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding: 6px 8px; border-radius: 10px; background: var(--plate-2); box-shadow: inset 0 2px 0 rgba(0, 0, 0, .08); font-size: 12px; }
 .movelog[hidden] { display: none; }
 .logempty { margin: auto 0; opacity: .7; }
 .logrow { display: grid; grid-template-columns: 3.6ch auto minmax(0, 1fr); align-items: center; gap: 6px; min-height: 20px; opacity: .62; white-space: nowrap; }

@@ -73,6 +73,9 @@
 }
 .tcg-type .pxi { width: 5cqw; height: 5cqw; color: var(--fb); }
 .tcg-type .tt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tmark { display: grid; place-items: center; width: 6.4cqw; height: 6.4cqw; flex: none; border-radius: 1.4cqw; color: #fff; box-shadow: inset 0 -.5cqw 0 rgba(0, 0, 0, .25); }
+.tmark svg { width: 72%; height: 72%; display: block; }
+.tmark.lesson { background: #d9480f; } .tmark.research { background: #8a6d1d; }
 .rgem { width: 4.8cqw; height: 4.8cqw; flex: none; transform: rotate(45deg); border-radius: .8cqw; box-shadow: inset 0 0 0 .5cqw rgba(0, 0, 0, .28); }
 .rgem.r-common { background: linear-gradient(135deg, #e2ddd3, #6f6a62); }
 .rgem.r-uncommon { background: linear-gradient(135deg, #ffffff, #8ea2b4); }
@@ -207,8 +210,6 @@
 .tcg .ribbon.inplay { background: #e0a400; color: #3a2a00; }
 .tcg .ribbon.default { background: #5e6e74; }
 .tcg .ribbon.native { background: #8a6d1d; }
-.tcg .ribbon.exp, .tcg .ribbon.lesson { left: -1.5cqw; top: 19cqw; transform: rotate(-7deg); }
-.tcg .ribbon.exp { background: #b8860b; } .tcg .ribbon.lesson { background: #d9480f; }
 .tcg.off .tcg-body { filter: grayscale(.9) brightness(.82); }
 .tcg.off { cursor: help; }
 .tcg-banner {
@@ -228,7 +229,7 @@
 
 /* ---- small cards (slots, tight hands): a big name, the art and the type ---- */
 @container card (max-width: 132px) {
-  .tcg-text, .tcg-effect, .tcg-type .costs, .tcg .ribbon.exp, .tcg .ribbon.lesson, .needs { display: none; }
+  .tcg-text, .tcg-effect, .tcg-type .costs, .needs { display: none; }
   .tcg.algo .front { grid-template-rows: 18cqw minmax(0, 1fr) 10cqw 24cqw; }
   .tcg.algo .name, .tcg.algo .name.long { font-size: 11cqw; }
   .badge small { display: none; }
@@ -267,39 +268,18 @@
 .backlabel { position: absolute; left: 0; right: 0; bottom: 10cqw; text-align: center; font: 400 6.4cqw/1 var(--pixel); letter-spacing: .14em; color: #f3e3b5; }
 
 /* ---- piles: a deck you can browse or draw from ---- */
-.pile { position: relative; display: block; width: var(--pw, 140px); aspect-ratio: 5 / 7; padding: 0; border: 0; background: none; cursor: pointer; }
+.pile { position: relative; display: block; width: var(--pw, 140px); aspect-ratio: 5 / 7; margin-bottom: calc(var(--layers, 1) * 3px + 4px); padding: 0; border: 0; background: none; cursor: pointer; }   /* room for the layers below it */
 .pile .layer { position: absolute; inset: 0; transform: translate(calc(var(--i) * -2px), calc(var(--i) * 3px)); transition: transform .2s cubic-bezier(.2, .9, .3, 1.3); }
 .pile .layer .tcg { --cw: var(--pw, 140px); }
 .pile .layer:not(:last-of-type) .tcg-body { box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
 .pile:hover .layer:last-of-type, .pile:focus-visible .layer:last-of-type { transform: translateY(-10px) rotate(-3deg); }
 .pile:focus-visible { outline: 3px solid #ffd45a; outline-offset: 6px; border-radius: 8px; }
-.pile.shake { animation: shake .45s; }
-@keyframes shake { 20% { transform: rotate(-4deg); } 40% { transform: rotate(4deg); } 60% { transform: rotate(-3deg); } 80% { transform: rotate(2deg); } }
 .pilecount {
   position: absolute; right: -10px; top: -10px; z-index: 2; min-width: 30px; height: 30px; padding: 0 7px; display: grid; place-items: center;
   border-radius: 99px; background: #ffd45a; color: #3a2a00; font: 400 19px/1 var(--pixel); box-shadow: 0 3px 0 rgba(0, 0, 0, .35);
 }
 
-/* ---- the book of codex ---- */
-.book { position: relative; display: block; width: var(--bw, 140px); aspect-ratio: 4 / 5; perspective: 900px; text-decoration: none; }
-.book-pages {
-  position: absolute; inset: 3% 1% 2% 8%; border-radius: 2px 8px 8px 2px;
-  background: repeating-linear-gradient(0deg, #f6eedb 0 2px, #e3d5b3 2px 3px); box-shadow: 0 5px 0 rgba(0, 0, 0, .35), 0 10px 18px rgba(0, 0, 0, .25);
-}
-.book-cover {
-  position: absolute; inset: 0 5% 0 0; display: grid; align-content: center; justify-items: center; gap: 6px; padding: 10%;
-  border-radius: 3px 10px 10px 3px; transform-origin: 8% 50%; transition: transform .35s cubic-bezier(.2, .8, .3, 1);
-  background: radial-gradient(120% 90% at 30% 20%, #8a4b2a, #5b2a14 60%, #3c1a0b);
-  box-shadow: inset 0 0 0 5px #3c1a0b, inset 0 0 0 7px #d9b45a, inset 0 0 0 9px #4a210f, 0 4px 0 rgba(0, 0, 0, .35);
-  color: #f3d58a; text-align: center;
-}
-.book-emblem { width: 34%; aspect-ratio: 1; color: #f3d58a; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .4)); }
-.book-emblem svg { width: 100%; height: 100%; display: block; }
-.book-title { font: 400 clamp(18px, 1.6vw, 28px)/1 var(--pixel); letter-spacing: .16em; text-shadow: 0 2px 0 rgba(0, 0, 0, .45); }
-.book-sub { font-size: 11px; color: #e8cfa0; opacity: .85; }
-.book-spine { position: absolute; left: 0; top: 0; bottom: 0; width: 9%; border-radius: 3px 0 0 3px; background: linear-gradient(90deg, #2c1207, #5b2a14); }
-.book:hover .book-cover, .book:focus-visible .book-cover { transform: rotateY(-26deg); }
-.book:focus-visible { outline: 3px solid #ffd45a; outline-offset: 6px; border-radius: 6px; }
+.book:focus-visible .book-cover { transform: rotateY(-26deg); }
 
 /* ---- named decks as deck boxes ---- */
 .deckbox {
@@ -317,7 +297,7 @@
 .deckbox .dk-num { margin-top: 2px; font: 400 15px/1 var(--pixel); color: #b9f0c4; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tcg-body, .pile .layer, .book-cover, .deckbox { transition: none; }
+  .tcg-body, .pile .layer, .deckbox { transition: none; }
   .shine, .foil, .sparkles i, .tcg .rim::before, .tcg-body::after, .tcg.nope, .badge::after { animation: none !important; }
 }
 

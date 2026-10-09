@@ -15,7 +15,7 @@ import { $, el, esc, css, topBar, cardsData, metaData, f0, pct, signed, gradeNam
 import { markdown, sections } from './markdown.js';
 import { mini } from './card.js';
 import { Board } from './board.js';
-import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, codexBook, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, CLASS_TIER, PS_TIER_TEXT } from './tcg.js';
+import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, CLASS_TIER, PS_TIER_TEXT } from './tcg.js';
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
 import { runAll } from './worker-client.js';
@@ -84,14 +84,11 @@ function closeOverlay(o = [...document.querySelectorAll('.overlay:not([hidden])'
   if (!document.querySelector('.overlay:not([hidden])')) S.opener?.focus?.({ preventScroll: true });
 }
 
-// The decks and the book.
+// The two decks: click one to spread it out.
 $('algoPileSpot').append(pile('algo', { id: 'algoPile', count: ALGOS.length, title: 'Algorithm deck: spread it out' }));
 $('techPileSpot').append(pile('tech', { id: 'techPile', count: TECHS.length, title: 'Technique deck: spread it out' }));
-$('bookSpot').append(codexBook());
-$('algoPile').onclick = $('algoBrowse').onclick = () => openOverlay('algo');
-$('techPile').onclick = $('techBrowse').onclick = () => openOverlay('tech');
-$('algoDraw').onclick = drawAlgo;
-$('techDraw').onclick = drawTech;
+$('algoPile').onclick = () => openOverlay('algo');
+$('techPile').onclick = () => openOverlay('tech');
 
 // Inspect: right-click any card, or its ? button.
 document.addEventListener('contextmenu', e => { const c = e.target.closest('.tcg[data-kind]'); if (!c || c.closest('#inspectBody') || !['algo', 'tech'].includes(c.dataset.kind)) return; e.preventDefault(); inspect(c.dataset.kind, c.dataset.id); });
@@ -608,35 +605,22 @@ function planMs(id, n) {
   return a * Math.pow(Math.max(1, n) / 100, p);
 }
 function busy(text) { $('busy').textContent = text; $('busy').hidden = !text; }
-function play(id, from = null, drew = false) {
+function play(id, from = null) {
   if (id === S.hand.algo) return;
   const n = S.input?.n ?? 100, ms = planMs(id, n);
   // A slow card freezes the page while it plans: say so first, then let the browser paint.
-  if (ms > 1500) { busy(`${byId[id].name} is thinking: about ${Math.round(ms / 1000)} s at ${n} numbers…`); setTimeout(() => { playNow(id, from, drew); busy(''); }, 60); return; }
-  playNow(id, from, drew);
+  if (ms > 1500) { busy(`${byId[id].name} is thinking: about ${Math.round(ms / 1000)} s at ${n} numbers…`); setTimeout(() => { playNow(id, from); busy(''); }, 60); return; }
+  playNow(id, from);
 }
-function playNow(id, from, drew) {
+function playNow(id, from) {
   const old = S.hand;
   // Keep the cards that still fit; the rest go back with a note.
   const keep = old.techs.filter(t => { const c = techById[t]; return c.role === 'prep' || c.role === 'post' || fits(byId[id], c).ok; });
   const dropped = old.techs.filter(t => !keep.includes(t));
   S.hand = { ...old, algo: id, techs: keep, params: {}, presets: {}, finisher: undefined };
-  replay(false, `${drew ? 'Drew ' : ''}${byId[id].name}${drew ? '' : ' played'}${dropped.length ? ` (${dropped.map(label).join(', ')} did not fit)` : ''}`);
+  replay(false, `${byId[id].name} played${dropped.length ? ` (${dropped.map(label).join(', ')} did not fit)` : ''}`);
   if (from) fly($('played').querySelector('.tcg'), from, { dur: 520 });
 }
-function drawAlgo() {
-  const n = S.input?.n ?? 100, pool = ALGOS.filter(a => a.id !== S.hand.algo && (a.maxN == null || n <= a.maxN) && planMs(a.id, n) < 1500);
-  if (!pool.length) return;
-  juice($('algoPile'), 'shake');
-  play(pool[Math.floor(Math.random() * pool.length)].id, $('algoPile').getBoundingClientRect(), true);
-}
-function drawTech() {
-  const pool = handCards();
-  if (!pool.length) { $('handInfo').textContent = `Your hand is empty: nothing else fits ${byId[S.hand.algo].name}.`; return; }
-  juice($('techPile'), 'shake');
-  playTech(pool[Math.floor(Math.random() * pool.length)].id, $('techPile').getBoundingClientRect());
-}
-
 // ---- the decks spread out (overlays) -------------------------------------------------------
 function renderAlgoViewer() {
   const box = $('algoViewer'); box.replaceChildren();

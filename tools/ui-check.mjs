@@ -103,13 +103,15 @@ await click('#algoPile'); await sleep(200);
 check('the algorithm deck spreads out', !(await ev(`document.getElementById('ov-algo').hidden`)) && (await ev(`document.querySelectorAll('#algoViewer .tcg.algo').length`)) === 23);
 await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`); await sleep(150);
 check('Escape closes it', await ev(`document.getElementById('ov-algo').hidden`));
-const deck0 = await ev('location.hash');
-await click('#algoDraw'); await sleep(600);
-check('Draw plays another algorithm card', !(await ev('location.hash')).startsWith(deck0.split('&')[0] + '&'), await ev('location.hash'));
+check('the decks sit beside the hand, with no Draw, no book and no right column', (await has('.handzone .deckdock #algoPile')) && (await has('.handzone .deckdock #techPile')) && !(await ev(`!!document.querySelector('.rightpanel, #algoDraw, #techDraw, .book')`)));
+await click('#techPile'); await sleep(200);
+check('the technique deck spreads out too', !(await ev(`document.getElementById('ov-tech').hidden`)));
+await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`); await sleep(150);
 await click('#hand .tcg .peek'); await sleep(250);
 check('Inspect shows a card up close', !(await ev(`document.getElementById('ov-inspect').hidden`)) && /Codex page/.test(await ev(T('inspectBody'))) && /The idea/.test(await ev(T('inspectBody'))));
 await shot('table-inspect.png');
 // The cards' design: covers, badges, icons, tooltips; the fire past 10; the log and the effects
+check('lesson and research cards wear an icon in the type line, not a ribbon', (await ev(`[...document.querySelectorAll('#algoViewer .tcg.algo')].filter(c => c.querySelector('.tcg-type .tmark')).map(c => c.dataset.id).sort().join()`)) === 'annealer,beam-sorter,lookahead-greedy,natural-merge,tape-merge' && !(await ev(`!!document.querySelector('.ribbon.exp, .ribbon.lesson')`)), await ev(`[...document.querySelectorAll('#algoViewer .tcg-type .tmark')].length`));
 check('every algorithm card has its own cover', (await ev(`new Set([...document.querySelectorAll('#algoViewer .tcg.algo svg.cover')].map(s => s.innerHTML)).size`)) === 23, await ev(`document.querySelectorAll('#algoViewer svg.cover').length`));
 check('the played card shows class, slot tier and push_swap tier', (await ev(`[...document.querySelectorAll('#played .badges .badge small')].map(b => b.textContent).join()`)) === 'class,slots,push_swap', await ev(`[...document.querySelectorAll('#played .badges .badge small')].map(b => b.textContent).join()`));
 check('Grasp and Craft carry a bulb and a hammer', (await ev(`document.querySelectorAll('#played .gem svg').length`)) === 2);

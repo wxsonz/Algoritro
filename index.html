@@ -57,38 +57,27 @@
       </section>
       <section class="mid" aria-label="Played card and board">
         <div id="played" class="playedwrap"></div>
-        <div class="boardplate">
+        <!-- A plain block around the board: a grid item can never bound a layout, this can. -->
+        <div class="boardslot"><div class="boardplate">
           <div id="busy" class="busy" role="status" hidden></div>
           <div id="boardWrap" class="boardwrap">
             <div id="board" class="boardbox"></div>
           </div>
           <div id="movelog" class="movelog" aria-label="Move log"></div>
           <div id="console" class="consoledock"></div>
-        </div>
+        </div></div>
       </section>
       <section class="handzone" aria-label="Your hand">
         <div class="handhead"><span class="eyebrow">Your hand</span> <span id="handInfo" class="small dim"></span></div>
         <div id="hand" class="hand"></div>
+        <!-- The two decks, beside the hand: click one to spread it out. -->
+        <div class="deckdock" aria-label="Decks">
+          <div class="deckspot"><div id="algoPileSpot" class="pilespot"></div><div class="pilelabel"><b>Algorithms</b><span id="algoPileInfo" class="small dim"></span></div></div>
+          <div class="deckspot"><div id="techPileSpot" class="pilespot"></div><div class="pilelabel"><b>Techniques</b><span id="techPileInfo" class="small dim"></span></div></div>
+        </div>
       </section>
     </main>
 
-    <!-- Right: the decks and the book. -->
-    <aside class="rightpanel" aria-label="Decks">
-      <div class="deckspot">
-        <div id="algoPileSpot" class="pilespot"></div>
-        <div class="pilelabel"><b>Algorithms</b><span id="algoPileInfo" class="small dim"></span></div>
-        <div class="pilebtns"><button id="algoBrowse" class="btn blue mini">Browse</button><button id="algoDraw" class="btn red mini" title="Draw a random algorithm card and play it">Draw</button></div>
-      </div>
-      <div class="deckspot">
-        <div id="techPileSpot" class="pilespot"></div>
-        <div class="pilelabel"><b>Techniques</b><span id="techPileInfo" class="small dim"></span></div>
-        <div class="pilebtns"><button id="techBrowse" class="btn blue mini">Browse</button><button id="techDraw" class="btn red mini" title="Draw a random card that fits and play it">Draw</button></div>
-      </div>
-      <div class="deckspot">
-        <div id="bookSpot" class="pilespot"></div>
-        <div class="pilelabel"><b>Book of Codex</b><span class="small dim">every card, explained</span></div>
-      </div>
-    </aside>
   </div>
 
   <!-- Overlays: decks spread out, and the tools. One at a time. -->
