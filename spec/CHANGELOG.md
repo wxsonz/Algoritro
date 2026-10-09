@@ -4,6 +4,8 @@
 
 - **Adaptive Selector handles tiny stacks first:** 3 or fewer numbers by Hardcoded Three, 5 or
   fewer by Five Hand. It failed the new every-order stacks (9 and 18 moves); now 2 and 10.
+- **Tiny stacks are graded against their optimum** (Oracle's worst order: 1, 2 and 8 moves):
+  ★ at the optimum, blue ✓ halfway there, orange ✓ just within the subject's limit.
 - **13 more stacks** (26 in all): 1 number, 2 in order, 2 swapped, every order of 3 and of 5
   (stamped by the worst, which picking the stack plays), Smallest at the bottom, Down then up,
   Interleaved halves, Nearly reversed, Twenty runs, exact disorder at 25/50/75 %, and Nearly

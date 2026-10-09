@@ -2,6 +2,8 @@ import { parseManual, ranks, disorder, generate, describe, regime, nthPermutatio
 import { eq, ok } from './assert.mjs';
 import { runAdaptive } from '../js/core/meta-run.js';
 import { BUILDS } from '../js/cards/decks.js';
+import { runHand } from '../js/core/hand.js';
+import { stackById, stamp } from '../js/ui/stacks.js';
 export const tests = [
   ['manual input follows push_swap rules', () => {
     eq(parseManual('3 -1 +7').values, [3, -1, 7]);
@@ -23,6 +25,14 @@ export const tests = [
   ['Adaptive Selector meets the subject on every order of 3 and 5', () => {
     const build = BUILDS[0].build || BUILDS[0], worst = (n, k) => Math.max(...Array.from({ length: k }, (_, i) => { const r = runAdaptive(build, generate('perm', n, i)); ok(r.valid); return r.ops.length; }));
     ok(worst(3, 6) <= 3); ok(worst(5, 120) <= 12); eq(runAdaptive(build, [0, 1]).ops.length, 0);
+  }],
+  ['the tiny stacks know their optimum (the Oracle\'s worst order) and stamp it gold', () => {
+    for (const id of ['three', 'five']) {
+      const b = stackById[id], worst = Math.max(...b.seeds.map(k => runHand({ algo: 'oracle', techs: [], sandbox: true }, generate('perm', b.n, k), { keepSteps: false }).ops.length));
+      eq(worst, b.best);
+    }
+    eq(stamp(stackById.five, 8), 'EXCELLENT'); eq(stamp(stackById.five, 10), 'GOOD'); eq(stamp(stackById.five, 12), 'PASS'); eq(stamp(stackById.five, 13), 'FAIL');
+    eq(stamp(stackById.three, 2), 'EXCELLENT'); eq(stamp(stackById.three, 3), 'PASS');
   }],
   ['the new shapes', () => {
     eq(generate('valley', 6), [5, 3, 1, 0, 2, 4]); eq(generate('interleave', 6), [0, 3, 1, 4, 2, 5]); eq(generate('interleave', 5), [0, 3, 1, 4, 2]);

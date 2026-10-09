@@ -8,9 +8,9 @@ export const LEVELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 export const STACKS = [
   { id: 'one', level: 'easy', icon: '1', name: '1 number', n: 1, gen: 'sorted', desc: 'A single number is already sorted. Any move is a fail.', limit: 0 },
   { id: 'two-sorted', level: 'easy', icon: '2', name: '2 in order', n: 2, gen: 'sorted', desc: 'Two numbers, already in order. Any move is a fail.', limit: 0 },
-  { id: 'two-swapped', level: 'easy', icon: '⇅', name: '2 swapped', n: 2, gen: 'reversed', desc: 'Two numbers, the wrong way round: exactly one sa.', limit: 1 },
-  { id: 'three', level: 'easy', icon: '3', name: '3 numbers, every order', n: 3, gen: 'perm', seeds: range(6), desc: 'All 6 orders of three numbers, stamped by the worst. The subject allows at most 3 moves.', limit: 3 },
-  { id: 'five', level: 'easy', icon: '5', name: '5 numbers, every order', n: 5, gen: 'perm', seeds: range(120), desc: 'All 120 orders of five numbers, stamped by the worst. The subject allows at most 12 moves.', limit: 12 },
+  { id: 'two-swapped', level: 'easy', icon: '⇅', name: '2 swapped', n: 2, gen: 'reversed', desc: 'Two numbers, the wrong way round: exactly one sa.', limit: 1, best: 1 },
+  { id: 'three', level: 'easy', icon: '3', name: '3 numbers, every order', n: 3, gen: 'perm', seeds: range(6), desc: 'All 6 orders of three numbers, stamped by the worst. The subject allows at most 3 moves.', limit: 3, best: 2 },
+  { id: 'five', level: 'easy', icon: '5', name: '5 numbers, every order', n: 5, gen: 'perm', seeds: range(120), desc: 'All 120 orders of five numbers, stamped by the worst. The subject allows at most 12 moves.', limit: 12, best: 8 },
   { id: 'sorted', level: 'easy', icon: '✓', name: 'Already sorted', n: 100, gen: 'sorted', desc: 'Nothing to do. Any move at all is a fail.', limit: 0 },
   { id: 'one-swap', level: 'easy', icon: '⇄', name: 'One swap', n: 100, gen: 'nearly', param: 1, desc: 'Sorted, except one pair swapped.' },
   { id: 'nearly', level: 'easy', icon: '≈', name: 'Nearly sorted', n: 100, gen: 'nearly', param: 3, desc: 'Sorted, except three pairs swapped.' },
@@ -38,9 +38,16 @@ function range(k) { return Array.from({ length: k }, (_, i) => i); }
 const RANDOM = new Set(['uniform', 'nearly', 'disorder', 'nearrev']);   // generators that use the seed
 export const stackById = Object.fromEntries(STACKS.map(b => [b.id, b]));
 
-// The stamp a move count earns: a hard limit where the subject sets one, else the grade.
+// The stamp a move count earns: the grade, or, where the subject sets a hard limit, a grade of
+// its own. best is the optimum (the worst order's shortest solution, by the Oracle's search):
+// EXCELLENT reaches it, GOOD gets at least halfway from the limit to it, PASS stays within the limit.
 export function stamp(b, ops) {
-  if (b.limit != null) return ops <= b.limit ? (b.limit === 0 ? 'PERFECT' : 'PASS') : 'FAIL';
+  if (b.limit != null) {
+    if (ops > b.limit) return 'FAIL';
+    if (b.limit === 0) return 'PERFECT';
+    const best = b.best ?? b.limit;
+    return ops <= best ? 'EXCELLENT' : ops <= (best + b.limit) / 2 ? 'GOOD' : 'PASS';
+  }
   return grade(b.n, ops).replace('~', '');
 }
 export const stampClass = s => s === 'PERFECT' ? 'EXCELLENT' : s;
@@ -48,7 +55,7 @@ export const stampClass = s => s === 'PERFECT' ? 'EXCELLENT' : s;
 export function goal(b) {
   if (!b) return '';
   if (b.limit === 0) return 'Goal: 0 moves.';
-  if (b.limit != null) return `Goal: at most ${b.limit} moves.`;
+  if (b.limit != null) return `Goal: at most ${b.limit} moves${b.best != null && b.best < b.limit ? ` · Best possible: ${b.best}` : ''}.`;
   return b.n === 100 ? 'Pass under 2 000 · Excellent under 700' : b.n === 500 ? 'Pass under 12 000 · Excellent under 5 500' : '';
 }
 // The stack matching an input, if any.
