@@ -3,6 +3,8 @@
 // and sorting one stamps it. A stack with seeds is a set of inputs (every order of 3, say):
 // it is stamped by its worst one, and picking it plays that one.
 import { grade } from '../core/metrics.js';
+import { generate, ranks } from '../core/input.js';
+import { routeOf } from '../core/meta-run.js';
 
 export const LEVELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 export const STACKS = [
@@ -37,6 +39,10 @@ export const SEED = 42;
 function range(k) { return Array.from({ length: k }, (_, i) => i); }
 const RANDOM = new Set(['uniform', 'nearly', 'disorder', 'nearrev']);   // generators that use the seed
 export const stackById = Object.fromEntries(STACKS.map(b => [b.id, b]));
+// A stack's input at a seed; a set of orders gives its first.
+export const stackRanks = (b, seed = SEED) => ranks(generate(b.gen, b.n, b.seeds ? b.seeds[0] : seed, b.param));
+// Where a stack goes. A set of orders is tiny by its size, whatever each order's disorder.
+export function stackRoute(b, seed = SEED) { const r = routeOf(stackRanks(b, seed)); return b.seeds ? { d: null, route: r.route } : r; }
 
 // The stamp a move count earns: the grade, or, where the subject sets a hard limit, a grade of
 // its own. best is the optimum (the worst order's shortest solution, by the Oracle's search):

@@ -26,18 +26,23 @@ export function runPortfolio(hands, ranks) {
   hands.forEach((h, i) => { const res = runHand(h, ranks); all.push(res.ops.length); if (!best || res.ops.length < best.ops.length) { best = res; bi = i; } });
   return { ...best, chosen: bi, all };
 }
-// build: { simple: hand, medium: hand, complex: hand }
 // Tiny stacks come first, as in any push_swap: three numbers or fewer take the hardcoded cases,
 // four or five the Oracle's search (120 orders at most: a BFS or a lookup table in C), which is
 // optimal, 8 moves for the worst order of 5 where Five Hand needs 10. No disorder regime applies
 // to them, and the subject caps them at 3 and 12 moves.
-const TINY = [[3, 'hardcoded-three'], [5, 'oracle']];
+export const TINY_MAX = 5;
+export const tinyCard = n => n <= 3 ? 'hardcoded-three' : 'oracle';
+// Where an input goes: the tiny seat by its size, else the flag its disorder picks.
+export function routeOf(r, opts) {
+  const { d, regime } = regimeOf(r, opts);
+  return { d, route: r.length <= TINY_MAX ? 'tiny' : regime };
+}
+// build: { simple: hand, medium: hand, complex: hand }
 export function runAdaptive(build, ranks, opts = {}) {
-  const { d, regime } = regimeOf(ranks, opts);
-  const tiny = TINY.find(([n]) => ranks.length <= n);
-  if (tiny) return { ...runHand({ algo: tiny[1], techs: [], sandbox: true }, ranks), regime: 'tiny', tinyCard: tiny[1], disorder: d };
-  const res = runHand(build[regime], ranks);
-  return { ...res, regime, disorder: d };
+  const { d, route } = routeOf(ranks, opts);
+  if (route === 'tiny') { const id = tinyCard(ranks.length); return { ...runHand({ algo: id, techs: [], sandbox: true }, ranks), regime: 'tiny', tinyCard: id, disorder: d }; }
+  const res = runHand(build[route], ranks);
+  return { ...res, regime: route, disorder: d };
 }
 
 // Does a hand's class claim hold on its params? A param that stops growing on a card that claims

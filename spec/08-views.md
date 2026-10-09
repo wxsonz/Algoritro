@@ -30,7 +30,10 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   Twenty runs, and exact disorder at 25 %, 50 % and 75 %. Hard: Random 500, Reversed 500, Up
   then down 500, Nearly sorted 500 (10 swaps), Rotated 500 (by 137). Seeded stacks use seed
   42. An "every order" stack runs all n! orders, is stamped by the worst, and picking it plays
-  that worst order. A stack with a hard limit is graded against its optimum (the worst
+  that worst order. Each row also shows the stack's **route**: its disorder, the flag it goes
+  to (`--simple` below 0.2, `--medium` up to 0.5, `--complex` from 0.5, or `tiny` for 5 numbers or
+  fewer, whatever the disorder) and the icon of the card that sorted it. The flags have their
+  own colours, never the stack levels'. A stack with a hard limit is graded against its optimum (the worst
   order's shortest solution, found by the Oracle: 1 for 2 swapped, 2 for 3 numbers, 8 for 5):
   ★ at the optimum, blue ✓ at least halfway from the limit to it, orange ✓ within the limit. A custom stack is one more entry. Each stack carries
   the current hand's moves and a stamp (★ EXCELLENT or perfect, ✓ GOOD or PASS, ✕ FAIL),

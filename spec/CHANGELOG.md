@@ -6,6 +6,9 @@
   no Browse or Draw buttons (click a deck to spread it), and the Book of Codex left the Table
   (Codex is in the top bar). The left panel is wider. Lesson and research cards wear a book or
   a flask icon in the type line instead of a ribbon.
+- **Step 2, routes.** Every stack row shows its route: the disorder, the flag it goes to
+  (`--simple`, `--medium`, `--complex`, or `tiny` for 5 numbers or fewer) and the icon of the card
+  that sorted it. With the Adaptive Selector in play, that is the card it actually chose.
 - **Playback lays out only the board.** Every move was laying out the whole page, stack list and
   hand included: containment on the board plate did nothing, because Chrome never lets a grid
   item be a layout boundary. The board now sits in a plain block. Layout during playback went

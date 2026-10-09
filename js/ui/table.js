@@ -7,7 +7,7 @@ import { ALGOS, TECHS, byId, techById, FAMILIES, ROLES, label } from '../cards/i
 import { DECKS, deckById, BUILDS } from '../cards/decks.js';
 import { GENERATORS, generate, parseManual, describe } from '../core/input.js';
 import { runHand, resolve, fits, parseDeck, deckString } from '../core/hand.js';
-import { runPortfolio, runAdaptive, METRICS, buildCompliance } from '../core/meta-run.js';
+import { runPortfolio, runAdaptive, METRICS, buildCompliance, tinyCard } from '../core/meta-run.js';
 import { grade, thresholds } from '../core/metrics.js';
 import { useDpTables } from '../cards/engines/divide.js';
 import { loadData } from '../core/data.js';
@@ -19,7 +19,7 @@ import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, 
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
 import { runAll } from './worker-client.js';
-import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack } from './stacks.js';
+import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack, stackRoute } from './stacks.js';
 import { PATHS } from './paths.js';
 
 let shown = null, countTimer = 0;   // the move counter's displayed value
@@ -31,6 +31,7 @@ const S = {
   pinned: null, path: null, step: 0, seedJob: null,
   stamps: {}, stampKey: '', stampJob: null, known: new Map(),   // stack results per hand
   shownAlgo: '', handEls: new Map(), handKey: '', hist: null, opener: null,
+  routes: Object.fromEntries(STACKS.map(b => [b.id, stackRoute(b)])),   // each stack's disorder and flag
 };
 const QUICK = [3, 5, 7, 20, 100, 500];
 const ORDER = [...ROLES, 'leaf', 'prep', 'post'];
@@ -142,15 +143,29 @@ function stackList() {
       const st = S.stamps[b.id], d = st?.d;
       const tip = `${b.name}: ${b.desc}` + (st?.ops != null ? `\n${b.seeds ? 'worst order: ' : ''}${st.ops} moves (${st.s})` + (d ? `, ${signed(d)} after the last change` : d === 0 ? ', unchanged by the last change' : '') : '');
       box.append(el('button', { className: `brow l-${level}${S.stack?.id === b.id ? ' on' : ''}`, title: tip, onclick: () => pickStack(b), dataset: { id: b.id } },
-        el('span.disc', {}, b.icon), el('span.bname', {}, b.name),
+        el('span.disc', {}, b.icon), el('span.bname', {}, b.name), routeChip(b),
         el('span', { className: 'bdelta' + (d < 0 ? ' good' : d > 0 ? ' bad' : '') }, d ? signed(d) : ''),
         el('span.bops', {}, st?.ops != null ? f0(st.ops) : ''),
         el('span', { className: 'mark ' + (st ? stampClass(st.s) : 'none'), title: st ? (st.ops != null ? `${st.s}: ${st.ops} moves` : st.why || '') : '' }, st ? MARK[st.s] ?? '·' : '')));
     }
   }
   box.append(el('button', { className: `brow custom${S.stack ? '' : ' on'}`, onclick: () => openOverlay('input'), title: 'Set the size and shape yourself, or type your own numbers' },
-    el('span.disc', {}, '✎'), el('span.bname', {}, 'Custom stack…'), el('span.bdelta'), el('span.bops'), el('span.mark.none')));
+    el('span.disc', {}, '✎'), el('span.bname', {}, 'Custom stack…'), el('span.bdelta'), el('span.bops'), el('span.mark.none')));   // no route: it can be anything
   stackSummary();
+}
+// A stack's route: its disorder, the flag that picks, and the card that sorted it. Under the
+// Adaptive Selector that is the flag's hand, or the tiny card; otherwise the one hand plays all.
+function flag(route) { return route === 'tiny' ? 'tiny' : '--' + route; }   // a function: start-up code calls it before a const would exist
+function routeCard(b) {
+  const r = S.routes[b.id].route;
+  return S.meta !== 'adaptive' ? S.hand.algo : r === 'tiny' ? tinyCard(b.n) : adaptiveBuild()[r].algo;
+}
+function routeChip(b) {
+  const { d, route } = S.routes[b.id], a = byId[routeCard(b)];
+  const why = route === 'tiny' ? `${b.n} numbers or fewer: the tiny seat, whatever the disorder` : `Disorder ${d.toFixed(3)}: ${flag(route)} (${route === 'simple' ? 'below 0.2' : route === 'medium' ? '0.2 to 0.5' : '0.5 and above'})`;
+  return el('span', { className: 'route f-' + route, title: `${flag(route)}\n${why}\nSorted by ${a.name}` },
+    el('span.rd', {}, d == null || route === 'tiny' ? '' : d.toFixed(2)), el('span.rflag', {}, flag(route)),   // the tiny seat ignores disorder
+    el('span', { className: 'rcard fam-' + a.family, html: icon(a.family) }));
 }
 // The last change, weighed over every stack: where it helped and where it hurt.
 function stackSummary() {
