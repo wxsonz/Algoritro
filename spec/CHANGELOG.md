@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-09, cards told top-down, and Inspect on the felt
+
+- **The project is called Algoritro**, "a push_swap card table", and lives in git.
+- **No more card backs.** The flip button is gone from the Table and the Codex: clicking a
+  card opens it in Inspect, which says more than a back could.
+- **Inspect was redesigned** to sit on the table's felt as cream panels in reading order
+  ([08-views.md §8.1](08-views.md#81-table-indexhtml-the-play-page)): The idea, Step by step
+  beside a replay, the Scorecard (the three badges in plain words), Good at and Watch out,
+  then Under the hood. A technique shows its change on the played card, says when the card
+  has it built in or comes with it, and lists its change on every card it fits.
+- **Card text is told top-down** ([cards/README.md](cards/README.md#how-a-cards-text-reads)):
+  "How it plays" became **The idea** in plain words and **Step by step** as a numbered list,
+  followed by **Under the hood** with the exact rules. Every technique and Finisher has an
+  idea line too.
+- **Fixes:** a bold phrase opening a sentence no longer starts a new section of a card's text;
+  numbered lists render as lists; the Finisher table's Grasp and Craft are on the 0–10 scale
+  like the rest; the Codex's Grasp × Craft note uses the 0–10 bands.
+
 ## 2026-10-09, cards you can read, covers with ideas, and a show while it plays
 
 - **Algorithm cards were remade** ([02-game-design.md §2.3](02-game-design.md#23-the-card-face)):

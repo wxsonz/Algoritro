@@ -6,7 +6,9 @@ into.
 
 ## LIS Anchor — *"Keep the longest ordered line"*
 
-Keep a longest increasing subsequence, found by patience sorting with predecessor links in
+**The idea.** Keep the longest line of numbers in A that already goes up, and never move it: everything else is inserted around it.
+
+**Under the hood.** Keep a longest increasing subsequence, found by patience sorting with predecessor links in
 O(n log n). The expected LIS of a random permutation approaches 2√n, but it is shorter at
 these sizes: about 17 values at n=100 and 40 at n=500 (sim).
 
@@ -24,7 +26,9 @@ these sizes: about 17 values at n=100 and 40 at n=500 (sim).
 
 ## Circular LIS Anchor — *"The line can wrap around"*
 
-A is a circle, so the kept set only needs to be increasing **circularly**. Take the best LIS
+**The idea.** Like LIS Anchor, but A is a circle, so the kept line may wrap around from the bottom back to the top.
+
+**Under the hood.** A is a circle, so the kept set only needs to be increasing **circularly**. Take the best LIS
 over all n rotations (O(n² log n)).
 
 - **Measured:** on LIS Insertion (Four-Way Cost, one band), −6 ± 1 at n=100, −7 ± 4 at n=200
@@ -38,7 +42,9 @@ over all n rotations (O(n² log n)).
 
 ## Longest Run Anchor — *"Keep the longest contiguous ordered block"*
 
-Keep the longest stretch of **adjacent** values that are already in order. It is trivial to
+**The idea.** Keep the longest block of neighbours that is already in order, and move only the rest.
+
+**Under the hood.** Keep the longest stretch of **adjacent** values that are already in order. It is trivial to
 find in O(n).
 
 - **Measured:** on Simple Insertion + Cheapest Pick, −7 at n=100 and −20 ± 12 at n=500; on Turk
@@ -50,7 +56,9 @@ find in O(n).
 
 ## Keep Three — *"Leave three, sort them by hand"*
 
-Stop pushing when 3 values remain in A and sort them with Hardcoded Three.
+**The idea.** Stop pushing when three numbers are left in A, and sort those three directly.
+
+**Under the hood.** Stop pushing when 3 values remain in A and sort them with Hardcoded Three.
 
 - **Pros:** Turk's default anchor, and native in Min Extract. Zero Grasp cost.
 - **Cons:** it keeps only 3, against ~2√n for the LIS.

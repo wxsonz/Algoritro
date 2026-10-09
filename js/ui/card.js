@@ -1,9 +1,8 @@
-// Card faces (spec/02 §2.3). Algorithm cards have a front (stats, mini replay) and a back (how it
-// plays, lore, pros and cons, compatible cards) and flip on click. Technique cards are small.
-import { el, esc, cls, proofMark, dots, speedDots, gradeBar, gradeName, f0, RARITY, css } from './common.js';
-import { markdown, sections } from './markdown.js';
-import { FAMILIES, TECHS, label } from '../cards/index.js';
-import { fits, runHand } from '../core/hand.js';
+// Card faces for the Codex (spec/02 §2.3). An Algorithm card shows its stats and a mini replay;
+// its Codex page holds the rest. Technique cards are small.
+import { el, cls, proofMark, dots, speedDots, gradeBar, gradeName, f0, RARITY, css } from './common.js';
+import { FAMILIES, label } from '../cards/index.js';
+import { runHand } from '../core/hand.js';
 import { generate, ranks } from '../core/input.js';
 import { grade } from '../core/metrics.js';
 
@@ -50,7 +49,7 @@ export function mini(algo) {
 }
 
 // The front of an Algorithm card. stats: data/meta.json's entry for the card, if any.
-export function algoCard(a, { stats, doc, onPlay, compact = false, selected = false, disabled = '', flip = true } = {}) {
+export function algoCard(a, { stats, onPlay, compact = false, selected = false, disabled = '' } = {}) {
   const fam = FAMILIES[a.family] || { icon: '?', name: a.family };
   const at = (n, sim) => {
     const s = stats?.at?.[n];
@@ -69,23 +68,7 @@ export function algoCard(a, { stats, doc, onPlay, compact = false, selected = fa
     compact ? '' : el('div.stat.nerdy', {}, el('span.k', {}, 'Speed'), el('span.dots', { title: stats?.speedMs != null ? `${stats.speedMs} ms at n=${stats.speedN} (JS)` : '' }, speedDots(stats?.speedMs) || '—'), ' ', el('span.k', {}, 'Lines'), `~${a.lines}`),
     el('div.stat', {}, el('span.k', {}, 'Slots'), slots, a.maxN ? el('span.muted', {}, ` · n ≤ ${a.maxN}`) : ''));
   const card = el('div.card.algo.fam-' + a.family, { tabIndex: 0, dataset: { id: a.id }, title: disabled || '', className: `card algo fam-${a.family}${selected ? ' on' : ''}${disabled ? ' off' : ''}${a.research ? ' research' : ''}${a.lesson ? ' lesson' : ''}` }, front);
-  if (!compact && flip) {
-    const back = el('div.face.back', {});
-    const sec = sections(doc?.doc || '');
-    back.innerHTML = `<div class="head"><b class="name">${esc(a.name)}</b></div>` +
-      (sec['How it plays'] ? `<h4>How it plays</h4>${markdown(sec['How it plays'], doc.source)}` : '') +
-      (sec.Lore ? `<h4>Lore</h4>${markdown(sec.Lore, doc.source)}` : '') +
-      (sec.Pros ? `<h4>Pros</h4>${markdown(sec.Pros, doc.source)}` : '') + (sec.Cons ? `<h4>Cons</h4>${markdown(sec.Cons, doc.source)}` : '');
-    const compat = TECHS.filter(t => !['prep', 'post'].includes(t.role) && fits(a, t).ok).map(t => label(t.id));
-    back.append(el('h4', {}, 'Compatible'), el('p.muted', {}, compat.length ? compat.join(' · ') : 'no slot or Finisher cards: prep and post cards only'),
-      el('p', {}, el('a', { href: `codex.html#${a.id}` }, 'Codex page →'), ' ', el('a', { href: `index.html#deck=${a.id}` }, 'Play on the Table →')));
-    if (stats?.disorder) back.append(el('h4', {}, 'Disorder curve (n=100)'), sparkline(stats.disorder));
-    card.append(back);
-    card.classList.add('flips');
-    const flipBtn = el('button.flip.ghost', { title: 'Flip the card', 'aria-label': 'Flip the card', onclick: e => { e.stopPropagation(); card.classList.toggle('flipped'); } }, '⟲');
-    card.append(flipBtn);
-  }
-  if (onPlay) { card.onclick = e => { if (e.target.closest('a,.back')) return; if (!disabled) onPlay(a); }; card.onkeydown = e => { if (e.key === 'Enter' && !disabled) onPlay(a); }; }
+  if (onPlay) { card.onclick = e => { if (e.target.closest('a')) return; if (!disabled) onPlay(a); }; card.onkeydown = e => { if (e.key === 'Enter' && !disabled) onPlay(a); }; }
   return card;
 }
 

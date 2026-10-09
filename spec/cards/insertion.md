@@ -12,7 +12,15 @@ gap between its predecessor and successor, and you can reach it by rotating eith
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n²) · ✓ | 1459 sim GOOD | 32251 sim FAIL | 4 | 4 | ~90 | Uncommon |
 
-**How it plays.** Take A's top, rotate B (the shorter way) until the slot for that value is on
+**The idea.** Move the numbers to B one at a time, each straight into its right place, so B is always sorted. Then pour B back into A.
+
+**Step by step.**
+1. Take the number on top of A.
+2. Turn B the short way until the gap for that number is at the top.
+3. Push the number in (`pb`).
+4. When A is empty, turn B so its biggest number is on top, and push everything back.
+
+**Under the hood.** Take A's top, rotate B (the shorter way) until the slot for that value is on
 top, then `pb`. B stays circularly sorted in descending order. At the end, rotate B's max to
 the top and `pa` everything.
 
@@ -36,7 +44,15 @@ twist here is the circular slot.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n²) · ✓ | 1462 sim GOOD | 32242 sim FAIL | 4 | 4 | ~100 | Uncommon |
 
-**How it plays.** `pb` everything. Then repeatedly take B's top, rotate A to its slot, and `pa`.
+**The idea.** Move everything to B, then bring the numbers back one by one, each into its right place in A.
+
+**Step by step.**
+1. Push every number to B.
+2. Take the number on top of B and turn A until its spot is on top.
+3. Push it back (`pa`), and repeat until B is empty.
+4. Turn A so the smallest number is on top.
+
+**Under the hood.** `pb` everything. Then repeatedly take B's top, rotate A to its slot, and `pa`.
 Finish by rotating A's minimum to the top.
 
 **Lore.** Same idea as Insert-into-B, mirrored. No separate history.
@@ -60,7 +76,15 @@ slots of any card. It is the main **lab bench** for Insertion techniques.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n²) · ✓ | 547 sim EXC | 5059 sim EXC | 6 | 6 | ~300 | Rare |
 
-**How it plays.** Find a longest increasing subsequence (patience sorting, O(n log n)). Pass 1:
+**The idea.** Some numbers are already in a good order. Keep the longest such line in A, move only the rest, and insert those back where they belong, cheapest first.
+
+**Step by step.**
+1. Find the longest line of numbers in A that already goes up.
+2. Walk A once: rotate past the numbers on that line, push the others to B.
+3. Bring the numbers back from B, always the one that is cheapest to place, turning both stacks together when they go the same way.
+4. Turn A so the smallest number is on top.
+
+**Under the hood.** Find a longest increasing subsequence (patience sorting, O(n log n)). Pass 1:
 `ra` past values on the LIS and `pb` the rest, so A becomes the LIS in circular order. Pass 2:
 insert each value of B back, choosing the cheapest value in B, with A and B rotating together
 (`rr`/`rrr`) when their directions agree. Final rotation of the minimum to the top.
@@ -95,7 +119,15 @@ starts as Two-Way Cost.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n²) · ✓ | 557 sim EXC | 5088 sim EXC | 4 | 6 | ~250 | Common |
 
-**How it plays.** This is the most popular 42 push_swap ("Mechanical Turk", credited to a 42
+**The idea.** Before every move, price every number: how many turns it takes to bring it to the top and its spot in B to the top, together. Make the cheapest move, then price again.
+
+**Step by step.**
+1. Push two numbers to B to start.
+2. For each number in A, count the turns to bring it to the top and B's matching spot to the top, sharing turns when both stacks go the same way.
+3. Make the cheapest of those moves and push (`pb`). Repeat until three numbers are left in A.
+4. Sort those three, then bring each number back from B to its spot in A, and turn the smallest to the top.
+
+**Under the hood.** This is the most popular 42 push_swap ("Mechanical Turk", credited to a 42
 student; see sources). Start with `pb pb`. While A has more than 3 values: for **every** value
 in A, find its target in B (the largest smaller value, or B's max) and price the four rotation
 combinations (`rr`, `rrr`, `ra+rrb`, `rra+rb`); perform the cheapest and `pb`. Finish the last

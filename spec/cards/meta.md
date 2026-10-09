@@ -11,7 +11,9 @@ cost CPU, not ops.
 | --- | --- | --- | --- |
 | CPU × (number of hands) | 2 | 2 | Rare |
 
-**How it plays.** Run every wrapped hand on a copy of the input and output the shortest stream.
+**The idea.** Play several hands on the same stack and keep the shortest move list.
+
+**Under the hood.** Run every wrapped hand on a copy of the input and output the shortest stream.
 The simplest version is "one band vs two bands" inside LIS Insertion: −8 ops at n=100 against
 two bands alone, and nothing at n=500, where two bands always win (sim).
 
@@ -35,7 +37,9 @@ several and keep the best.
 | --- | --- | --- | --- |
 | one disorder measurement | 4 | 4 | Common (required by the subject's `--adaptive`) |
 
-**How it plays.** Measure the input's disorder (inversions ÷ pairs, by the subject's
+**The idea.** Measure how messy the stack is, then play the hand that suits it best.
+
+**Under the hood.** Measure the input's disorder (inversions ÷ pairs, by the subject's
 definition), then dispatch to a hand per range. The subject's baseline is < 0.2 → the O(n²)
 hand, < 0.5 → the O(n√n) hand, and otherwise → the O(n log n) hand. These are also the
 subject's class targets: whatever runs at disorder ≥ 0.5 must be O(n log n), and whatever

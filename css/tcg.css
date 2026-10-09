@@ -29,14 +29,11 @@
   user-select: none; -webkit-user-select: none; outline: none; cursor: pointer;
 }
 .tcg-body {
-  position: absolute; inset: 0; border-radius: inherit; transform-style: preserve-3d;
-  transform: perspective(900px) rotateY(var(--flip, 0deg));
-  transition: transform .45s cubic-bezier(.3, .7, .3, 1), box-shadow .2s, filter .2s;
+  position: absolute; inset: 0; border-radius: inherit; isolation: isolate;   /* the legendary rim sits just behind it */
+  transition: box-shadow .2s, filter .2s;
   box-shadow: 0 3px 0 rgba(0, 0, 0, .32), 0 8px 18px rgba(0, 0, 0, .22);
 }
-.tcg.flipped { --flip: 180deg; }
-.tcg .face { position: absolute; inset: 0; border-radius: inherit; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
-.tcg .face.back { transform: rotateY(180deg); }
+.tcg .face { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
 .tcg:focus-visible .tcg-body { box-shadow: 0 0 0 3px #ffd45a, 0 8px 18px rgba(0, 0, 0, .3); }
 .tcg.on .tcg-body { box-shadow: 0 0 0 3px #ffd45a, 0 0 24px rgba(255, 212, 90, .6), 0 8px 18px rgba(0, 0, 0, .3); }
 .tcg.on:not(.flying) .tcg-body { animation: inplay 2.4s ease-in-out infinite; }
@@ -109,18 +106,6 @@
 .badge.tier-small { --bc: linear-gradient(#a8b4c8, #5d6b84); }
 .badge.ps { clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); padding-bottom: 4.5cqw; border-radius: 2.4cqw 2.4cqw 0 0; }
 .badge.ps.tier-S::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .7) 45%, transparent 60%) -200% 0 / 300% 100%; animation: shimmer 2.6s ease-in-out infinite; }
-
-/* the back of an algorithm card: how it plays, lore */
-.tcg .face.back {
-  padding: 4cqw 5cqw; overflow: auto; overscroll-behavior: contain; font-size: 5cqw; line-height: 1.35; color: #2a2520;
-  background: linear-gradient(#fffaf0, #efe2c3); box-shadow: inset 0 0 0 1.8cqw var(--fa, #8a7a62), inset 0 0 0 2.6cqw rgba(255, 255, 255, .5);
-}
-.tcg .face.back .backhead { text-align: center; margin-bottom: 1cqw; }
-.tcg .face.back .name { font-size: 8.6cqw; }
-.tcg .face.back h4 { margin: 3cqw 0 1cqw; font: 400 6.6cqw/1 var(--pixel); color: var(--fb, #3a3026); }
-.tcg .face.back p, .tcg .face.back ul { margin: 1cqw 0; }
-.tcg .face.back ul { padding-left: 5cqw; }
-.tcg .face.back a { color: #1d5fa8; }
 
 /* ---- technique, meta and plain cards: a metal trim (rarity) around a cream card ---- */
 .tcg.tech .front, .tcg.meta .front { padding: 2.2cqw; background: var(--metal); }
@@ -204,7 +189,6 @@
 }
 .tcg-btn:hover { transform: scale(1.12); }
 .tcg-btn.peek { right: -2.4cqw; }
-.tcg-btn.flip { right: max(26px, 12cqw); }
 .tcg:hover .tcg-btn, .tcg:focus-within .tcg-btn { opacity: 1; }
 
 /* ---- small cards (slots, tight hands): a big name, the art and the type ---- */

@@ -10,7 +10,15 @@ Sort by the digits of each value's **rank**, never comparing two values directly
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 4 | 2 | ~40 | Common |
 
-**How it plays.** Replace values with ranks 0..n−1. For each bit from least to most
+**The idea.** Write each number's rank in binary and sort by one bit at a time, from the last bit to the first. Each pass is a simple walk through A; after the last bit everything is in order.
+
+**Step by step.**
+1. Replace the numbers by their ranks, from 0 to n−1.
+2. Walk A once: push the numbers whose current bit is 0 to B, and rotate past the ones whose bit is 1.
+3. Push everything back from B.
+4. Move to the next bit, until all bits are done.
+
+**Under the hood.** Replace values with ranks 0..n−1. For each bit from least to most
 significant: walk A once, `pb` if the bit is 0 and `ra` if it is 1, then `pa` everything back.
 Every pass costs exactly n + (number of zeros). Passes = ⌈log₂ n⌉.
 
@@ -48,7 +56,15 @@ the gap to EXCELLENT.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 6 | 6 | ~150 | Rare |
 
-**How it plays.** Base-3 digits of the rank. Per pass, digit 0 → `pb` + `rb` (bottom of B),
+**The idea.** Radix sort in base 3 instead of base 2: three groups per pass instead of two, so fewer passes, using both ends of B as extra bins.
+
+**Step by step.**
+1. Write each rank in base 3.
+2. For the current digit: a 0 goes to B's bottom (`pb` then `rb`), a 1 to B's top (`pb`), and a 2 stays in A (`ra`).
+3. Gather the three groups back into A, in order.
+4. Move to the next digit, until all digits are done.
+
+**Under the hood.** Base-3 digits of the rank. Per pass, digit 0 → `pb` + `rb` (bottom of B),
 digit 1 → `pb` (top of B), digit 2 → `ra` (stays in A). Then gather the three groups back into
 A in digit order with `rrb`/`pa` and `pa`. There are ⌈log₃ n⌉ passes: 5 for n=100 and 6 for
 n=500, against 7 and 9 for binary.
@@ -78,7 +94,15 @@ pocket per digit; here B's two ends plus A act as three pockets.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 6 | 6 | ~200 | Uncommon |
 
-**How it plays.** Split the chunk by the top bit of its rank range: values below the
+**The idea.** Split the numbers by their top bit, the smaller half to B and the larger half staying in A, then sort each half the same way, one bit lower each time.
+
+**Step by step.**
+1. Look at the highest bit of the ranks in the current group.
+2. Push the numbers with that bit at 0 to B, and rotate past the others.
+3. Sort the half left in A the same way, then the half in B.
+4. Groups of two are fixed with a single swap.
+
+**Under the hood.** Split the chunk by the top bit of its rank range: values below the
 power-of-two cut go to B, the rest stay in A, and each half is sorted recursively, top bit
 first. On ranks 0..n−1 this is exactly Quick 2-Way with the pivot moved to a power of two, and
 the sim builds it that way: same pushes, same restores, same 2-value leaves.

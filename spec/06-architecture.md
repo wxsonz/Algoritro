@@ -135,7 +135,7 @@ is what makes "same card, one technique toggled" an exact, fair comparison.
 
 ## 6.5 Card data
 
-The card text (how it plays, lore, pros, cons) lives in one place: this spec. `tools/build-data.mjs`
+The card text (the idea, step by step, under the hood, lore, pros, cons) lives in one place: this spec. `tools/build-data.mjs`
 extracts each card's section from `spec/cards/*.md` and `spec/techniques/*.md` into
 `data/cards.json`, keyed by kind (algorithms, techniques, meta, cursed) because a leaf card can
 share an id with its Algorithm card. The code keeps the name, tagline, scores and roles, and

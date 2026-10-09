@@ -44,7 +44,8 @@ const missing = [];
 for (const a of ALGOS) { const s = find(a); if (!s) missing.push(a.name); cards.algorithms[a.id] = { kind: 'algorithm', name: a.name, tagline: a.tagline, family: a.family, rarity: a.rarity, grasp: a.grasp, craft: a.craft, lines: a.lines, claimedClass: a.claimedClass, proof: a.proof, doc: s?.body || '', source: s?.file }; }
 for (const t of TECHS) {
   let doc = '', source;
-  if (t.role === 'leaf') { const row = leafRow(t.name); doc = row ? row.split('|').slice(1, -1).map(c => c.trim()).filter((c, i) => i === 2 || i === 5).join('. ') : ''; source = 'spec/techniques/leaf.md'; }
+  // A Finisher's text: its idea, then its quality and notes. Columns: card, size, quality, Grasp, Craft, notes, idea.
+  if (t.role === 'leaf') { const row = leafRow(t.name), c = row ? row.split('|').slice(1, -1).map(x => x.trim()) : []; doc = row ? `**The idea.** ${c[6]}\n\n**Under the hood.** ${c[2]}. ${c[5]}` : ''; source = 'spec/techniques/leaf.md'; }
   else { const s = find(t); if (s) { doc = s.body; source = s.file; } else missing.push(t.name); }
   cards.techniques[t.id] = { kind: 'technique', name: t.name, tagline: t.tagline || '', role: t.role, rarity: t.rarity, grasp: t.grasp, craft: t.craft, effect: t.effect, doc, source };
 }

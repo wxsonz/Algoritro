@@ -10,7 +10,9 @@ For Divide cards. Three roles, one card each per hand:
 
 ## Median Pivot
 
-Role: pivot. Split at the median rank of the chunk, into two halves. Ranks make the median
+**The idea.** Split each group exactly at its middle value, into two halves.
+
+**Under the hood.** Role: pivot. Split at the median rank of the chunk, into two halves. Ranks make the median
 exact and free.
 
 - **Pros:** balanced recursion with depth log₂ n.
@@ -18,7 +20,9 @@ exact and free.
 
 ## Thirds Split — *"Three-way partition"*
 
-Role: split. Split by two pivots into low, mid and high parts, and send each to a different
+**The idea.** Split a group into three parts, low, middle and high, instead of two, and send each part to a different end.
+
+**Under the hood.** Role: split. Split by two pivots into low, mid and high parts, and send each to a different
 place.
 
 - **Measured:** with Four Ends and no Finisher, −86 at n=100 and −330 at n=500 against halves
@@ -31,7 +35,9 @@ place.
 
 ## Four Ends
 
-Role: ends. Use the top and bottom of both stacks as four destinations. A part sent to the
+**The idea.** Use the top and the bottom of both stacks as four places to send numbers, so nothing has to be moved back later.
+
+**Under the hood.** Role: ends. Use the top and bottom of both stacks as four destinations. A part sent to the
 bottom of the current stack costs one rotation and never needs restoring.
 
 - **Measured:** on Quick 2-Way with halves, both with 2-value leaves: +6 at n=100 and −355 at
@@ -43,7 +49,9 @@ bottom of the current stack costs one rotation and never needs restoring.
 
 ## Pivot by Leaf Count
 
-Role: pivot. Choose pivots so that the final leaves come out full (for example, ⌈m/5⌉ leaves of
+**The idea.** Choose the split points so the last small groups come out full, which makes the Finisher's work cheaper.
+
+**Under the hood.** Role: pivot. Choose pivots so that the final leaves come out full (for example, ⌈m/5⌉ leaves of
 up to 5 values), instead of splitting in equal thirds.
 
 - **Measured:** with BFS Leaf ≤ 5, −27 at n=100 and −334 at n=500; without a Finisher, +12 /
@@ -54,7 +62,9 @@ up to 5 values), instead of splitting in equal thirds.
 
 ## DP Splits — *"Plan every split in advance"*
 
-Role: split. A dynamic program over (chunk size, location, whether the stacks hold other
+**The idea.** Plan the size and the destination of every split in advance, to need the fewest moves on average.
+
+**Under the hood.** Role: split. A dynamic program over (chunk size, location, whether the stacks hold other
 values) chooses part sizes and destinations that minimise the **expected** op count. It
 includes `rr` merges and free cases, such as a chunk alone on its stack.
 
@@ -71,7 +81,9 @@ includes `rr` merges and free cases, such as a chunk alone on its stack.
 
 ## Restore Skip
 
-Role: ends, as a variant of Quick 2-Way's two ends. In Quick 2-Way, skip the `rra` restore
+**The idea.** In Quick 2-Way, skip undoing the rotations when there is nothing underneath to protect.
+
+**Under the hood.** Role: ends, as a variant of Quick 2-Way's two ends. In Quick 2-Way, skip the `rra` restore
 when the chunk is the whole stack, or when the remaining part can be processed from the
 bottom instead. The first case is part of the bare Quick 2-Way: always restoring would cost
 +139 at n=100 and +732 at n=500 (sim). The second case is not built in the sim; carried

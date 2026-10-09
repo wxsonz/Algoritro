@@ -69,9 +69,13 @@ a fanned hand. The anatomy borrows from card games peers already know:
   legendary cards have a slowly turning prismatic rim.
 - **Icons** are 12×12 pixel bitmaps drawn as SVG, so they look the same on every system.
 
-The back of the card (it flips on click) shows how it plays, its **lore** (where the idea
-came from, kept to a few plain sentences, or one line when there is no story), pros and cons,
-the compatible techniques, and a link to its Codex page. All stats are defined in [03-stats.md](03-stats.md).
+A card has no back to flip. Clicking it opens it up close in **Inspect**, told top-down so
+the plain words come first: **the idea** in a sentence or two, **step by step** as a short
+numbered list, a replay of it sorting 20 numbers, the scorecard behind its three badges, what
+it is **good at** and what to **watch out** for, and only then **under the hood**, the exact
+rules, costs and edge cases. Its **lore** (where the idea came from, kept to a few plain
+sentences, or one line when there is no story) and its slots close the page. All stats are
+defined in [03-stats.md](03-stats.md).
 
 ## 2.4 The play loop: the Table
 

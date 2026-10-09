@@ -5,7 +5,9 @@ executed.
 
 ## Cheapest Pick — *"Look at everyone before moving"*
 
-Instead of taking the top of the source stack, evaluate every value in it and move the one
+**The idea.** Instead of always moving the top number, look at every number and move the one that costs the fewest turns.
+
+**Under the hood.** Instead of taking the top of the source stack, evaluate every value in it and move the one
 whose total rotation cost is lowest.
 
 - **Measured:** on an LIS-anchored Simple Insertion, 1397 → 547 at n=100 (−850) and −26,817 at
@@ -24,7 +26,9 @@ whose total rotation cost is lowest.
 
 ## Two-Way Cost
 
-Price each stack independently by its shorter direction. If both directions agree, the cost
+**The idea.** Price a move by turning each stack the short way; when both turn the same way, they turn together.
+
+**Under the hood.** Price each stack independently by its shorter direction. If both directions agree, the cost
 is max(a, b), because `rr`/`rrr` move both stacks at once; otherwise it is a + b.
 
 - **Pros:** simple.
@@ -34,7 +38,9 @@ is max(a, b), because `rr`/`rrr` move both stacks at once; otherwise it is a + b
 
 ## Four-Way Cost — *"Price all four ways"*
 
-Price `rr` (max(fa, fb)), `rrr` (max(ba, bb)), `ra+rrb` (fa + bb) and `rra+rb` (ba + fb), and
+**The idea.** Price all four ways of lining up both stacks (both up, both down, or one each way) and take the cheapest.
+
+**Under the hood.** Price `rr` (max(fa, fb)), `rrr` (max(ba, bb)), `ra+rrb` (fa + bb) and `rra+rb` (ba + fb), and
 take the minimum.
 
 - **Measured:** on LIS Insertion, −4 at n=100, −9 at n=200 and −19 at n=500, and the same on
@@ -49,7 +55,9 @@ take the minimum.
 
 ## Double-Op Sharing
 
-When planning a move, emit `rr`/`rrr` for the shared part instead of separate `ra` and `rb`
+**The idea.** When both stacks need to turn the same way, turn them together with one move (`rr` or `rrr`) instead of two.
+
+**Under the hood.** When planning a move, emit `rr`/`rrr` for the shared part instead of separate `ra` and `rb`
 ops. Cost cards assume it. Without it, the planner's prices are lies.
 
 It is a **post** card that acts as each move is emitted, like No-op Suppression, and it is
@@ -63,7 +71,9 @@ cost role.
 
 ## Lookahead-k — *"Price the move after next"*
 
-Score a candidate by its cost plus the cheapest follow-up move after it (depth k, keeping the
+**The idea.** Price a move together with the best move right after it, not on its own.
+
+**Under the hood.** Score a candidate by its cost plus the cheapest follow-up move after it (depth k, keeping the
 top-b candidates).
 
 - **Measured (k = 2):** it makes things **worse**. Among the 3 cheapest moves: Turk −2 at n=100

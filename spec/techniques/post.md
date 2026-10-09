@@ -7,7 +7,9 @@ Double-Op Sharing is also a post card; it is described with the cost cards in
 
 ## No-op Suppression
 
-Drop an op that changes nothing at the moment it is emitted: rotating or swapping a stack of
+**The idea.** Leave out moves that do nothing, such as rotating a stack that holds a single number.
+
+**Under the hood.** Drop an op that changes nothing at the moment it is emitted: rotating or swapping a stack of
 size < 2, or pushing from an empty stack. Record `rr` with one idle half as the single half.
 
 - **Measured:** under 0.5 op per stream on every sim card: Long Line 0.4 (a sink with one value
@@ -17,7 +19,9 @@ size < 2, or pushing from an empty stack. Record `rr` with one idle half as the 
 
 ## Peephole Cancel
 
-Remove adjacent inverse pairs: `ra/rra`, `rb/rrb`, `rr/rrr`, `pa/pb`, `sa/sa`, `sb/sb`. Do it
+**The idea.** Remove moves that undo each other straight away, such as `ra` then `rra`.
+
+**Under the hood.** Remove adjacent inverse pairs: `ra/rra`, `rb/rrb`, `rr/rrr`, `pa/pb`, `sa/sa`, `sb/sb`. Do it
 in one left-to-right pass that treats the output as a stack, so cascades also cancel.
 
 - **Measured:** on LSD Radix, −78 at n=100 and −55 at n=500: the `pb`s that end a pass are
@@ -26,7 +30,9 @@ in one left-to-right pass that treats the output as a stack, so cascades also ca
 
 ## Peephole Fuse
 
-Merge adjacent halves: `ra+rb → rr`, `rra+rrb → rrr`, `sa+sb → ss`.
+**The idea.** Merge two neighbouring moves into one double move: `ra` then `rb` becomes `rr`.
+
+**Under the hood.** Merge adjacent halves: `ra+rb → rr`, `rra+rrb → rrr`, `sa+sb → ss`.
 
 - **Measured:** −17 at n=100 and −106 at n=500 on Chunks, and −20 / −166 on Butterfly, mostly
   a sunk value's `rb` meeting the next `ra`. Nothing on LSD Radix, which never rotates B, and
@@ -35,7 +41,9 @@ Merge adjacent halves: `ra+rb → rr`, `rra+rrb → rrr`, `sa+sb → ss`.
 
 ## Commutation Peephole
 
-Ops on different stacks commute. For example, `ra pb`… cannot be reordered, but `ra rb` can be
+**The idea.** Moves on different stacks can trade places, so it reorders them to let more pairs cancel or merge.
+
+**Under the hood.** Ops on different stacks commute. For example, `ra pb`… cannot be reordered, but `ra rb` can be
 pulled together across an unrelated op on the other stack. Reorder within a window before
 cancelling and fusing.
 

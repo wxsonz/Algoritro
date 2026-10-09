@@ -9,7 +9,9 @@ Nearest-Member Sweep with its default `rb` Sink.
 
 ## `rb` Sink (Two Bands) — *"Low ones to the floor"*
 
-Role: band. Right after pushing a value from the lower half of its range, `rb` it to the bottom
+**The idea.** When a pushed number is from the lower half of its range, drop it to the bottom of B, so B splits into a high band on top and a low band below.
+
+**Under the hood.** Role: band. Right after pushing a value from the lower half of its range, `rb` it to the bottom
 of B. B becomes two bands (an "hourglass"): high values near the top, low values near the
 bottom. When the next op is an `ra`, the `rb` merges into one `rr`.
 
@@ -23,7 +25,9 @@ bottom. When the next op is an `ra`, the `rb` merges into one `rr`.
 
 ## Multi-Band — *"More floors"*
 
-Role: band. Generalise to k bands, using both the top and bottom of B with a split per band.
+**The idea.** Split B into more than two bands, using both of its ends.
+
+**Under the hood.** Role: band. Generalise to k bands, using both the top and bottom of B with a split per band.
 
 - **Not buildable as written:** B has only two cheap ends, so a third band has nowhere to go
   without rotating past the others. Its measurable part is the split point of `rb` Sink, which
@@ -33,7 +37,9 @@ Role: band. Generalise to k bands, using both the top and bottom of B with a spl
 
 ## `sb` Seed
 
-Role: band. After Turk's opening `pb pb`, `sb` if needed so the two seeds are in descending
+**The idea.** After Turk pushes its first two numbers, swap them if needed so B starts in order.
+
+**Under the hood.** Role: band. After Turk's opening `pb pb`, `sb` if needed so the two seeds are in descending
 order.
 
 - **Measured:** +0.3 on Turk at both sizes (sim): the `sb` it sometimes spends is not won back.
@@ -43,7 +49,9 @@ order.
 
 ## Nearest-Member Sweep
 
-Role: sweep. When pushing a chunk, bring the **nearest** member of the chunk to the top,
+**The idea.** To find the next number of a crate, look both up and down A and take the nearer one.
+
+**Under the hood.** Role: sweep. When pushing a chunk, bring the **nearest** member of the chunk to the top,
 searching both directions, instead of rotating `ra` until one appears.
 
 - **Pros:** none measured. It looks smarter than a blind `ra` sweep, but on Chunks it costs
@@ -56,7 +64,9 @@ searching both directions, instead of rotating `ra` until one appears.
 
 ## One-Way Sweep — *"Pass each value once"*
 
-Role: sweep. Per chunk, pick a direction and sweep once, never reversing. Price the two
+**The idea.** Sweep each crate in one direction only and never turn back, so every number is passed at most once.
+
+**Under the hood.** Role: sweep. Per chunk, pick a direction and sweep once, never reversing. Price the two
 directions honestly: an `ra` sweep pays only for the non-members it passes, while an `rra`
 sweep pays for every value it pulls up, members included. So `ra` nearly always wins.
 
@@ -69,7 +79,9 @@ sweep pays for every value it pulls up, members included. So `ra` nearly always 
 
 ## Middle-Out Push
 
-Role: band. Push the chunks from the middle outwards: chunks above the middle go on top of B,
+**The idea.** Push the middle chunks first, then the ones further out, above and below, so B ends up sorted chunk by chunk.
+
+**Under the hood.** Role: band. Push the chunks from the middle outwards: chunks above the middle go on top of B,
 chunks below it are sunk. B ends up sorted chunk by chunk, from the highest at the top to the
 lowest at the bottom.
 

@@ -4,7 +4,9 @@ They replace a greedy choice ("cheapest next") with a search over the whole **pl
 
 ## Beam over Orders
 
-Keep the W best partial insertion orders, expanding each by the cheapest few next insertions,
+**The idea.** Try many insertion orders at once, and keep only the best few as they grow.
+
+**Under the hood.** Keep the W best partial insertion orders, expanding each by the cheapest few next insertions,
 and score them by ops so far. Width can be scaled by size, for example W = budget ÷ b².
 
 - **Measured:** on Long Line, keeping the 3 cheapest next insertions per order: W = 4 gives −7
@@ -18,7 +20,9 @@ and score them by ops so far. Width can be scaled by size, for example W = budge
 
 ## Annealed Plan
 
-Simulated annealing over a plan: insertion order, chunk boundaries or pivots. See the Annealer
+**The idea.** Tweak the plan (insertion order, crate cuts or pivots) at random and keep the changes that help, as the Annealer does.
+
+**Under the hood.** Simulated annealing over a plan: insertion order, chunk boundaries or pivots. See the Annealer
 card.
 
 - **Measured:** over the chunk boundaries of Chunks, 200 trials per input: −47 at n=100 and −263

@@ -11,7 +11,15 @@ the best way to learn what each op actually costs.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n²) · ✓ | 11301 sim FAIL | 301410 sim FAIL | 2 | 2 | ~25 | Uncommon |
 
-**How it plays.** Bubble sort using only A. Each pass does, n−1 times: if the top two are out of
+**The idea.** Bubble sort with only stack A: keep turning A like a wheel and swap the top two whenever they are out of order, until a full turn needs no swap.
+
+**Step by step.**
+1. Look at the top two numbers and swap them (`sa`) if they are out of order.
+2. Turn A by one (`ra`).
+3. After a full turn, start the next turn.
+4. Stop when a whole turn needed no swap.
+
+**Under the hood.** Bubble sort using only A. Each pass does, n−1 times: if the top two are out of
 order, `sa`; then `ra`. One more `ra` completes the revolution. Repeat the pass until A is
 sorted. B is never used.
 
@@ -40,7 +48,15 @@ includes it.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n²) · ✓ | 1454 sim GOOD | 32298 sim FAIL | 2 | 2 | ~40 | Common |
 
-**How it plays.** Find the minimum of A, rotate it to the top by the shorter direction, `pb`.
+**The idea.** Pull out the smallest number again and again. B fills up in order, so pushing everything back rebuilds A sorted.
+
+**Step by step.**
+1. Find the smallest number in A and turn it to the top the short way.
+2. Push it to B.
+3. Repeat until three numbers are left, and sort those with Hardcoded Three.
+4. Push everything back from B (`pa`).
+
+**Under the hood.** Find the minimum of A, rotate it to the top by the shorter direction, `pb`.
 Repeat until 3 remain, finish with Hardcoded Three (with only 2 values, `sa` if needed), then
 `pa` everything back. B ends in descending order from the top, so the `pa`s rebuild A in
 order.
@@ -68,7 +84,15 @@ Presorted Shortcut is a prep card, so it fits without a slot.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n²) · ✓ | 1117 sim GOOD | 22318 sim FAIL | 4 | 4 | ~80 | Uncommon |
 
-**How it plays.** At each step, find the cheaper of the current min and the current max to bring
+**The idea.** Like Min Extract, but each time it takes whichever of the smallest or largest number is closer to the top. Small ones go on top of B, large ones to the bottom.
+
+**Step by step.**
+1. Count how far the smallest and the largest number are from the top, and take the closer one.
+2. A smallest number goes on top of B; a largest goes to the bottom of B (`pb` then `rb`).
+3. Repeat until three numbers are left in A, and sort them.
+4. Push the small ones back, then the large ones, and turn that block of large ones to the bottom of A.
+
+**Under the hood.** At each step, find the cheaper of the current min and the current max to bring
 to the top. A min goes `pb` onto the top of B. A max goes `pb` then `rb` to the bottom of B.
 At the end, B holds the mins (descending from the top) above the maxes, and the maxes run
 from the largest down to the smallest. Return the mins with `pa`. The largest max is now on

@@ -79,15 +79,20 @@ check('manual: duplicate error', /appears twice/.test(await ev(T('inputError')))
 await set('#manual', '3 1 2'); await sleep(300);
 check('manual values run', (await total()) > 0);
 await set('#manual', '');
-// Flip a card
+// Read the played card up close: plain words first, the technical part last
 await ev(`document.querySelector('#played .tcg').click()`); await sleep(150);
-check('clicking the played card opens it up close', !(await ev(`document.getElementById('ov-inspect').hidden`)) && /How it plays/.test(await ev(T('inspectBody'))));
+const ib = await ev(T('inspectBody')), at = ['The idea', 'Step by step', 'Scorecard', 'Under the hood'].map(h => ib.indexOf(h));
+check('clicking the played card opens it up close, the idea first', !(await ev(`document.getElementById('ov-inspect').hidden`)) && at.every((x, i) => x >= 0 && (!i || x > at[i - 1])), at.join(' '));
+check('cards have no flip button', !(await ev(`!!document.querySelector('.tcg-btn.flip, .card .flip')`)));
 await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`);
 await shot('table.png');
 // The card table: the hand, the slots, the blinds, the decks and Inspect
 await go('index.html#deck=turk&n=100&gen=uniform&seed=42', 2500);
 const has = sel => ev(`!!document.querySelector(${JSON.stringify(sel)})`);
 check('the hand holds the cards that fit', (await ev(`document.querySelectorAll('#hand .tcg.tech').length`)) >= 10, await ev(`document.querySelectorAll('#hand .tcg.tech').length`));
+await ev(`document.querySelector('#hand .tcg[data-id="lis-anchor"]').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))`); await sleep(200);
+check('a technique up close shows its change here and on every card it fits', (await has('#inspectBody .dchips .dchip')) && (await has('#inspectBody .etable tr.here')));
+await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`); await sleep(150);
 await click('#hand .tcg[data-id="lis-anchor"]'); await sleep(400);
 check('a hand card goes to its slot and leaves the hand', /LIS Anchor/.test(await ev(T('slots'))) && !(await has('#hand .tcg[data-id="lis-anchor"]')));
 check('the default it replaced comes back to the hand', await has('#hand .tcg[data-id="keep-three"]'));
@@ -110,7 +115,7 @@ const deck0 = await ev('location.hash');
 await click('#algoDraw'); await sleep(600);
 check('Draw plays another algorithm card', !(await ev('location.hash')).startsWith(deck0.split('&')[0] + '&'), await ev('location.hash'));
 await click('#hand .tcg .peek'); await sleep(250);
-check('Inspect shows a card up close', !(await ev(`document.getElementById('ov-inspect').hidden`)) && /Codex page/.test(await ev(T('inspectBody'))));
+check('Inspect shows a card up close', !(await ev(`document.getElementById('ov-inspect').hidden`)) && /Codex page/.test(await ev(T('inspectBody'))) && /The idea/.test(await ev(T('inspectBody'))));
 await shot('table-inspect.png');
 // The cards' design: covers, badges, icons, tooltips; the fire past 10; the log and the effects
 check('every algorithm card has its own cover', (await ev(`new Set([...document.querySelectorAll('#algoViewer .tcg.algo svg.cover')].map(s => s.innerHTML)).size`)) === 23, await ev(`document.querySelectorAll('#algoViewer svg.cover').length`));
@@ -146,7 +151,8 @@ for (const [page, sel, min] of [['codex.html', '.card', 40], ['meta.html', 'tabl
   await shot(page.replace('.html', '.png'));
 }
 await go('codex.html#turk', 2500);
-check('Codex card page', /How it plays/.test(await ev('document.body.textContent')) && /Lore/.test(await ev('document.body.textContent')));
+const body = await ev('document.body.textContent');
+check('Codex card page', ['The idea', 'Step by step', 'Under the hood', 'Lore'].every(h => body.includes(h)), body.length);
 await go('lab.html#gap', 2000);
 await ev(`[...document.querySelectorAll('button')].find(b => /^Run/.test(b.textContent) && b.offsetParent).click()`); await sleep(6000);
 check('Lab optimality gap runs', /extra ops/.test(await ev('document.body.textContent')), '');

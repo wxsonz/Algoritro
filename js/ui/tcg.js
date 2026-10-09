@@ -11,7 +11,6 @@
 import { el, f0, RARITY } from './common.js';
 import { icon } from './pixel.js';
 import { cover } from './covers.js';
-import { markdown, sections } from './markdown.js';
 import { thresholds } from '../core/metrics.js';
 import { FAMILIES, label } from '../cards/index.js';
 
@@ -80,8 +79,8 @@ function psBadge(a, stats) {
 }
 
 // ---- Algorithm cards ----------------------------------------------------------------------
-// stats: data/meta.json's entry; doc: data/cards.json's entry (for the back).
-export function algoFace(a, { stats, doc, flip = false, cls = '' } = {}) {
+// stats: data/meta.json's entry. There is no back: clicking a card opens it in Inspect.
+export function algoFace(a, { stats, cls = '' } = {}) {
   const fam = FAMILIES[a.family] || { name: a.family };
   const front = el('div.face.front', {},
     el('div.tcg-top', {},
@@ -93,26 +92,11 @@ export function algoFace(a, { stats, doc, flip = false, cls = '' } = {}) {
     el('div.tcg-text.quote', {}, el('p.flavor', {}, `“${a.tagline}”`)),
     el('div.badges', {}, classBadge(a), slotBadge(a), psBadge(a, stats)));
   const card = el('div', { className: `tcg algo fam-${a.family} r-${a.rarity}${a.research ? ' research' : ''}${a.lesson ? ' lesson' : ''}${cls ? ' ' + cls : ''}`, tabIndex: 0, dataset: { id: a.id, kind: 'algo' } },
-    el('div.tcg-body', {}, front, flip ? algoBack(a, doc) : ''),
+    el('div.tcg-body', {}, front),
     a.research ? el('span.ribbon.exp', {}, 'research') : a.lesson ? el('span.ribbon.lesson', {}, 'lesson') : '');
-  if (flip) {
-    card.classList.add('flips');
-    card.append(el('button.tcg-btn.flip', { title: 'Flip the card', 'aria-label': 'Flip the card', onclick: e => { e.stopPropagation(); card.classList.toggle('flipped'); } }, '⟲'));
-  }
   card.append(el('button.tcg-btn.peek', { title: 'Inspect', 'aria-label': `Inspect ${a.name}` }, '?'));
   return card;
 }
-function algoBack(a, doc) {
-  const back = el('div.face.back', {});
-  const sec = sections(doc?.doc || '');
-  back.innerHTML = `<div class="backhead"><b class="name">${a.name}</b></div>` +
-    (sec['How it plays'] ? `<h4>How it plays</h4>${markdown(sec['How it plays'], doc.source)}` : '<p>Loading the card text…</p>') +
-    (sec.Lore ? `<h4>Lore</h4>${markdown(sec.Lore, doc.source)}` : '') +
-    (sec.Pros ? `<h4>Pros</h4>${markdown(sec.Pros, doc.source)}` : '') + (sec.Cons ? `<h4>Cons</h4>${markdown(sec.Cons, doc.source)}` : '');
-  back.append(el('p', {}, el('a', { href: `codex.html#${a.id}` }, 'Codex page →')));
-  return back;
-}
-
 // ---- Technique cards ----------------------------------------------------------------------
 // state: { ok, reason, open, played, isDefault, native, always }; effect: plain words on the
 // current host ("on Turk: −11 moves at 100"), with its sign for the colour. needs: what the card

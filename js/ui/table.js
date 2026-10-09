@@ -12,11 +12,11 @@ import { counts, grade, stats, passRate, thresholds } from '../core/metrics.js';
 import { OPS } from '../core/machine.js';
 import { useDpTables } from '../cards/engines/divide.js';
 import { loadData } from '../core/data.js';
-import { $, el, css, topBar, cardsData, metaData, f0, pct, signed, gradeName, dots, store, RARITY } from './common.js';
+import { $, el, esc, css, topBar, cardsData, metaData, f0, pct, signed, gradeName, dots, store, RARITY } from './common.js';
 import { markdown, sections } from './markdown.js';
 import { mini } from './card.js';
 import { Board, link } from './board.js';
-import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, codexBook, bindCardFx, ROLE_NAMES, ROLE_HINT } from './tcg.js';
+import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, codexBook, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, PS_TIER_TEXT } from './tcg.js';
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
 import { run as runJob, runAll } from './worker-client.js';
@@ -327,7 +327,7 @@ function renderPlayed() {
   if (key === S.shownAlgo) return;
   const first = !S.shownAlgo;
   S.shownAlgo = key;
-  const card = algoFace(a, { stats: META?.cards?.[a.id], doc: DOC?.algorithms?.[a.id], cls: 'onmat' });
+  const card = algoFace(a, { stats: META?.cards?.[a.id], cls: 'onmat' });
   card.onclick = e => { if (!e.target.closest('.tcg-btn')) inspect('algo', a.id); };   // click it to read it up close
   card.title = `${a.name}: click to read it up close`;
   $('played').replaceChildren(card);
@@ -696,39 +696,119 @@ function renderTechViewer() {
   for (const b of $('techFilter').children) b.classList.toggle('on', b.dataset.f === S.techFilter);
 }
 
-// ---- inspect: a card up close, with its full text ----------------------------------------------
+// ---- inspect: a card up close, told top-down: the idea, the steps, then the technical part ----
+const CLASS_WORDS = {
+  '1': 'A fixed number of moves, whatever the input: it only plays tiny stacks.',
+  'n log n': 'The moves grow a little faster than n: the best class a comparison sort can reach.',
+  'n√n': 'The moves grow like n times its square root: between n log n and n².',
+  'n²': 'The moves grow with n squared: fine at 500, slow far beyond.',
+  heuristic: 'A search that plans its moves: it claims no class.',
+  exponential: 'The work explodes with n: only for tiny stacks.',
+};
+const PROOF_WORDS = { yes: 'There is a simple worst-case proof.', avg: 'It holds on average; the worst case is unproven or worse.', no: 'The claim does not hold.' };
+// A technique's labelled notes, sorted into panels: good, watch, measured, fits; the rest stays
+// in Under the hood.
+function splitNotes(md) {
+  const text = [], notes = { good: [], watch: [], measured: [], fits: [], other: [] };
+  let cur = null;
+  for (const l of String(md || '').split('\n')) {
+    const m = l.match(/^- \*\*([^*]+?):\*\*\s*(.*)$/);
+    if (m) {
+      const k = m[1], bin = k === 'Pros' ? 'good' : k === 'Cons' || k === 'Why it loses' ? 'watch' : /^(Measured|On )/.test(k) ? 'measured' : /^(Hosts|Conflicts|Requires)$/.test(k) ? 'fits' : 'other';
+      cur = { label: k, text: m[2] }; notes[bin].push(cur);
+    } else if (cur && /^\s{2,}\S/.test(l)) cur.text += ' ' + l.trim();
+    else { cur = null; text.push(l); }
+  }
+  return { text: text.join('\n').trim(), notes };
+}
+function panel(cls, iconName, title, ...body) {
+  return el('section.ipanel.' + cls, {}, el('h3.ihead', {}, el('span.iicon', { html: icon(iconName) }), el('span', {}, title)), ...body);
+}
+const mdBlock = (md, src) => el('div.doc', { html: markdown(md, src) });
+const noteList = (items, src) => el('ul.notes', {}, items.map(x => {
+  const bare = !x.label || /^(Pros|Cons)$/.test(x.label), text = bare ? x.text.replace(/^[a-z]/, c => c.toUpperCase()) : x.text;
+  return el('li', { html: (bare ? '' : `<b>${esc(x.label)}:</b> `) + markdown(text, src).replace(/^<p>|<\/p>$/g, '') });
+}));
+const tone = d => d < -0.5 ? 'gain' : d > 0.5 ? 'loss' : 'even';
+// The change in moves on one card, big: one chip per size.
+const deltaChips = e => el('div.dchips', {}, [100, 500].filter(n => e.at[n]).map(n => el('span', { className: 'dchip ' + tone(e.at[n].delta) }, el('b', {}, signed(e.at[n].delta)), el('small', {}, `moves on ${n} numbers`))));
+// The change in moves on every card a technique fits, the played card first.
+function effectTable(id, a) {
+  const rows = (META?.techniques?.[id]?.effects || []).slice().sort((x, y) => (y.host === a.id) - (x.host === a.id));
+  if (!rows.length) return '';
+  const cell = x => x ? el('td', { className: tone(x.delta) }, signed(x.delta)) : el('td.dim', {}, '–');
+  return el('table.etable', {},
+    el('thead', {}, el('tr', {}, el('th', {}, 'Played on'), el('th', {}, '100 numbers'), el('th', {}, '500 numbers'))),
+    el('tbody', {}, rows.map(e => el('tr', { className: e.host === a.id ? 'here' : '' }, el('th', {}, byId[e.host]?.name || e.host), cell(e.at[100]), cell(e.at[500])))));
+}
 function inspect(kind, id) {
-  const body = $('inspectBody'); body.replaceChildren();
+  const body = $('inspectBody'), sheet = $('ov-inspect').querySelector('.sheet');
+  body.replaceChildren();
   if (kind === 'algo') {
-    const a = byId[id], doc = DOC?.algorithms?.[id], st = META?.cards?.[id], sec = sections(doc?.doc || '');
-    const face = algoFace(a, { stats: st, doc }); face.style.setProperty('--cw', '300px');
+    const a = byId[id], doc = DOC?.algorithms?.[id], st = META?.cards?.[id], sec = sections(doc?.doc || ''), src = doc?.source;
+    sheet.className = `sheet inspect fam-${a.family}`;
+    const face = algoFace(a, { stats: st }); face.style.setProperty('--cw', '290px');
     $('inspectTitle').textContent = a.name;
-    const nums = st ? Object.entries(st.at).map(([n, s]) => `${n} numbers → ${f0(s.mean)} moves on average (worst ${f0(s.max)}, ${s.grade.replace('~', '')})`) : [];
-    body.append(el('div.inspectcard', {}, face), el('div.inspecttext', {},
-      el('p.lede', {}, `${FAMILIES[a.family].name} algorithm · ${RARITY[a.rarity]} · Grasp ${a.grasp} · Craft ${a.craft} · ${a.slots ? `${a.slots} slot${a.slots === 1 ? '' : 's'}` : 'no slots'}${a.maxN ? ` · n ≤ ${a.maxN}` : ''}`),
-      el('p.flavor', {}, `“${a.tagline}”`),
-      nums.length ? el('ul.nums', {}, nums.map(t => el('li', {}, t))) : '',
-      el('div.inspectmini', {}, el('h4', {}, 'Watch it sort 20 numbers'), mini(a)),
-      el('div.doc', { html: (sec['How it plays'] ? '<h4>How it plays</h4>' + markdown(sec['How it plays'], doc.source) : '') + (sec.Lore ? '<h4>Lore</h4>' + markdown(sec.Lore, doc.source) : '') + (sec.Pros ? '<h4>Pros</h4>' + markdown(sec.Pros, doc.source) : '') + (sec.Cons ? '<h4>Cons</h4>' + markdown(sec.Cons, doc.source) : '') }),
-      el('div.row.actions', {},
-        a.id === S.hand.algo ? el('span.dim', {}, 'In play') : el('button.btn.blue', { disabled: a.maxN != null && S.input?.n > a.maxN, onclick: () => { closeOverlay($('ov-inspect')); closeOverlay($('ov-algo')); play(id); } }, 'Play this card'),
-        el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'))));
+    const canPlay = !(a.maxN != null && S.input?.n > a.maxN);
+    const actions = el('div.iactions', {},
+      a.id === S.hand.algo ? el('span.inplay', {}, 'In play') : el('button.btn.blue', { disabled: !canPlay, title: canPlay ? '' : `${a.name} handles at most ${a.maxN} numbers`, onclick: () => { closeOverlay($('ov-inspect')); closeOverlay($('ov-algo')); play(id); } }, 'Play this card'),
+      el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'));
+    const at = st?.at || {}, n1 = at[100], n5 = at[500], small = !n1 && Object.entries(at)[0];
+    const t = n1 && n5 ? psTier(n1.mean, n5.mean) : null, m = modularity(a), mt = modTier(m);
+    const score = panel('scorecard wide', 'curve', 'Scorecard', el('div.scores', {},
+      el('div.srow', {}, el('b.sbadge.cls', { html: classLabel(a.claimedClass).replace('²', '<sup>2</sup>') }), el('p', {}, el('strong', {}, 'Class. '), CLASS_WORDS[a.claimedClass] || '', ' ', PROOF_WORDS[a.proof] || '')),
+      el('div.srow', {}, el('b', { className: 'sbadge tier-' + mt }, mt), el('p', {}, el('strong', {}, 'Slots. '), a.slots ? `${a.slots} technique slot${a.slots === 1 ? '' : 's'}` : 'No technique slots', a.finishers?.length ? ' and a Finisher to swap' : '', `. ${m >= 3 ? 'Lots to tune.' : m ? 'A little to tune.' : 'Nothing to tune but its knobs.'}`)),
+      el('div.srow', {}, el('b', { className: 'sbadge tier-' + (t || 'small') }, t || (a.maxN ? `≤${a.maxN}` : '–')), el('p', {}, el('strong', {}, 'push_swap. '),
+        t ? `${f0(n1.mean)} moves on average at 100 (worst ${f0(n1.max)}) and ${f0(n5.mean)} at 500 (worst ${f0(n5.max)}). ${PS_TIER_TEXT[t]}`
+          : small ? `Only for ${a.maxN} numbers or fewer: ${small[1].mean.toFixed(1)} moves on average at ${small[0]}, at most ${small[1].max}.` : 'Not measured yet.'))),
+      el('p.dim.small', {}, `Grasp ${a.grasp} of 10, Craft ${a.craft} of 10: about ${a.lines} lines of C.`));
+    const extra = ['Why the class holds', 'Plays as', 'Variants', 'Teaching role', 'As built (exp)'].filter(k => sec[k]);
+    body.append(
+      el('aside.icard', {}, face, actions),
+      el('div.ipanels', {},
+        panel('idea wide', 'bulb', 'The idea', el('p.big', {}, sec['The idea'] || a.tagline)),
+        sec['Step by step'] ? panel('steps', 'order', 'Step by step', mdBlock(sec['Step by step'], src)) : '',
+        panel('watch', 'play', 'Watch it sort 20 numbers', mini(a)),
+        score,
+        sec.Pros ? panel('good', 'diamond', 'Good at', mdBlock(sec.Pros, src)) : '',
+        sec.Cons ? panel('bad', 'cross', 'Watch out', mdBlock(sec.Cons, src)) : '',
+        sec['Under the hood'] ? panel('hood wide', 'gear', 'Under the hood', el('p.tag', {}, 'The technical part: exact rules, costs and edge cases.'), mdBlock(sec['Under the hood'], src), ...extra.map(k => [el('h4', {}, k), mdBlock(sec[k], src)])) : '',
+        sec.Lore ? panel('lore', 'book', 'Lore', mdBlock(sec.Lore, src)) : '',
+        sec.Slots ? panel('slotsp', 'meta', 'Slots', mdBlock(sec.Slots, src)) : ''));
   } else {
-    const t = techById[id], doc = DOC?.techniques?.[id], a = byId[S.hand.algo], f = fits(a, t), active = activeIds().has(id), mine = S.hand.techs.includes(id) || (id === 'double-op-sharing' && S.hand.sharing);
-    const face = techFace(t, { doc, state: { ...f, played: active }, effect: effectOn(t, a)?.text, sign: effectOn(t, a)?.sign, needs: f.ok ? needsOf(t) : [] }); face.style.setProperty('--cw', '260px');
+    const t = techById[id], doc = DOC?.techniques?.[id], src = doc?.source, sec = sections(doc?.doc || ''), a = byId[S.hand.algo], f = fits(a, t);
+    const active = activeIds().has(id), mine = S.hand.techs.includes(id) || (id === 'double-op-sharing' && S.hand.sharing), eff = effectOn(t, a);
+    sheet.className = `sheet inspect role-${t.role}`;
+    const face = techFace(t, { doc, state: { ...f, played: active }, effect: eff?.text, sign: eff?.sign, needs: f.ok ? needsOf(t) : [] }); face.style.setProperty('--cw', '260px');
     $('inspectTitle').textContent = label(id).replace(/`/g, '');
-    const effects = (META?.techniques?.[id]?.effects || []).map(e => `on ${byId[e.host]?.name || e.host}: ${signed(e.at[100]?.delta)} moves at 100${e.at[500] ? `, ${signed(e.at[500].delta)} at 500` : ''}`);
-    body.append(el('div.inspectcard', {}, face), el('div.inspecttext', {},
-      el('p.lede', {}, `${ROLE_NAMES[t.role]} card · ${RARITY[t.rarity]} · +${t.grasp ?? 0} Grasp · +${t.craft ?? 0} Craft · ${ROLE_HINT[t.role]}`),
-      doc?.tagline ? el('p.flavor', {}, `“${doc.tagline}”`) : '',
-      effects.length ? [el('h4', {}, 'Measured'), el('ul.nums', {}, effects.map(x => el('li', {}, x)))] : t.effect ? el('p', {}, 'Measured: ' + t.effect) : '',
-      el('div.doc', { html: doc?.doc ? markdown(doc.doc, doc.source) : '' }),
-      el('div.row.actions', {},
-        mine ? el('button.btn.grey', { onclick: () => { closeOverlay($('ov-inspect')); removeTech(id); } }, 'Take it back')
-          : active ? el('span.dim', {}, 'In play') : f.ok || id === 'double-op-sharing' ? el('button.btn.blue', { onclick: () => { closeOverlay($('ov-inspect')); addTech(id); } }, `Play it on ${a.name}`) : el('span.dim', {}, f.reason || ''),
-        el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'))));
+    const { text, notes } = splitNotes(sec['Under the hood'] || '');
+    const hostEff = META?.techniques?.[id]?.effects?.find(e => e.host === a.id), table = effectTable(id, a);
+    const native = a.natives[t.role] === id, dflt = !mine && (a.defaults[t.role] === id || (t.role === 'leaf' && S.resolved?.finisher?.id === id));
+    const seeds = META?.seeds || { 100: 50, 500: 20 };
+    const actions = el('div.iactions', {},
+      mine ? el('button.btn.grey', { onclick: () => { closeOverlay($('ov-inspect')); removeTech(id); } }, 'Take it back')
+        : active ? el('span.inplay', {}, 'In play') : f.ok || id === 'double-op-sharing' ? el('button.btn.blue', { onclick: () => { closeOverlay($('ov-inspect')); addTech(id); } }, `Play it on ${a.name}`) : '',
+      el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'));
+    const here = needsOf(t), lone = notes.good.length && notes.watch.length ? '' : ' wide';   // a panel without its pair spans the row
+    body.append(
+      el('aside.icard', {}, face, actions),
+      el('div.ipanels', {},
+        panel('idea wide', 'bulb', 'The idea', el('p.big', {}, sec['The idea'] || doc?.tagline || ROLE_HINT[t.role])),
+        panel('here wide', t.role === 'leaf' ? 'leaf' : t.role, `On ${a.name}`,
+          native ? el('p', {}, `Built into ${a.name}: it is how the card works, so it cannot be taken out.`)
+            : dflt ? el('p', {}, `${a.name} comes with it, so the card's own numbers already include it. Play another ${ROLE_NAMES[t.role]} card to swap it out.`)
+            : !(f.ok || id === 'double-op-sharing') ? el('p', {}, f.reason ? f.reason.replace(/^[a-z]/, c => c.toUpperCase()) : 'Does not fit here.')
+            : hostEff ? [el('p', {}, `Playing it here changes the moves by:`), deltaChips(hostEff)] : el('p', {}, 'Fits here; not measured on this card yet.'),
+          here.length && f.ok ? needsEl(here) : '',
+          el('p.dim.small', {}, `${ROLE_NAMES[t.role]} card: ${ROLE_HINT[t.role]}. Costs +${t.grasp ?? 0} Grasp and +${t.craft ?? 0} Craft.`)),
+        notes.good.length ? panel('good' + lone, 'diamond', 'Good at', noteList(notes.good, src)) : '',
+        notes.watch.length ? panel('bad' + lone, 'cross', 'Watch out', noteList(notes.watch, src)) : '',
+        table || notes.measured.length ? panel('measured wide', 'curve', 'Measured', table ? [el('p.tag', {}, `Moves saved (−) or added (+) against the card without it: the mean over ${seeds[100]} random stacks of 100 and ${seeds[500]} of 500.`), table] : '',
+          notes.measured.length ? [el('h4', {}, 'From the study notes'), noteList(notes.measured, src)] : '') : '',
+        text || notes.other.length || notes.fits.length ? panel('hood wide', 'gear', 'Under the hood', el('p.tag', {}, 'The technical part: exact rules, costs and edge cases.'), text ? mdBlock(text, src) : '', notes.other.length ? noteList(notes.other, src) : '', notes.fits.length ? noteList(notes.fits, src) : '') : ''));
   }
   openOverlay('inspect');
+  $('inspectBody').scrollTop = 0;
 }
 
 // ---- Meta card -----------------------------------------------------------------------------

@@ -5,6 +5,19 @@ One file per family. Stats are defined in [../03-stats.md](../03-stats.md), and 
 thresholds: n=100 → FAIL ≥ 2000, PASS < 2000, GOOD < 1500, EXCELLENT < 700; n=500 → FAIL ≥
 12000, PASS < 12000, GOOD < 8000, EXCELLENT < 5500.
 
+## How a card's text reads
+
+Each card is told top-down, so a peer gets the idea before the details:
+
+1. **The idea.** One or two plain sentences, no jargon: what the card does and why it works.
+2. **Step by step.** A short numbered list a peer could follow by hand.
+3. **Under the hood.** The technical part: exact rules, costs, parameters and edge cases.
+
+Then come the class argument, the variants, the measured numbers, **Lore**, **Pros**, **Cons**
+and **Slots**. Technique cards follow the same order: **The idea**, then **Under the hood**
+with its labelled notes (Pros, Cons, Measured, Hosts, Conflicts). Inspect and the Codex show
+the parts in this order; `tools/build-data.mjs` copies them into `data/cards.json`.
+
 | file | family |
 | --- | --- |
 | [small.md](small.md) | ◆ Small: tiny n, exact |

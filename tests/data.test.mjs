@@ -31,6 +31,15 @@ export const tests = [
     for (const t of TECHS) { const x = c.techniques[t.id]; ok(x && x.role && x.doc.length > 20, `${t.id} doc`); }
     for (const id of ['portfolio', 'adaptive-selector']) ok(c.meta[id].doc.length > 100, id);
   }],
+  ['every card is told top-down: the idea, the steps, then the technical part (spec/cards/README.md)', async () => {
+    const c = await loadData('cards'), at = (doc, h) => doc.indexOf(`**${h}.**`);
+    for (const a of ALGOS) {
+      const d = c.algorithms[a.id].doc, i = ['The idea', 'Step by step', 'Under the hood'].map(h => at(d, h));
+      ok(i[0] >= 0 && i[1] > i[0] && i[2] > i[1], `${a.id}: ${i}`);
+    }
+    for (const t of TECHS) { const d = c.techniques[t.id].doc; ok(at(d, 'The idea') >= 0 && at(d, 'Under the hood') > at(d, 'The idea'), t.id); }
+    for (const id of ['portfolio', 'adaptive-selector']) ok(at(c.meta[id].doc, 'The idea') >= 0, id);
+  }],
   ['the role table in spec/04 agrees with the modules (slots and open roles)', async () => {
     const md = await readFile(new URL('../spec/04-compatibility.md', import.meta.url), 'utf8');
     const rows = md.split('\n').filter(l => /^\| [A-Z]/.test(l) && !l.startsWith('| algorithm'));

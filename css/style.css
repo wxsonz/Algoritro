@@ -140,14 +140,6 @@ canvas.board { aspect-ratio: 900 / 420; }
 .fam-small .fam { color: var(--f-small); } .fam-selection .fam { color: var(--f-selection); } .fam-insertion .fam { color: var(--f-insertion); }
 .fam-bucket .fam { color: var(--f-bucket); } .fam-digit .fam { color: var(--f-digit); } .fam-divide .fam { color: var(--f-divide); } .fam-search .fam { color: var(--f-search); }
 canvas.mini { aspect-ratio: 3 / 1; margin: 4px 0; background: var(--soft); border-radius: 6px; }
-.card.flips .back { display: none; }
-.card.flips.flipped .front { display: none; }
-.card.flips.flipped .back { display: block; }
-.card .back { font-size: 13px; max-height: 520px; overflow: auto; }
-.card .back p, .card .back ul { margin: 4px 0; }
-.card .back ul { padding-left: 18px; }
-.card .flip { position: absolute; top: 6px; right: 6px; padding: 0 6px; font-size: 14px; }
-.card.flips .head { padding-right: 26px; }
 .techs { display: grid; gap: 6px; }
 .card.tech { padding: 6px 8px; border-width: 1px; cursor: pointer; font-size: 12px; }
 .card.tech .name { font-size: 13px; }

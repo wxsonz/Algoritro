@@ -38,18 +38,29 @@ export function markdown(md, base = 'spec/') {
       out.push('<ul>' + items.map(t => `<li>${inl(t)}</li>`).join('') + '</ul>');
       continue;
     }
+    if (/^\s*\d+\. /.test(l)) {   // a numbered list
+      const items = [];
+      while (i < lines.length && (/^\s*\d+\. /.test(lines[i]) || (/^\s{2,}\S/.test(lines[i]) && items.length))) {
+        if (/^\s*\d+\. /.test(lines[i])) items.push(lines[i].replace(/^\s*\d+\. /, '')); else items[items.length - 1] += ' ' + lines[i].trim();
+        i++;
+      }
+      out.push('<ol>' + items.map(t => `<li>${inl(t)}</li>`).join('') + '</ol>');
+      continue;
+    }
     if (/^```/.test(l)) { const code = []; i++; while (i < lines.length && !/^```/.test(lines[i])) code.push(lines[i++]); i++; out.push(`<pre>${esc(code.join('\n'))}</pre>`); continue; }
-    const para = []; while (i < lines.length && lines[i].trim() && !/^(#|\||\s*[-*] |```)/.test(lines[i])) para.push(lines[i++]);
+    const para = []; while (i < lines.length && lines[i].trim() && !/^(#|\||\s*[-*] |\s*\d+\. |```)/.test(lines[i])) para.push(lines[i++]);
     out.push(`<p>${inl(para.join(' '))}</p>`);
   }
   return out.join('\n');
 }
-// Split a card's Markdown into its bold-labelled parts: "How it plays", "Lore", "Pros", "Cons", ….
+// Split a card's Markdown into its bold-labelled parts: "The idea", "Step by step", "Lore", "Pros", ….
 export function sections(md) {
   const out = {}; let key = 'intro', buf = [];
   for (const l of String(md || '').split('\n')) {
-    const m = l.match(/^\*\*([A-Z][^*]{1,40}?)[.:]?\*\*[.:]?\s*(.*)$/);
-    if (m && !l.startsWith('- ')) { out[key] = buf.join('\n').trim(); key = m[1].replace(/[.:]$/, ''); buf = [m[2]]; } else buf.push(l);
+    // A label ends in "." or ":" ("**Lore.** …", "**Slots:** …") or stands alone on its line
+    // ("**Pros**"). A bold phrase that opens a sentence ("**One-Way Sweep**, with …") is not one.
+    const m = l.match(/^\*\*([A-Z][^*]{1,40}?)([.:]?)\*\*([.:]?)(\s+.*)?$/);
+    if (m && !l.startsWith('- ') && (m[2] || m[3] || !m[4])) { out[key] = buf.join('\n').trim(); key = m[1]; buf = [(m[4] || '').trim()]; } else buf.push(l);
   }
   out[key] = buf.join('\n').trim();
   return out;

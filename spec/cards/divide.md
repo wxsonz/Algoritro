@@ -11,7 +11,15 @@ cheap places to put a value are the **top and bottom of each stack**.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 6 | 6 | ~200 | Uncommon |
 
-**How it plays.** Sort a chunk of k values on top of A by pushing the lower half (below the
+**The idea.** Quicksort with two stacks: split a group at its middle value, send the lower half to B, and sort each half the same way.
+
+**Step by step.**
+1. Take the group on top of A and find its middle value, the median rank.
+2. Push the smaller half to B and rotate past the bigger half. Undo those rotations, unless the group was the whole stack.
+3. Sort the half in A the same way, then bring the half in B back and sort it too.
+4. Groups of two are fixed with a single swap.
+
+**Under the hood.** Sort a chunk of k values on top of A by pushing the lower half (below the
 median rank) to B and rotating the rest past (`ra`). Then undo those rotations (`rra`) if the
 chunk was not the whole stack, recurse on the upper half in A, then do the mirror operation
 for the half in B (push the upper part back with `pa`, rotate the rest with `rb`). Leaves of
@@ -56,7 +64,15 @@ halves, and Median Pivot. A Finisher is optional; by default, leaves of 2 are fi
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 8 | 8 | ~400 | Rare |
 
-**How it plays.** Treat the tops and bottoms of A and B as **four locations**. A chunk sitting
+**The idea.** Quicksort that uses the top and the bottom of both stacks as four places to put things. A group splits into three parts at once, and nothing ever has to be moved back out of the way.
+
+**Step by step.**
+1. Take a group sitting at one of the four ends.
+2. Split it by rank into three parts: small, middle and big.
+3. Send each part to one of the other three ends, at most three moves per number.
+4. Sort each part the same way, biggest first, so the sorted numbers pile up on top of A.
+
+**Under the hood.** Treat the tops and bottoms of A and B as **four locations**. A chunk sitting
 at one location is split by **exact rank** into three parts, and each part is sent to one of
 the other three locations. Every move costs at most 3 ops and never passes over another value,
 so nothing is ever "undone". The parts are sorted max first, so sorted values pile up on top
@@ -102,7 +118,15 @@ Finisher slot is empty by default; BFS Leaf is the one to play.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n log n) · ✓ | 1200 exp GOOD | 8100 exp GOOD | 8 | 8 | ~350 | Legendary |
 
-**How it plays.** Treat the four stack ends like the tapes in old **external merge sort**.
+**The idea.** Merge sort, the way old computers sorted on tape drives: make short sorted runs at the stack ends, then keep merging two runs into one longer run until only one is left.
+
+**Step by step.**
+1. Split the input into short sorted runs, spread over the four stack ends.
+2. Take two runs, compare their front numbers, and move the smaller one to the output end.
+3. Repeat until the two runs are one.
+4. Keep merging runs in pairs until a single run holds every number.
+
+**Under the hood.** Treat the four stack ends like the tapes in old **external merge sort**.
 First split the input into sorted runs (natural runs, or small runs sorted by a Finisher),
 spread across the ends. Then repeatedly merge pairs of runs: compare the heads at two
 locations, move the smaller to the output location, and repeat. **Polyphase merge** (a
@@ -149,7 +173,15 @@ Tables). Without one, the runs are the natural runs; the distribution is balance
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 4 | 6 | ~150 | Rare |
 
-**How it plays.** Find the ascending runs in A. Merge them in pairs: push the first run to B,
+**The idea.** Use the sorted stretches the input already has: merge them two at a time until the whole stack is one sorted run.
+
+**Step by step.**
+1. Find the stretches of A that already go up.
+2. Push the first stretch to B.
+3. Merge it with the next stretch onto the bottom of A, smallest first.
+4. Do the same with the next pair, and make more passes until one run is left.
+
+**Under the hood.** Find the ascending runs in A. Merge them in pairs: push the first run to B,
 then merge both smallest first onto A's bottom. A value of the second run is already on A's
 top (`ra`); a value of the first is at B's bottom (`rrb pa ra`). The merged run ends up behind
 the runs not yet merged, so the next pair is on top. Repeat passes until one run is left.

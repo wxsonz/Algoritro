@@ -11,7 +11,15 @@ inside bigger algorithms.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(1) · ✓ | 3 | ≤ 2 | 2 | 2 | ~20 | Common |
 
-**How it plays.** There are 3! = 6 orders. If the max is on top, `ra`. If the max is in the
+**The idea.** Three numbers can only be in six orders, so the card simply knows the best answer for each one.
+
+**Step by step.**
+1. If the biggest number is on top, rotate it to the bottom (`ra`).
+2. If it is in the middle, bring the bottom one up instead (`rra`).
+3. The biggest is now at the bottom. If the top two are the wrong way round, swap them (`sa`).
+4. Done, in at most two moves.
+
+**Under the hood.** There are 3! = 6 orders. If the max is on top, `ra`. If the max is in the
 middle, `rra`. Then, if the top two are out of order, `sa`. This is always optimal for 3
 (checked against the Oracle on all 6 orders, sim).
 
@@ -34,7 +42,15 @@ middle, `rra`. Then, if the top two are out of order, `sa`. This is always optim
 | --- | --- | --- | --- | --- | --- | --- |
 | O(1) · ✓ | 4–5 | ≤ 10 (mean 7.4 at n=5) | 2 | 4 | ~40 | Common |
 
-**How it plays.** Rotate the minimum to the top by the shorter way and `pb`. Repeat for the
+**The idea.** Park the two smallest numbers in B, sort the three that are left, then bring the two back on top.
+
+**Step by step.**
+1. Turn A the short way until the smallest number is on top, and push it to B.
+2. Do the same for the second smallest.
+3. Sort the three numbers left in A with Hardcoded Three.
+4. Push both back (`pa pa`): the smaller one lands on top.
+
+**Under the hood.** Rotate the minimum to the top by the shorter way and `pb`. Repeat for the
 second minimum. Hardcoded Three on A, then `pa pa`.
 
 **Lore.** Folk 42 knowledge, passed between peers because evaluators used to check 5 values in
@@ -60,7 +76,15 @@ second minimum. Hardcoded Three on A, then `pa pa`.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | exponential · ✓ optimal | ≤ 8 (BFS), 9+ (IDA*) | optimal | 4 | 6 | ~200 | ●●○○○ | Rare |
 
-**How it plays.** Breadth-first search over states (A, B) using the 11 ops. The first time the
+**The idea.** Try every possible sequence of moves, shortest first, until one sorts the stack. It always finds the fewest moves, but only small stacks fit in memory.
+
+**Step by step.**
+1. Start from the input: one position, zero moves.
+2. From every position, try all 11 moves to reach the positions one move further.
+3. Never visit the same position twice.
+4. The first sorted position found gives the answer: the moves that led there.
+
+**Under the hood.** Breadth-first search over states (A, B) using the 11 ops. The first time the
 sorted state is reached, the path is the shortest stream. Every way to split an order of the n
 values between the two stacks is a state: (n+1)·n! in all. That is 40,320 at n=7, 362,880 at
 n=8 (a full BFS takes about a second in Node, sim) and 3.6 million at n=9. Pack each state into

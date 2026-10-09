@@ -4,13 +4,13 @@ These solve small leftovers inside a bigger card. A Finisher goes in the hand's 
 slot, not a technique slot, and a hand holds at most one. Better leaves matter most for Divide
 cards, which produce about n/k leaves.
 
-| card | size | quality | Grasp | Craft | notes |
-| --- | --- | --- | --- | --- | --- |
-| Hardcoded Three | 3 | optimal | 1 | 1 | Turk, Min Extract |
-| Five Hand | ≤ 5 | good | 1 | 2 | push two mins, Three, pull back |
-| BFS Leaf | ≤ 5 | optimal | 2 | 4 | the rest of each stack is a fixed **wall** the search cannot touch. States pack into an integer key. On Four-End Quicksort: ≤ 3 saves 95 / 635, ≤ 5 saves 142 / 657 at n=100 / 500 (sim). |
-| Distance Tables | ≤ 4 | optimal, O(1) lookup | 3 | 4 | precomputed backward BFS from the goal. The same ops as BFS Leaf ≤ 4 (−105 / −657), only faster. |
-| Beam Leaf | ≤ ~32 | near optimal | 5 | 5 | pattern-database heuristic. Falls back to splitting if the beam result is too long. Not built in the sim (ref only). |
+| card | size | quality | Grasp | Craft | notes | idea |
+| --- | --- | --- | --- | --- | --- | --- |
+| Hardcoded Three | 3 | optimal | 2 | 2 | Turk, Min Extract | Three numbers have only six orders: look up the right answer for each one. |
+| Five Hand | ≤ 5 | good | 2 | 4 | push two mins, Three, pull back | Park the two smallest numbers in B, sort the three left, then bring the two back. |
+| BFS Leaf | ≤ 5 | optimal | 4 | 8 | the rest of each stack is a fixed **wall** the search cannot touch. States pack into an integer key. On Four-End Quicksort: ≤ 3 saves 95 / 635, ≤ 5 saves 142 / 657 at n=100 / 500 (sim). | Search every move sequence for the last few numbers and use the shortest, without disturbing the rest of the stacks. |
+| Distance Tables | ≤ 4 | optimal, O(1) lookup | 6 | 8 | precomputed backward BFS from the goal. The same ops as BFS Leaf ≤ 4 (−105 / −657), only faster. | The same perfect answers as BFS Leaf, looked up in a table computed in advance. |
+| Beam Leaf | ≤ ~32 | near optimal | 10 | 10 | pattern-database heuristic. Falls back to splitting if the beam result is too long. Not built in the sim (ref only). | A beam search for leftovers of up to about 32 numbers: nearly perfect, and far bigger than a full search can handle. |
 
 **As a Finisher on other hosts (exp, n=100 / 500):** BFS Leaf on Turk (it keeps 5 instead of 3)
 −5 / −50; on Lookahead Greedy −13 / −24; on Min Extract and Twin Extract about −2.5. On Tape Merge,

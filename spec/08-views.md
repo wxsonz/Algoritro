@@ -12,7 +12,7 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 │ the stack: goal  │ slots: [meta][pick][anchor][cost]…[finisher]  │ algorithm   │
 │ moves · stamp    │        [extras]                     [knobs]   │ deck        │
 │ Grasp, Craft gems│ ┌ played card ┐ ┌ board: A | B, transport,  ┐ │ browse·draw │
-│ delta chip       │ │  (flips)    │ │ phase timeline, overlays  │ │ technique   │
+│ delta chip       │ │(click: read)│ │ phase timeline, overlays  │ │ technique   │
 │ stacks: easy,    │ └─────────────┘ └───────────────────────────┘ │ deck        │
 │ medium, hard,    │ your hand: the techniques that fit, fanned    │ browse·draw │
 │ Learn Stats      │                                               │ Book of     │
@@ -47,8 +47,14 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   prebuilt hands and the Meta cards; technique cards by role. **Draw** plays a random card
   that fits, skipping cards that take more than about 1.5 s to plan at this n. A slow card
   played on purpose says it is thinking before it runs.
-- **Inspect.** Right-click a card, or press its **?**, to see it up close with its full text
-  and every measured effect.
+- **Inspect.** Click the played card, right-click any card, or press its **?**, to see it up
+  close on the felt, in panels read top to bottom: **The idea** in plain words, **Step by
+  step** beside a replay of it sorting 20 numbers, the **Scorecard** (its three badges, each
+  explained in a sentence), **Good at** and **Watch out**, and last **Under the hood**, the
+  technical part, then its lore and slots. A technique shows **On** the played card: its
+  change in moves at 100 and 500, or that the card has it built in or comes with it. Then
+  its pros and cons, a **Measured** table of its change on every card it fits (the played card
+  highlighted) with the study's notes, and the technical part. Cards have no back to flip.
 - **Tools** open as overlays: Custom input, Learn (Paths and Challenges), Stats (op counts,
   many seeds with a histogram, and the technical-details switch) and the Meta card's setup.
 - **Compare:** pin the current hand, change a card, and see both side by side, stepping
@@ -72,8 +78,9 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 ## 8.2 Codex (`codex.html`)
 
 - Every card, as a grid of card faces. Filter by type, family, role and rarity.
-- **Card page:** front and back, how it plays, pros and cons, compatible cards, a mini replay,
-  its Path position, and "play on Table".
+- **Card page:** the card face and its full text in the same top-down order (the idea, step
+  by step, under the hood, lore, pros and cons), compatible cards, a mini replay, its Path
+  position, and "play on Table". Clicking a card in the grid opens its page.
 - The **Grasp × Craft grid** with all Algorithm cards plotted and the quadrants labelled
   (Starter, Grinder, Elegant, Boss).
 - Cursed cards in their own section.

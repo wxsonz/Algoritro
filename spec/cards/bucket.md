@@ -12,7 +12,15 @@ O(n√n).
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 4 | 4 | ~150 | Common |
 
-**How it plays.** Split the ranks into K chunks (the sim uses K = round(√n / 2): 5 chunks at
+**The idea.** Cut the numbers into a few ranges, like crates. Ship the smallest crate to B first, then the next one; at the end, bring the numbers back biggest first.
+
+**Step by step.**
+1. Split the ranks into K equal ranges: 5 crates for 100 numbers, 11 for 500.
+2. For the first crate, bring its nearest member in A to the top and push it to B. Members from the lower half of the crate go to the bottom of B (`rb`).
+3. Repeat, crate by crate, until A is empty.
+4. Bring B's biggest number to the top and push it back, again and again.
+
+**Under the hood.** Split the ranks into K chunks (the sim uses K = round(√n / 2): 5 chunks at
 n=100 and 11 at n=500). For each chunk in order: bring its nearest member in A to the top (by
 either direction) and `pb`. If the value is in the lower half of its chunk, also `rb` (a
 "sink"), so B forms an hourglass. When A is empty, repeatedly bring B's max to the top and
@@ -49,7 +57,16 @@ Param: the chunk count K.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n√n) · ✕ with a constant w; ✓ with w = k·√n | 577 sim EXC | 5080 sim EXC | 4 | 4 | ~80 | Uncommon |
 
-**How it plays.** Keep a counter i of how many values have been pushed so far. For A's top x:
+**The idea.** Push the numbers to B in roughly increasing order through a sliding window: the ones that are due sink to B's bottom, the ones just above them stay on top, and the rest wait their turn.
+
+**Step by step.**
+1. Keep a count of how many numbers have been pushed, and a window width w.
+2. If A's top number is among the numbers already due, push it and sink it to B's bottom (`pb` then `rb`).
+3. If it falls inside the window just above those, push it to B's top (`pb`).
+4. Otherwise rotate A (`ra`) and look at the next one.
+5. When A is empty, bring B's biggest number back, again and again.
+
+**Under the hood.** Keep a counter i of how many values have been pushed so far. For A's top x:
 if rank(x) ≤ i, then `pb` + `rb` (sink it); else if rank(x) ≤ i + w, then `pb`; otherwise
 `ra`. This produces a "butterfly" shape in B. Then retrieve the max of B repeatedly. The sim
 uses w = 15 at n=100 and w = 30 above, like one reference build, which makes w a constant
@@ -81,7 +98,15 @@ rule) and Max Retrieval. Param: the window w.
 | --- | --- | --- | --- | --- | --- | --- |
 | O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 6 | 6 | ~300 | Rare |
 
-**How it plays.** Buckets of about c·√n ranks (a reference build uses ⌊4√n⌋), each pushed in a
+**The idea.** Ship the numbers to B in crates, like Chunks, then unpack each crate the smart way: from the highest crate down, move back whichever member is cheapest to put in its place.
+
+**Step by step.**
+1. Split the ranks into buckets of about c·√n.
+2. Push them bucket by bucket in a single sweep, sinking the lower half of each bucket to B's bottom.
+3. Starting with the highest bucket, pick the member that costs the fewest turns, both stacks together, to put in its spot in A, and push it back.
+4. When B is empty, turn A so the smallest number is on top.
+
+**Under the hood.** Buckets of about c·√n ranks (a reference build uses ⌊4√n⌋), each pushed in a
 **One-Way Sweep**, with lower-half sinking. The return is **cheapest insertion restricted to
 the current bucket**: pick the member of the highest remaining bucket whose combined A and B
 rotation is cheapest, sharing `rr`/`rrr`. Restricting the choice to one bucket keeps the

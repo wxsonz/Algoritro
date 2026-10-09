@@ -11,7 +11,15 @@ time for ops, and they appear in the strongest builds.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | O(n²·bᵏ) CPU · heuristic | 557 sim EXC | 5284 sim EXC | 6 | 6 | ~300 | ●●○○○ | Rare |
 
-**How it plays.** Turk, but instead of taking the single cheapest move, evaluate the best
+**The idea.** Turk, but it looks one move further: it makes the move whose cost plus the best move after it is lowest, instead of the cheapest move on its own.
+
+**Step by step.**
+1. Price every candidate move, as Turk does.
+2. For the cheapest few, also price the best move that would follow each one.
+3. Make the first move of the cheapest pair.
+4. Plan again after every move.
+
+**Under the hood.** Turk, but instead of taking the single cheapest move, evaluate the best
 **sequence** of k moves (for example k = 2: the cost of this move plus the cheapest next move
 after it). Only consider the top b candidates per level to bound the CPU cost.
 
@@ -45,7 +53,15 @@ Three and Hardcoded Three.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | heuristic | 503 exp EXC | 4562 exp EXC | 10 | 10 | ~600 | ●○○○○ | Legendary |
 
-**How it plays.** Keep the W best partial solutions (the beam). At each step, expand each
+**The idea.** Explore many move sequences at once, but keep only the most promising few at every step: smarter than one greedy choice, and far cheaper than trying everything.
+
+**Step by step.**
+1. Start with the input as the only plan.
+2. Extend every plan by each useful next move.
+3. Score each new plan by its moves so far plus a guess of the moves still needed.
+4. Keep the W best plans, and repeat until one of them sorts the stack.
+
+**Under the hood.** Keep the W best partial solutions (the beam). At each step, expand each
 partial solution by the useful next moves, score every candidate with (ops so far + heuristic
 estimate of the remaining cost), and keep the top W. The heuristic can be a **pattern
 database**: exact distances for small groups of ranks, summed. Applied to the whole problem,
@@ -85,7 +101,15 @@ search plays as Beam Leaf (a Finisher) and Beam over Orders (order).
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | heuristic | 575 exp EXC | 5060 exp EXC | 8 | 6 | ~200 | ●○○○○ | Legendary |
 
-**How it plays.** Simulated annealing over a **plan**, not over raw ops. The plan can be the
+**The idea.** Take a working plan, such as where Chunks cuts its crates, and keep making small random changes, keeping the ones that help. Early on it also accepts some worse changes, so it does not get stuck.
+
+**Step by step.**
+1. Start from a plan, such as Chunks' crate boundaries.
+2. Change it a little at random and count the moves again.
+3. Keep the change if it is better, or sometimes even if it is worse while the temperature is still high.
+4. Cool down step by step, until it stops changing.
+
+**Under the hood.** Simulated annealing over a **plan**, not over raw ops. The plan can be the
 insertion order (LIS Insertion), the chunk boundaries (Chunks), or the pivots (quicksort). Make
 a small random change, re-simulate, and keep the change if it is better (or occasionally if it
 is worse, with a probability that falls over time).

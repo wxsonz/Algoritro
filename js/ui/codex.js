@@ -34,7 +34,7 @@ function matches(c, kind) {
 function grid() {
   const g = $('grid'); g.innerHTML = '';
   const add = (title, items) => { if (items.length) g.append(el('h2.full', {}, title), el('div.grid', {}, items)); };
-  add('Algorithm cards', ALGOS.filter(a => matches(a, 'algorithm')).map(a => link(a.id, algoCard(a, { stats: META?.cards?.[a.id], doc: DOC?.algorithms?.[a.id] }))));
+  add('Algorithm cards', ALGOS.filter(a => matches(a, 'algorithm')).map(a => link(a.id, algoCard(a, { stats: META?.cards?.[a.id] }))));
   add('Technique cards', TECHS.filter(t => t.role !== 'leaf' && matches(t, 'technique')).map(t => link(t.id, techCard(t, { state: { ok: !t.unbuildable, reason: t.unbuildable || '' }, doc: DOC?.techniques?.[t.id] }))));
   add('Finishers', TECHS.filter(t => t.role === 'leaf' && matches(t, 'leaf')).map(t => link(t.id, techCard(t, { state: { ok: !t.unbuildable, reason: t.unbuildable || '' }, doc: DOC?.techniques?.[t.id] }))));
   add('Meta cards', METACARDS.filter(m => matches(m, 'meta')).map(m => link(m.id, el('div.card.tech.meta', {}, el('div.head', {}, el('b.name', {}, m.name), el('span.rarity.' + m.rarity, {}, RARITY[m.rarity])), el('div.tagline', {}, `“${m.tagline}”`), el('div.meta', {}, `cost: ${m.cost} · Grasp ${m.grasp} · Craft ${m.craft}`)))));
@@ -76,7 +76,7 @@ function statsTable(stats) {
 function pathsOf(match) { const out = []; for (const p of PATHS) p.steps.forEach((s, i) => { if (match(s.deck)) out.push(el('a', { href: `index.html#deck=${s.deck}&n=${s.n ?? 100}&gen=uniform&seed=42&path=${p.id}&step=${i}` }, `${p.name}, step ${i + 1}`)); }); return out; }
 function algoPage(a, box, back) {
   const d = DOC?.algorithms?.[a.id], st = META?.cards?.[a.id];
-  const side = el('div', {}, algoCard(a, { stats: st, doc: d, flip: false }), el('p', {}, el('a', { href: `index.html#deck=${a.id}&n=${a.maxN ? Math.min(a.maxN, 7) : 100}&gen=uniform&seed=42` }, 'Play on the Table →')));
+  const side = el('div', {}, algoCard(a, { stats: st }), el('p', {}, el('a', { href: `index.html#deck=${a.id}&n=${a.maxN ? Math.min(a.maxN, 7) : 100}&gen=uniform&seed=42` }, 'Play on the Table →')));
   const main = el('div', {}, el('h1', {}, `${FAMILIES[a.family].icon} ${a.name}`), el('p.lede', {}, `“${a.tagline}” · ${cls(a.claimedClass)} ${proofMark(a.proof)} · Grasp ${a.grasp} · Craft ${a.craft} · ~${a.lines} lines · ${RARITY[a.rarity]}`));
   main.append(el('div.doc', { html: markdown(d?.doc || '', d?.source) }));
   main.append(el('h3', {}, 'Measured (explorer)'), statsTable(st));

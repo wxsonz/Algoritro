@@ -4,14 +4,18 @@ They decide how values return from B to A. This is the main cost centre for Buck
 
 ## Max Retrieval
 
-Bring B's maximum to the top by the shorter direction and `pa`. Repeat.
+**The idea.** To bring numbers back, always take B's biggest: turn B the short way, then push it back.
+
+**Under the hood.** Bring B's maximum to the top by the shorter direction and `pa`. Repeat.
 
 - **Pros:** trivially correct. A ends up sorted with no final rotation.
 - **Cons:** blind. It pays the full distance to every max.
 
 ## Second-Max Lookahead — *"Grab the runner-up on the way"*
 
-If the second-largest value is cheaper to reach than the largest (by more than ~2 ops),
+**The idea.** On the way to B's biggest, if the second biggest is closer, bring it back first and fix the order with one swap.
+
+**Under the hood.** If the second-largest value is cheaper to reach than the largest (by more than ~2 ops),
 `pa` it first, then `pa` the max, then `sa`.
 
 - **Pros:** a few lines, with a steady saving of about 3–6.5 %: −26 at n=100 and −385 at
@@ -22,7 +26,9 @@ If the second-largest value is cheaper to reach than the largest (by more than ~
 
 ## Rank-Range Max
 
-Search for the max **by rank range** (for example, "the next expected rank") rather than by
+**The idea.** Know which rank comes back next and look for exactly that one, instead of scanning all of B.
+
+**Under the hood.** Search for the max **by rank range** (for example, "the next expected rank") rather than by
 scanning. It also fixes the bug of assuming a chunk stays contiguous in B.
 
 - **Measured:** 0 by construction: it finds the same max as Max Retrieval.
@@ -31,7 +37,9 @@ scanning. It also fixes the bug of assuming a chunk stays contiguous in B.
 
 ## Cheapest Return — *"Turk on the way back"*
 
-Instead of the max, pick the B value (optionally restricted to the current bucket) whose
+**The idea.** On the way back, move whichever number in B is cheapest to put in its spot in A, Turk-style, instead of always the biggest.
+
+**Under the hood.** Instead of the max, pick the B value (optionally restricted to the current bucket) whose
 B rotation plus A slot rotation is cheapest, and insert it into A's circular order. Finish by
 rotating the minimum to the top.
 
