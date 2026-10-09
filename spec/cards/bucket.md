@@ -8,9 +8,9 @@ O(n√n).
 
 ## Chunks — *"Ship it in crates"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 4 | 4 | ~150 | Common |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 3 | 6 | Common |
 
 **The idea.** Cut the numbers into a few ranges, like crates. Ship the smallest crate to B first, then the next one; at the end, bring the numbers back biggest first.
 
@@ -53,9 +53,9 @@ Param: the chunk count K.
 
 ## Butterfly (K-sort) — *"A sliding window"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n√n) · ✕ with a constant w; ✓ with w = k·√n | 577 sim EXC | 5080 sim EXC | 4 | 4 | ~80 | Uncommon |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n√n) · ✕ with a constant w; ✓ with w = k·√n | 577 sim EXC | 5080 sim EXC | 3 | 5 | ~80 | Uncommon |
 
 **The idea.** Push the numbers to B in roughly increasing order through a sliding window: the ones that are due sink to B's bottom, the ones just above them stay on top, and the rest wait their turn.
 
@@ -94,9 +94,9 @@ rule) and Max Retrieval. Param: the window w.
 
 ## Bucket Insertion — *"Crates, then careful unpacking"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 6 | 6 | ~300 | Rare |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 8 | 12 | Rare |
 
 **The idea.** Ship the numbers to B in crates, like Chunks, then unpack each crate the smart way: from the highest crate down, move back whichever member is cheapest to put in its place.
 

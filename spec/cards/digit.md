@@ -6,9 +6,9 @@ Sort by the digits of each value's **rank**, never comparing two values directly
 
 ## LSD Radix — *"One bit at a time"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 4 | 2 | ~40 | Common |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 3 | 2 | Common |
 
 **The idea.** Write each number's rank in binary and sort by one bit at a time, from the last bit to the first. Each pass is a simple walk through A; after the last bit everything is in order.
 
@@ -52,9 +52,9 @@ the gap to EXCELLENT.
 
 ## Ternary Radix — *"Three-way digits using both ends of B"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 6 | 6 | ~150 | Rare |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 5 | 5 | Rare |
 
 **The idea.** Radix sort in base 3 instead of base 2: three groups per pass instead of two, so fewer passes, using both ends of B as extra bins.
 
@@ -90,9 +90,9 @@ pocket per digit; here B's two ends plus A act as three pockets.
 
 ## MSD Radix — *"Biggest digit first, then recurse"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 6 | 6 | ~200 | Uncommon |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 7 | 6 | Uncommon |
 
 **The idea.** Split the numbers by their top bit, the smaller half to B and the larger half staying in A, then sort each half the same way, one bit lower each time.
 

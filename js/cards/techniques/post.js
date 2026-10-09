@@ -59,14 +59,14 @@ export function commute(steps, w = 8) {
 }
 
 export default [
-  { id: 'double-op-sharing', role: 'post', name: 'Double-Op Sharing', grasp: 0, craft: 2, rarity: 'common', always: true, flag: 'sharing',
+  { id: 'double-op-sharing', role: 'post', name: 'Double-Op Sharing', knows: [], fns: 0, from: "part of the rotations in the insertion core (claude-opus-5.5-high rotate.c's exec_rot)", rarity: 'common', always: true, flag: 'sharing',
     effect: 'switched off: Turk +98 @100, +1224 @500; Long Line +69 / +852' },
-  { id: 'noop-suppression', role: 'post', name: 'No-op Suppression', grasp: 0, craft: 0, rarity: 'common', rewrite: noop,
+  { id: 'noop-suppression', role: 'post', name: 'No-op Suppression', knows: [], fns: 1, from: "est.: one filter over the output", rarity: 'common', rewrite: noop,
     effect: 'under 0.5 op per stream on every card' },
-  { id: 'peephole-cancel', role: 'post', name: 'Peephole Cancel', grasp: 0, craft: 2, rarity: 'uncommon', rewrite: s => cancel(s),
+  { id: 'peephole-cancel', role: 'post', name: 'Peephole Cancel', knows: ['algebra'], fns: 2, from: "counted: claude-opus-5.5-high peephole.c (inverse, peephole)", rarity: 'uncommon', rewrite: s => cancel(s),
     effect: 'Radix −78 @100, −55 @500; Turk and LIS hosts < 1' },
-  { id: 'peephole-fuse', role: 'post', name: 'Peephole Fuse', grasp: 0, craft: 2, rarity: 'uncommon', rewrite: s => fuse(s),
+  { id: 'peephole-fuse', role: 'post', name: 'Peephole Fuse', knows: ['algebra'], fns: 1, from: "counted: claude-opus-5.5-high peephole.c (merged)", rarity: 'uncommon', rewrite: s => fuse(s),
     effect: 'Chunks −17 / −106; Butterfly −20 / −166; with Cancel on Four-End Quicksort −33 / −217' },
-  { id: 'commutation-peephole', role: 'post', name: 'Commutation Peephole', grasp: 2, craft: 4, rarity: 'rare', rewrite: s => commute(s),
+  { id: 'commutation-peephole', role: 'post', name: 'Commutation Peephole', knows: ['algebra'], fns: 3, from: "est.: which moves commute, and a pass that brings them together", rarity: 'rare', rewrite: s => commute(s),
     effect: 'after Cancel + Fuse: ~0 on every card' },
 ].map(c => ({ kind: 'technique', requires: [], conflicts: [], ...c }));

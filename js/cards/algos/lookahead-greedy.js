@@ -3,7 +3,7 @@ import { turk } from '../engines/insertion.js';
 // move, re-planning after every move.
 export default {
   id: 'lookahead-greedy', kind: 'algorithm', family: 'search', name: 'Lookahead Greedy', tagline: 'Think k moves ahead',
-  rarity: 'rare', claimedClass: 'n²', proof: 'yes', grasp: 6, craft: 6, lines: 300, lesson: true,
+  rarity: 'rare', claimedClass: 'n²', proof: 'yes', knows: ['slot',  'rotdist',  'greedy',  'shared',  'heuristic'], fns: 13, from: "est.: Turk's 10 (gemini-flash-3.8) plus 3 to price each pick two moves deep", lesson: true,
   slots: 2, natives: { pick: 'cheapest pick, priced with lookahead', cost: 'lookahead (k = 2)' }, open: ['anchor', 'band'], defaults: { anchor: 'keep-three' },
   finisher: 'hardcoded-three', finishers: ['hardcoded-three', 'five-hand', 'bfs-leaf', 'distance-tables'],
   params: { b: { label: 'candidates per level b', type: 'int', min: 2, max: 50, def: () => 10 }, commit: { label: 'commit to both moves', type: 'bool', def: () => false } },

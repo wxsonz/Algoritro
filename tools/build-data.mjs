@@ -41,7 +41,7 @@ const cursedMd = await readFile(at('spec/cards/cursed.md'), 'utf8');
 const metaSec = id => sections.find(s => s.key === norm(META.find(m => m.id === id).name));
 const cards = { algorithms: {}, techniques: {}, meta: {}, cursed: {} };
 const missing = [];
-for (const a of ALGOS) { const s = find(a); if (!s) missing.push(a.name); cards.algorithms[a.id] = { kind: 'algorithm', name: a.name, tagline: a.tagline, family: a.family, rarity: a.rarity, grasp: a.grasp, craft: a.craft, lines: a.lines, claimedClass: a.claimedClass, proof: a.proof, doc: s?.body || '', source: s?.file }; }
+for (const a of ALGOS) { const s = find(a); if (!s) missing.push(a.name); cards.algorithms[a.id] = { kind: 'algorithm', name: a.name, tagline: a.tagline, family: a.family, rarity: a.rarity, grasp: a.grasp, craft: a.craft, knows: a.concepts, fns: a.fns, from: a.from, claimedClass: a.claimedClass, proof: a.proof, doc: s?.body || '', source: s?.file }; }
 for (const t of TECHS) {
   let doc = '', source;
   // A Finisher's text: its idea, then its quality and notes. Columns: card, size, quality, Grasp, Craft, notes, idea.

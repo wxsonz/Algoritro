@@ -42,7 +42,8 @@ export function runAdaptive(build, ranks, opts = {}) {
 
 // Does a hand's class claim hold on its params? A param that stops growing on a card that claims
 // O(n√n) is flagged without measuring (spec/09). Returns the reasons it does not.
-import { byId, techById } from '../cards/index.js';
+import { byId, techById, findCard } from '../cards/index.js';
+import { tally } from '../cards/stats.js';
 export function classProblems(hand) {
   const a = byId[hand.algo], out = [];
   for (const [k, p] of Object.entries(a.params || {})) {
@@ -55,6 +56,13 @@ export function classProblems(hand) {
   const R = resolve(hand), inPlay = new Set([...(hand.techs || []), ...Object.values(R.use || {}).map(u => u.id)]);
   for (const id of inPlay) { const t = techById[id]; if (t?.breaksClass === a.claimedClass) out.push(`${t.name}: ${t.breaksWhy}`); }
   return out;
+}
+// A build's Grasp and Craft (spec/03 §3.4): the union of the concepts and code of its three seats
+// and the tiny seat, plus the base kit. Knowledge learnt once and code written once count once.
+export function buildTotals(build) {
+  const cards = [byId['hardcoded-three'], byId.oracle];
+  for (const k of ['simple', 'medium', 'complex']) { const R = build[k] && resolve(build[k]); if (R?.ok) cards.push(...R.cards); }
+  return tally(cards, { kit: true, find: findCard });
 }
 // A build complies when every regime's hand meets that regime's class target.
 export function buildCompliance(build) {

@@ -42,7 +42,7 @@ export function distanceTable(n) {
 }
 export default {
   id: 'oracle', kind: 'algorithm', family: 'small', name: 'Oracle', tagline: 'Sees every future',
-  rarity: 'rare', claimedClass: 'exponential', proof: 'yes', grasp: 4, craft: 6, lines: 200, slots: 0, maxN: 8, playsAs: 'bfs-leaf', speed: 'n ≤ 8',
+  rarity: 'rare', claimedClass: 'exponential', proof: 'yes', knows: ['bfs'], fns: 3, uses: ['bfs-core'], from: "counted: claude-opus-5.5-max small_pack.c (pack, unpack, goal) on a BFS core", slots: 0, maxN: 8, playsAs: 'bfs-leaf', speed: 'n ≤ 8',
   run(m) {
     m.phase('search');
     for (const o of shortest(m.a)) m.why('a shortest stream, found by breadth-first search').op(o);

@@ -7,9 +7,9 @@ inside bigger algorithms.
 
 ## Hardcoded Three — *"Six cases, no thinking"*
 
-| class | n | ops | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(1) · ✓ | 3 | ≤ 2 | 2 | 2 | ~20 | Common |
+| class | n | ops | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(1) · ✓ | 3 | ≤ 2 | 1 | 1 | Common |
 
 **The idea.** Three numbers can only be in six orders, so the card simply knows the best answer for each one.
 
@@ -38,9 +38,9 @@ middle, `rra`. Then, if the top two are out of order, `sa`. This is always optim
 
 ## Five Hand — *"Push the two smallest, fix three, pull back"*
 
-| class | n | ops | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(1) · ✓ | 4–5 | ≤ 10 (mean 7.4 at n=5) | 2 | 4 | ~40 | Common |
+| class | n | ops | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(1) · ✓ | 4–5 | ≤ 10 (mean 7.4 at n=5) | 2 | 3 | Common |
 
 **The idea.** Park the two smallest numbers in B, sort the three that are left, then bring the two back on top.
 
@@ -72,9 +72,9 @@ second minimum. Hardcoded Three on A, then `pa pa`.
 
 ## Oracle — *"Sees every future"*
 
-| class | n | ops | Grasp | Craft | Lines | Speed | rarity |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| exponential · ✓ optimal | ≤ 8 (BFS), 9+ (IDA*) | optimal | 4 | 6 | ~200 | ●●○○○ | Rare |
+| class | n | ops | Grasp | Craft | Speed | rarity |
+| --- | --- | --- | --- | --- | --- | --- |
+| exponential · ✓ optimal | ≤ 8 (BFS), 9+ (IDA*) | optimal | 4 | 16 | ●●○○○ | Rare |
 
 **The idea.** Try every possible sequence of moves, shortest first, until one sorts the stack. It always finds the fewest moves, but only small stacks fit in memory.
 

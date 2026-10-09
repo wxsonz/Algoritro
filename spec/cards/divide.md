@@ -7,9 +7,9 @@ cheap places to put a value are the **top and bottom of each stack**.
 
 ## Quick 2-Way — *"Split at the median, recurse"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 6 | 6 | ~200 | Uncommon |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 5 | 6 | Uncommon |
 
 **The idea.** Quicksort with two stacks: split a group at its middle value, send the lower half to B, and sort each half the same way.
 
@@ -60,9 +60,9 @@ halves, and Median Pivot. A Finisher is optional; by default, leaves of 2 are fi
 
 ## Four-End Quicksort — *"Four bins, never step over anyone"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 8 | 8 | ~400 | Rare |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 6 | 7 | Rare |
 
 **The idea.** Quicksort that uses the top and the bottom of both stacks as four places to put things. A group splits into three parts at once, and nothing ever has to be moved back out of the way.
 
@@ -114,9 +114,9 @@ Finisher slot is empty by default; BFS Leaf is the one to play.
 
 ## Tape Merge — *"Merge sort on four tapes"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 8 | 8 | ~350 | Legendary |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 3 | 5 | Legendary |
 
 **The idea.** Merge sort, the way old computers sorted on tape drives: make short sorted runs at the stack ends, then keep merging two runs into one longer run until only one is left.
 
@@ -171,9 +171,9 @@ Tables). Without one, the runs are the natural runs; the distribution is balance
 
 ## Natural Merge — *"Merge the runs that are already there"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 4 | 6 | ~150 | Rare |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 3 | 4 | Rare |
 
 **The idea.** Use the sorted stretches the input already has: merge them two at a time until the whole stack is one sorted run.
 

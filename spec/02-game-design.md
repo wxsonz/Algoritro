@@ -36,7 +36,7 @@ a fanned hand. The anatomy borrows from card games peers already know:
 
 ```
 ┌──────────────────────────────────┐
-│ (💡4)         TURK          (🔨6) │  Grasp gem (a bulb: to understand) · name · Craft gem (a hammer: to build)
+│ (💡7)         TURK         (🔨11) │  Grasp gem (a bulb: the ideas to know first) · name · Craft gem (a hammer: functions to write)
 │ ┌──────────────────────────────┐ │
 │ │  [5] [3] [1] [4] [6]   cover │ │  the cover draws the card's idea: here, price tags with the cheapest lit
 │ └──────────────────────────────┘ │

@@ -7,9 +7,9 @@ the best way to learn what each op actually costs.
 
 ## Bubble Wheel — *"Turn the wheel, swap when wrong"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n²) · ✓ | 11301 sim FAIL | 301410 sim FAIL | 2 | 2 | ~25 | Uncommon |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n²) · ✓ | 11301 sim FAIL | 301410 sim FAIL | 1 | 2 | Uncommon |
 
 **The idea.** Bubble sort with only stack A: keep turning A like a wheel and swap the top two whenever they are out of order, until a full turn needs no swap.
 
@@ -44,9 +44,9 @@ includes it.
 
 ## Min Extract (selection sort) — *"Grab the smallest, every time"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n²) · ✓ | 1454 sim GOOD | 32298 sim FAIL | 2 | 2 | ~40 | Common |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n²) · ✓ | 1454 sim GOOD | 32298 sim FAIL | 2 | 4 | ~40 | Common |
 
 **The idea.** Pull out the smallest number again and again. B fills up in order, so pushing everything back rebuilds A sorted.
 
@@ -80,9 +80,9 @@ Presorted Shortcut is a prep card, so it fits without a slot.
 
 ## Twin Extract — *"Smallest or largest, whichever is closer"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n²) · ✓ | 1117 sim GOOD | 22318 sim FAIL | 4 | 4 | ~80 | Uncommon |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n²) · ✓ | 1117 sim GOOD | 22318 sim FAIL | 3 | 6 | Uncommon |
 
 **The idea.** Like Min Extract, but each time it takes whichever of the smallest or largest number is closer to the top. Small ones go on top of B, large ones to the bottom.
 

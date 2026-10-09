@@ -1,4 +1,9 @@
-import { ALGOS, byId } from '../js/cards/index.js';
+import { ALGOS, TECHS, META, byId, techById, findCard } from '../js/cards/index.js';
+import { CONCEPTS, SHARED, KIT_FNS, tally } from '../js/cards/stats.js';
+import { resolve } from '../js/core/hand.js';
+import { buildTotals } from '../js/core/meta-run.js';
+import { BUILDS } from '../js/cards/decks.js';
+import { execFileSync } from 'node:child_process';
 import { runHand } from '../js/core/hand.js';
 import { allHands } from '../js/core/combos.js';
 import { generate, GENERATORS, ranks } from '../js/core/input.js';
@@ -48,5 +53,24 @@ export const tests = [
   ['cards refuse inputs above their maxN', () => { let threw = false; try { play('hardcoded-three', [3, 2, 1, 0]); } catch { threw = true; } ok(threw); }],
   ['determinism: same seed and hand give byte-identical streams', () => {
     for (const a of ALGOS) { const n = a.maxN ? Math.min(a.maxN, 7) : 100; const r = ranks(generate('uniform', n, 42)); eq(play(a.id, r).ops.join(), play(a.id, r).ops.join(), a.id); }
+  }],
+  ['every card names its concepts, counts its functions, and says where the count comes from', () => {
+    for (const c of [...ALGOS, ...TECHS, ...META]) {
+      ok(Array.isArray(c.knows) && c.knows.every(k => CONCEPTS[k]), `${c.id}: knows`);
+      ok(Number.isInteger(c.fns) && c.fns >= 0 && (c.uses || []).every(k => SHARED[k]), `${c.id}: fns and uses`);
+      ok(/^(counted|est\.|in the base kit|part of|the disorder count)/.test(c.from), `${c.id}: from`);
+    }
+  }],
+  ['Grasp and Craft add up as sets: an idea or a piece of code counts once', () => {
+    const si = byId['simple-insertion'], cr = techById['cheapest-return'];
+    eq(tally([si, cr], { find: findCard }).craft, si.fns + cr.fns + SHARED['insert-core'].fns, 'the insertion core, once');
+    const lis = resolve({ algo: 'lis-insertion', techs: ['four-way-cost'], sandbox: true }), two = resolve({ algo: 'lis-insertion', techs: [], sandbox: true });
+    eq(lis.grasp, two.grasp, 'Four-Way Cost asks nothing Two-Way Cost had not');
+    const strong = BUILDS.find(b => b.id === 'strong-build'), T = buildTotals(strong);
+    ok(T.craft < KIT_FNS + ['simple', 'medium', 'complex'].reduce((s, k) => s + resolve(strong[k]).craft, 0) + byId.oracle.craft + 1, 'the build shares the BFS core between the Oracle and BFS Leaf');
+    ok(T.concepts.includes('bfs') && T.concepts.includes('disorder'), 'the tiny seat and the kit count');
+  }],
+  ['spec/grasp-craft.md is up to date with the card data (else run node tools/grasp-craft.mjs)', () => {
+    execFileSync('node', [new URL('../tools/grasp-craft.mjs', import.meta.url).pathname, '--check'], { stdio: 'pipe' });
   }],
 ];

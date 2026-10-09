@@ -11,7 +11,7 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 ┌ left panel ──────────┬ play mat ──────────────────────────────────────────────┐
 │ the stack: goal      │ build: [--simple] [--medium] [--complex] [tiny 🔒]     │
 │ moves · stamp        │ slots of the seat on the mat: [pick][anchor]…[knobs]   │
-│ Grasp, Craft gems    │ ┌ played card ┐ ┌ route: stack · disorder → flag → card┐│
+│ build Grasp, Craft   │ ┌ played card ┐ ┌ route: stack · disorder → flag → card┐│
 │ delta chip, cheats ☐☐│ │(click: read)│ │ board: A | B, transport, timeline   ││
 │ stacks with routes:  │ └─────────────┘ └─────────────────────────────────────┘│
 │ easy, medium, hard,  │ your hand: the techniques that fit, fanned  [algo][tech]│
@@ -53,7 +53,11 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   with a lock, and its card a lock seal and a "built in" ribbon. Clicking it shakes the card
   and says why it stays. A default card wears a "default" ribbon; clicking it points at the
   hand cards that can replace it.
-- **Hand totals past 10 catch fire:** the Grasp or Craft row burns, and the number throbs.
+- **Grasp and Craft of the build:** the two rows count the whole build, its three seats, the
+  tiny seat and the base kit, with what they share counted once ([03-stats.md
+  §3.4](03-stats.md#34-hand-and-build-totals)). Each row's ten gems fill up to its fire line;
+  past Grasp 20 or Craft 100 the row burns and the number throbs. The tooltip names the concepts,
+  and gives the seat on the mat's own share.
 - **Tooltips** sit above the pointer in the table's colours, with a heading and a few lines.
   Hand cards have none: hovering one enlarges it instead.
 - **The build.** Above the slots, four seats: `--simple`, `--medium`, `--complex` and the

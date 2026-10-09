@@ -23,45 +23,60 @@ across hosts.
 
 ## 3.2 Scored stats
 
-### Grasp: how hard is it to understand? (0–10)
+### Grasp: what must you know first?
 
-| score | rubric |
-| --- | --- |
-| 0 | Nothing to understand: it works by itself (an always-on card). |
-| 1–2 | You can explain it in one sentence and simulate it by hand. |
-| 3–4 | One idea beyond the stack ops, for example "rank" or "chunk". |
-| 5–6 | Several interacting ideas, or one that needs a diagram: circular order, cost models. |
-| 7–8 | Recursion across both stacks, or invariants you must hold in your head. |
-| 9–10 | Needs outside theory: search heuristics, DP over plans, proofs of bounds. |
+Grasp is the **prior knowledge** a card needs: the concepts you must know before it makes sense,
+each with a weight, summed. The two stacks, the 11 moves, loops and arrays are the free base.
+Time to understand was considered and dropped: it depends too much on the person.
 
-### Craft: how hard is it to implement in C under the Norm? (0–10)
+| concept | weight | concept | weight |
+| --- | --- | --- | --- |
+| rank compression | 1 | recursion | 2 |
+| disorder: inversions over pairs | 1 | partition around a pivot | 2 |
+| rotation distance (`ra` against `rra`) | 1 | digits in a base, bit tests | 2 |
+| greedy "cheapest first" | 1 | merging sorted runs | 2 |
+| ranges and chunks by rank | 1 | longest increasing subsequence | 3 |
+| target slot in a circular sorted stack | 2 | dynamic programming | 3 |
+| shared rotations (`rr`, `rrr`) in a cost | 2 | graph search (BFS) | 3 |
+| move algebra (peephole rewrites) | 2 | beam or A* search | 3 |
+| heuristics: what makes a good guess | 2 | simulated annealing, randomness | 3 |
 
-| score | rubric |
-| --- | --- |
-| 0 | Nothing to write. |
-| 1–2 | Under ~50 lines, one loop, few edge cases. |
-| 3–4 | ~50–150 lines, a couple of helpers. |
-| 5–6 | ~150–300 lines, several cases to get right (directions, wraparound, empty stacks). |
-| 7–8 | ~300–600 lines, recursion or state that is easy to corrupt, and painful debugging. |
-| 9–10 | 600+ lines, hash tables or memory-heavy search, tight CPU limits. |
+Weight 1 is one idea you can explain in a sentence; 2 needs a diagram or a page; 3 is a topic of
+its own, usually met in a course before push_swap. LSD Radix is 3 (ranks, binary digits), Turk 7,
+LIS Insertion 10, Beam Sorter 14.
 
-The scores were first given on a 1–5 scale. On 0–10 they are those judgments doubled, so
-every card sits on an even number for now; the odd steps are room for finer judgments, and the
-wider range gives a full hand room to grow (§3.4).
+### Craft: how much code under the Norm?
 
-Grasp and Craft are deliberately separate. The Codex plots every Algorithm card and every
-saved hand on a **Grasp × Craft grid**. Scores of 0–4 count as low and 5–10 as high. Technique
-cards carry added costs, not scores, so they are not plotted on their own.
+Craft is the **number of functions** a card takes under the Norm: at most 25 lines and 4
+parameters each, 5 functions to a file, no `for`, no ternary. More instructions mean more
+functions, and code that needs structs to get past the 4-parameter limit, or `malloc`'d state
+(search nodes, tables), costs more. Where a card has real C, its Craft is **counted** from that
+code: one of the study's builds (`push_swap/study/`) or a reference build
+(`study/explorer-refs/`, [README.md](README.md)). Where none has it, it is **estimated** from the
+nearest code that does. Hardcoded Three is 1, LSD Radix 2, Chunks 6, Turk 11, Beam Sorter 30.
 
-| | Craft low (0–4) | Craft high (5–10) |
+Every card's concepts and functions, with where each count comes from, are in
+[grasp-craft.md](grasp-craft.md), generated from the card data, so the numbers can be checked and
+argued with.
+
+### Sets, not sums
+
+Both scores add up as **sets**. A concept learnt once counts once, and code written once counts
+once. Code more than one card uses is listed once: the insertion core (4 functions), the two-way
+partition (4), the BFS core (13), the distance tables (21). An Algorithm card's own scores
+include its natives, its defaults and its default Finisher, since they come with it, and the
+cards always in play. A technique card shows what it asks on its own; in a hand it adds only
+what the hand does not have yet, so Four-Way Cost adds nothing to Grasp where Two-Way Cost was.
+
+### The Grasp × Craft grid
+
+The Codex plots every Algorithm card on a **Grasp × Craft grid**. Grasp is high from 6 (about two
+heavy ideas) and Craft from 10 functions (two files under the Norm).
+
+| | Craft low (under 10) | Craft high (10 and up) |
 | --- | --- | --- |
-| **Grasp low (0–4)** | *Starter*: Min Extract, LSD Radix, Chunks, Butterfly, Simple Insertion | *Grinder*: Turk, Oracle |
-| **Grasp high (5–10)** | *Elegant*: no bare card yet, so this is an open space | *Boss*: LIS Insertion, Bucket Insertion, Quick 2-Way, Four-End Quicksort, Beam Sorter |
-
-### Lines: rough size in C
-
-This is an estimate of Norm-style C lines for the card alone, not counting parsing or stack
-ops. It anchors Craft but does not replace it.
+| **Grasp low (under 6)** | *Starter*: Hardcoded Three, Five Hand, Bubble Wheel, Min Extract, Twin Extract, Insert-into-B, Simple Insertion, Chunks, Butterfly, LSD Radix, Ternary Radix, Quick 2-Way, Tape Merge, Natural Merge | *Grinder*: the Oracle |
+| **Grasp high (6 and up)** | *Elegant*: MSD Radix, Four-End Quicksort | *Boss*: LIS Insertion, Turk, Bucket Insertion, Lookahead Greedy, Beam Sorter, Annealer |
 
 ### Proof: can you defend the complexity class?
 
@@ -79,20 +94,28 @@ justifies it.
 | stat | meaning |
 | --- | --- |
 | **Effect** | the measured Δops on each compatible host, at n=100 and n=500 |
-| **Cost** | +Grasp / +Craft added to the hand |
+| **Cost** | +Grasp / +Craft: what it asks on its own; in a hand, only what is new counts (§3.2) |
 | **Role** | the role it fills. Slot roles (anchor, pick, cost, sweep, band, retrieval, ends, split, pivot, order) hold one card each. **leaf** cards are Finishers and use the Finisher slot. **prep** and **post** cards stack and use no slot. See [04-compatibility.md](04-compatibility.md). |
-| **Value** | Effect ÷ max(1, added Craft), so the Meta page can rank techniques by "ops saved per unit of pain" without dividing by zero for +0 Craft cards |
+| **Value** | Effect ÷ max(1, added Craft): ops saved per function written, so the Meta page can rank techniques without dividing by zero for +0 Craft cards |
 
-## 3.4 Hand totals
+## 3.4 Hand and build totals
 
-For a full hand, the result panel shows the measured stats of the actual combined run. It
-also shows **Hand Grasp** and **Hand Craft** = the Algorithm's score + the added costs of the
-techniques played on it, on the same 0–10 scale. The bar fills at 10; a hand past 10 keeps its
-real total and is marked as over. Natives and defaults are part of
-the Algorithm's score and add nothing. A Meta card adds its own Grasp and Craft to the highest
-totals among the hands it wraps. These totals are rough guides: costs do not really add up
-linearly.
-The Codex explains them, and the Meta page plots hands on ops × Hand Craft.
+- **Hand Grasp and Hand Craft** are the union of every card in play: the Algorithm, its natives
+  and defaults, the cards played, the Finisher, and the cards always in play (§3.2). They leave
+  out the base kit. A technique's delta chip says what it changed.
+- **A build's totals** are what the Table's Grasp and Craft rows show, since the Table plays a
+  build: the union over its three seats and the tiny seat (Hardcoded Three and the Oracle), plus
+  the **base kit** every push_swap needs (30 functions: parsing and errors, ranks, the two
+  stacks, the 11 moves and their output, freeing, the flags and main, and the disorder count the
+  selector reads). Knowledge and code the seats share count once: the Oracle's BFS core serves
+  BFS Leaf too.
+- **Fire.** A build burns past **Grasp 20** or **Craft 100**. A classic build (Min Extract,
+  Chunks, LSD Radix) is Grasp 9 and Craft 58: Grasp 20 is that plus about four heavy ideas, and
+  Craft 100 about twenty files under the Norm. The strong build is Grasp 21 and Craft 84, so its
+  Grasp burns; DP Splits or Beam Leaf in `--complex` sets the Craft row alight too. Each row's
+  ten gems fill up to its fire line.
+- The Meta page plots hands on ops × Hand Craft. These totals are guides, not measurements of a
+  person: they say what a build asks, not how long it takes.
 
 ## 3.5 Card tiers
 

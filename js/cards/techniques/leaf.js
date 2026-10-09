@@ -12,15 +12,15 @@ export function fiveHand(m) {
 }
 
 export default [
-  { id: 'hardcoded-three', role: 'leaf', name: 'Hardcoded Three', grasp: 0, craft: 0, rarity: 'common', rest: 3,
+  { id: 'hardcoded-three', role: 'leaf', name: 'Hardcoded Three', knows: [], fns: 1, from: "counted: sort_three, one function in gpt-6-sol-high sort_small.c and in gemini-flash-3.8 sort_small.c", rarity: 'common', rest: 3,
     finish: m => sortThree(m), effect: 'optimal for 3' },
-  { id: 'five-hand', role: 'leaf', name: 'Five Hand', grasp: 0, craft: 2, rarity: 'common', rest: 5,
+  { id: 'five-hand', role: 'leaf', name: 'Five Hand', knows: ['rotdist'], fns: 2, brings: ['hardcoded-three'], from: "counted: gemini-flash-3.8 sort_small.c (push_min_to_b, sort_five); Hardcoded Three sorts the last three", rarity: 'common', rest: 5,
     finish: fiveHand, effect: 'good, not optimal: up to 6 more than the Oracle at 5' },
-  { id: 'bfs-leaf', role: 'leaf', name: 'BFS Leaf (≤ 5)', short: 'BFS Leaf', grasp: 2, craft: 6, rarity: 'rare', rest: 5, leaf: 5,
+  { id: 'bfs-leaf', role: 'leaf', name: 'BFS Leaf (≤ 5)', short: 'BFS Leaf', knows: ['bfs'], fns: 5, uses: ['bfs-core'], from: "counted: claude-opus-5.5-high leaf.c (side_add, side_build, has_wall, make_goal, leaf_solve) on its BFS core", rarity: 'rare', rest: 5, leaf: 5,
     finish: m => bfsSortA(m), effect: 'Four-End Quicksort: ≤ 3 −95 / −635, ≤ 5 −142 / −657' },
-  { id: 'distance-tables', role: 'leaf', name: 'Distance Tables', grasp: 2, craft: 6, rarity: 'legendary', rest: 4, leaf: 4,
+  { id: 'distance-tables', role: 'leaf', name: 'Distance Tables', knows: ['bfs',  'heuristic'], fns: 0, uses: ['tables'], from: "counted: claude-opus-5.5-max's tables, built by BFS", rarity: 'legendary', rest: 4, leaf: 4,
     finish: m => bfsSortA(m), effect: 'the same ops as BFS Leaf ≤ 4 (−105 / −657), only faster' },
-  { id: 'beam-leaf', role: 'leaf', name: 'Beam Leaf (≤ 32)', short: 'Beam Leaf', grasp: 6, craft: 8, rarity: 'legendary',
+  { id: 'beam-leaf', role: 'leaf', name: 'Beam Leaf (≤ 32)', short: 'Beam Leaf', knows: ['beam',  'heuristic',  'bfs'], fns: 24, uses: ['tables'], from: "counted: claude-opus-5.5-max beam.c, beam_heur.c, beam_mem.c, beam_moved.c, beam_path.c, beam_search.c, beam_select.c (24) on its distance tables", rarity: 'legendary',
     unbuildable: 'Reference builds only: not built here yet. It is the main open space between Four Corners and Oracle\'s Plan.',
     effect: 'ref only' },
 ].map(c => ({ kind: 'technique', requires: [], conflicts: [], ...c }));

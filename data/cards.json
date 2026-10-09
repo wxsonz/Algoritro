@@ -8,12 +8,16 @@
    "tagline": "Six cases, no thinking",
    "family": "small",
    "rarity": "common",
-   "grasp": 2,
-   "craft": 2,
-   "lines": 20,
+   "grasp": 1,
+   "craft": 1,
+   "knows": [
+    "rank"
+   ],
+   "fns": 1,
+   "from": "counted: sort_three, one function in gpt-6-sol-high sort_small.c and in gemini-flash-3.8 sort_small.c",
    "claimedClass": "1",
    "proof": "yes",
-   "doc": "| class | n | ops | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(1) · ✓ | 3 | ≤ 2 | 2 | 2 | ~20 | Common |\n\n**The idea.** Three numbers can only be in six orders, so the card simply knows the best answer for each one.\n\n**Step by step.**\n1. If the biggest number is on top, rotate it to the bottom (`ra`).\n2. If it is in the middle, bring the bottom one up instead (`rra`).\n3. The biggest is now at the bottom. If the top two are the wrong way round, swap them (`sa`).\n4. Done, in at most two moves.\n\n**Under the hood.** There are 3! = 6 orders. If the max is on top, `ra`. If the max is in the\nmiddle, `rra`. Then, if the top two are out of order, `sa`. This is always optimal for 3\n(checked against the Oracle on all 6 orders, sim).\n\n**Lore.** Nothing to tell: with 6 orders, every push_swap writer works the cases out by hand.\n\n**Pros**\n- Optimal and trivial to write.\n- Used as the finisher in Turk, Min Extract and many others.\n\n**Cons**\n- Only for 3. It does not generalise.\n\n**Slots:** none. **Plays as:** Finisher.",
+   "doc": "| class | n | ops | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(1) · ✓ | 3 | ≤ 2 | 1 | 1 | Common |\n\n**The idea.** Three numbers can only be in six orders, so the card simply knows the best answer for each one.\n\n**Step by step.**\n1. If the biggest number is on top, rotate it to the bottom (`ra`).\n2. If it is in the middle, bring the bottom one up instead (`rra`).\n3. The biggest is now at the bottom. If the top two are the wrong way round, swap them (`sa`).\n4. Done, in at most two moves.\n\n**Under the hood.** There are 3! = 6 orders. If the max is on top, `ra`. If the max is in the\nmiddle, `rra`. Then, if the top two are out of order, `sa`. This is always optimal for 3\n(checked against the Oracle on all 6 orders, sim).\n\n**Lore.** Nothing to tell: with 6 orders, every push_swap writer works the cases out by hand.\n\n**Pros**\n- Optimal and trivial to write.\n- Used as the finisher in Turk, Min Extract and many others.\n\n**Cons**\n- Only for 3. It does not generalise.\n\n**Slots:** none. **Plays as:** Finisher.",
    "source": "spec/cards/small.md"
   },
   "five-hand": {
@@ -23,11 +27,16 @@
    "family": "small",
    "rarity": "common",
    "grasp": 2,
-   "craft": 4,
-   "lines": 40,
+   "craft": 3,
+   "knows": [
+    "rank",
+    "rotdist"
+   ],
+   "fns": 2,
+   "from": "counted: gemini-flash-3.8 sort_small.c (push_min_to_b, sort_five); Hardcoded Three sorts the last three",
    "claimedClass": "1",
    "proof": "yes",
-   "doc": "| class | n | ops | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(1) · ✓ | 4–5 | ≤ 10 (mean 7.4 at n=5) | 2 | 4 | ~40 | Common |\n\n**The idea.** Park the two smallest numbers in B, sort the three that are left, then bring the two back on top.\n\n**Step by step.**\n1. Turn A the short way until the smallest number is on top, and push it to B.\n2. Do the same for the second smallest.\n3. Sort the three numbers left in A with Hardcoded Three.\n4. Push both back (`pa pa`): the smaller one lands on top.\n\n**Under the hood.** Rotate the minimum to the top by the shorter way and `pb`. Repeat for the\nsecond minimum. Hardcoded Three on A, then `pa pa`.\n\n**Lore.** Folk 42 knowledge, passed between peers because evaluators used to check 5 values in\n≤ 12 ops.\n\n**Pros**\n- Simple and reliable. Its worst case at n=5 is 10 ops, so it always fits the common\n  \"5 values in ≤ 12\" bar.\n\n**Cons**\n- Not optimal. At n=5 the Oracle needs 2.5 fewer ops on average and up to 6 fewer, and Five\n  Hand is optimal on only 7 of the 120 orders (sim). The gap is shown in Lab › Optimality\n  gap.\n\n**Slots:** none. **Finisher:** its inner Three (Hardcoded Three by default) can be swapped.\n**Plays as:** Finisher for leaves of 5.",
+   "doc": "| class | n | ops | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(1) · ✓ | 4–5 | ≤ 10 (mean 7.4 at n=5) | 2 | 3 | Common |\n\n**The idea.** Park the two smallest numbers in B, sort the three that are left, then bring the two back on top.\n\n**Step by step.**\n1. Turn A the short way until the smallest number is on top, and push it to B.\n2. Do the same for the second smallest.\n3. Sort the three numbers left in A with Hardcoded Three.\n4. Push both back (`pa pa`): the smaller one lands on top.\n\n**Under the hood.** Rotate the minimum to the top by the shorter way and `pb`. Repeat for the\nsecond minimum. Hardcoded Three on A, then `pa pa`.\n\n**Lore.** Folk 42 knowledge, passed between peers because evaluators used to check 5 values in\n≤ 12 ops.\n\n**Pros**\n- Simple and reliable. Its worst case at n=5 is 10 ops, so it always fits the common\n  \"5 values in ≤ 12\" bar.\n\n**Cons**\n- Not optimal. At n=5 the Oracle needs 2.5 fewer ops on average and up to 6 fewer, and Five\n  Hand is optimal on only 7 of the 120 orders (sim). The gap is shown in Lab › Optimality\n  gap.\n\n**Slots:** none. **Finisher:** its inner Three (Hardcoded Three by default) can be swapped.\n**Plays as:** Finisher for leaves of 5.",
    "source": "spec/cards/small.md"
   },
   "oracle": {
@@ -37,11 +46,16 @@
    "family": "small",
    "rarity": "rare",
    "grasp": 4,
-   "craft": 6,
-   "lines": 200,
+   "craft": 16,
+   "knows": [
+    "bfs",
+    "rank"
+   ],
+   "fns": 3,
+   "from": "counted: claude-opus-5.5-max small_pack.c (pack, unpack, goal) on a BFS core",
    "claimedClass": "exponential",
    "proof": "yes",
-   "doc": "| class | n | ops | Grasp | Craft | Lines | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| exponential · ✓ optimal | ≤ 8 (BFS), 9+ (IDA*) | optimal | 4 | 6 | ~200 | ●●○○○ | Rare |\n\n**The idea.** Try every possible sequence of moves, shortest first, until one sorts the stack. It always finds the fewest moves, but only small stacks fit in memory.\n\n**Step by step.**\n1. Start from the input: one position, zero moves.\n2. From every position, try all 11 moves to reach the positions one move further.\n3. Never visit the same position twice.\n4. The first sorted position found gives the answer: the moves that led there.\n\n**Under the hood.** Breadth-first search over states (A, B) using the 11 ops. The first time the\nsorted state is reached, the path is the shortest stream. Every way to split an order of the n\nvalues between the two stacks is a state: (n+1)·n! in all. That is 40,320 at n=7, 362,880 at\nn=8 (a full BFS takes about a second in Node, sim) and 3.6 million at n=9. Pack each state into\nan integer key and keep a visited set. One backward BFS from the sorted state gives the\noptimum of every input at once.\n\n**Variants.** These are params, not technique cards: they change CPU time and the reachable n,\nnever the op count.\n- **Bidirectional BFS:** search from both ends and meet in the middle, roughly a square-root\n  saving in states.\n- **IDA\\*:** iterative deepening with an admissible heuristic, so memory stays flat and n ≥ 9\n  becomes feasible. Inversions ÷ 2 is **not** admissible: `[1 2 3 4 0]` scores 2 but is one\n  `rra` from sorted. A safe one: read A followed by B reversed as a cycle. `pa` and `pb` never\n  change that cycle, and one op removes at most 5 **breakpoints** (neighbours that are not\n  consecutive ranks), so max(|B|, ⌈breakpoints ÷ 5⌉) never overestimates (checked on every\n  state up to n=8, sim). It is weak, about a fifth of the true distance, so a pattern database\n  is the real upgrade.\n- **Distance tables:** precompute a backward BFS from the goal once, then look up any small\n  leaf in O(1).\n- **Op pruning:** never play an op right after its inverse, and never `ra` then `rb` when `rr`\n  exists.\n\n**Lore.** Breadth-first search was reinvented by Edward F. Moore in 1959 to find the shortest\nway out of a maze (Konrad Zuse had it in 1945, unpublished until 1972). IDA* is Richard Korf's\n1985 answer to BFS's memory hunger, tested on the 15-puzzle, which is exactly the kind of\nproblem a small push_swap is.\n\n**Pros**\n- Ground truth. Every heuristic's optimality gap is measured against it.\n- As a leaf solver inside quicksorts, it saves a measurable number of ops.\n\n**Cons**\n- Exponential: 3.6 million states at n=9 and 40 million at n=10. Beyond ~9 values it needs\n  serious engineering.\n- C needs a hash set and a queue (malloc-heavy, so watch the leaks).\n\n**Slots:** none; the variants above are params. **Plays as:** Finisher (BFS Leaf) and as the\nbaseline in the Lab.",
+   "doc": "| class | n | ops | Grasp | Craft | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| exponential · ✓ optimal | ≤ 8 (BFS), 9+ (IDA*) | optimal | 4 | 16 | ●●○○○ | Rare |\n\n**The idea.** Try every possible sequence of moves, shortest first, until one sorts the stack. It always finds the fewest moves, but only small stacks fit in memory.\n\n**Step by step.**\n1. Start from the input: one position, zero moves.\n2. From every position, try all 11 moves to reach the positions one move further.\n3. Never visit the same position twice.\n4. The first sorted position found gives the answer: the moves that led there.\n\n**Under the hood.** Breadth-first search over states (A, B) using the 11 ops. The first time the\nsorted state is reached, the path is the shortest stream. Every way to split an order of the n\nvalues between the two stacks is a state: (n+1)·n! in all. That is 40,320 at n=7, 362,880 at\nn=8 (a full BFS takes about a second in Node, sim) and 3.6 million at n=9. Pack each state into\nan integer key and keep a visited set. One backward BFS from the sorted state gives the\noptimum of every input at once.\n\n**Variants.** These are params, not technique cards: they change CPU time and the reachable n,\nnever the op count.\n- **Bidirectional BFS:** search from both ends and meet in the middle, roughly a square-root\n  saving in states.\n- **IDA\\*:** iterative deepening with an admissible heuristic, so memory stays flat and n ≥ 9\n  becomes feasible. Inversions ÷ 2 is **not** admissible: `[1 2 3 4 0]` scores 2 but is one\n  `rra` from sorted. A safe one: read A followed by B reversed as a cycle. `pa` and `pb` never\n  change that cycle, and one op removes at most 5 **breakpoints** (neighbours that are not\n  consecutive ranks), so max(|B|, ⌈breakpoints ÷ 5⌉) never overestimates (checked on every\n  state up to n=8, sim). It is weak, about a fifth of the true distance, so a pattern database\n  is the real upgrade.\n- **Distance tables:** precompute a backward BFS from the goal once, then look up any small\n  leaf in O(1).\n- **Op pruning:** never play an op right after its inverse, and never `ra` then `rb` when `rr`\n  exists.\n\n**Lore.** Breadth-first search was reinvented by Edward F. Moore in 1959 to find the shortest\nway out of a maze (Konrad Zuse had it in 1945, unpublished until 1972). IDA* is Richard Korf's\n1985 answer to BFS's memory hunger, tested on the 15-puzzle, which is exactly the kind of\nproblem a small push_swap is.\n\n**Pros**\n- Ground truth. Every heuristic's optimality gap is measured against it.\n- As a leaf solver inside quicksorts, it saves a measurable number of ops.\n\n**Cons**\n- Exponential: 3.6 million states at n=9 and 40 million at n=10. Beyond ~9 values it needs\n  serious engineering.\n- C needs a hash set and a queue (malloc-heavy, so watch the leaks).\n\n**Slots:** none; the variants above are params. **Plays as:** Finisher (BFS Leaf) and as the\nbaseline in the Lab.",
    "source": "spec/cards/small.md"
   },
   "bubble-wheel": {
@@ -50,12 +64,16 @@
    "tagline": "Turn the wheel, swap when wrong",
    "family": "selection",
    "rarity": "uncommon",
-   "grasp": 2,
+   "grasp": 1,
    "craft": 2,
-   "lines": 25,
+   "knows": [
+    "rank"
+   ],
+   "fns": 2,
+   "from": "est.: one loop of sa or ra, and a sorted check; no study build has it",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 11301 sim FAIL | 301410 sim FAIL | 2 | 2 | ~25 | Uncommon |\n\n**The idea.** Bubble sort with only stack A: keep turning A like a wheel and swap the top two whenever they are out of order, until a full turn needs no swap.\n\n**Step by step.**\n1. Look at the top two numbers and swap them (`sa`) if they are out of order.\n2. Turn A by one (`ra`).\n3. After a full turn, start the next turn.\n4. Stop when a whole turn needed no swap.\n\n**Under the hood.** Bubble sort using only A. Each pass does, n−1 times: if the top two are out of\norder, `sa`; then `ra`. One more `ra` completes the revolution. Repeat the pass until A is\nsorted. B is never used.\n\n**Lore.** Bubble sort was first described by Edward Friend in 1956 as \"sorting by exchange\".\nKenneth Iverson seems to have named it \"bubble sort\" in 1962. It survives as the first sort\npeople are taught, not because anyone uses it. Knuth's verdict: it \"seems to have nothing to\nrecommend it, except a catchy name and the fact that it leads to some interesting theoretical\nproblems\". Here it shows why a single swap op is weak.\n\n**Pros**\n- The purest illustration of the op set: it shows why `sa` alone is weak and why B exists.\n- Very short.\n\n**Cons**\n- About n² ops, which fails both grades badly.\n\n**Slots:** none. Stopping as soon as A is sorted is built in, and the measured count\nincludes it.\n**Teaching role:** the first card of the Path. It shows the problem every later card solves.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 11301 sim FAIL | 301410 sim FAIL | 1 | 2 | Uncommon |\n\n**The idea.** Bubble sort with only stack A: keep turning A like a wheel and swap the top two whenever they are out of order, until a full turn needs no swap.\n\n**Step by step.**\n1. Look at the top two numbers and swap them (`sa`) if they are out of order.\n2. Turn A by one (`ra`).\n3. After a full turn, start the next turn.\n4. Stop when a whole turn needed no swap.\n\n**Under the hood.** Bubble sort using only A. Each pass does, n−1 times: if the top two are out of\norder, `sa`; then `ra`. One more `ra` completes the revolution. Repeat the pass until A is\nsorted. B is never used.\n\n**Lore.** Bubble sort was first described by Edward Friend in 1956 as \"sorting by exchange\".\nKenneth Iverson seems to have named it \"bubble sort\" in 1962. It survives as the first sort\npeople are taught, not because anyone uses it. Knuth's verdict: it \"seems to have nothing to\nrecommend it, except a catchy name and the fact that it leads to some interesting theoretical\nproblems\". Here it shows why a single swap op is weak.\n\n**Pros**\n- The purest illustration of the op set: it shows why `sa` alone is weak and why B exists.\n- Very short.\n\n**Cons**\n- About n² ops, which fails both grades badly.\n\n**Slots:** none. Stopping as soon as A is sorted is built in, and the measured count\nincludes it.\n**Teaching role:** the first card of the Path. It shows the problem every later card solves.",
    "source": "spec/cards/selection.md"
   },
   "min-extract": {
@@ -65,11 +83,16 @@
    "family": "selection",
    "rarity": "common",
    "grasp": 2,
-   "craft": 2,
-   "lines": 40,
+   "craft": 4,
+   "knows": [
+    "rank",
+    "rotdist"
+   ],
+   "fns": 3,
+   "from": "counted: gpt-6-sol-high sort_simple.c (sort_simple) and sort_utils.c (find_value, bring_top)",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1454 sim GOOD | 32298 sim FAIL | 2 | 2 | ~40 | Common |\n\n**The idea.** Pull out the smallest number again and again. B fills up in order, so pushing everything back rebuilds A sorted.\n\n**Step by step.**\n1. Find the smallest number in A and turn it to the top the short way.\n2. Push it to B.\n3. Repeat until three numbers are left, and sort those with Hardcoded Three.\n4. Push everything back from B (`pa`).\n\n**Under the hood.** Find the minimum of A, rotate it to the top by the shorter direction, `pb`.\nRepeat until 3 remain, finish with Hardcoded Three (with only 2 values, `sa` if needed), then\n`pa` everything back. B ends in descending order from the top, so the `pa`s rebuild A in\norder.\n\n**Lore.** Plain selection sort: the way anyone sorts a hand of cards by picking out the\nsmallest each time. No inventor to credit.\n\n**Pros**\n- Easy to prove: each extraction costs at most n/2 rotations plus 1.\n- A very common choice for the subject's O(n²) \"simple\" slot.\n- Doubles as the Five Hand.\n\n**Cons**\n- Each rotation passes over values without doing anything useful with them.\n- It fails n=500.\n\n**Slots:** none. Keep Three is native, and the Finisher is Hardcoded Three by default.\nPresorted Shortcut is a prep card, so it fits without a slot.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1454 sim GOOD | 32298 sim FAIL | 2 | 4 | ~40 | Common |\n\n**The idea.** Pull out the smallest number again and again. B fills up in order, so pushing everything back rebuilds A sorted.\n\n**Step by step.**\n1. Find the smallest number in A and turn it to the top the short way.\n2. Push it to B.\n3. Repeat until three numbers are left, and sort those with Hardcoded Three.\n4. Push everything back from B (`pa`).\n\n**Under the hood.** Find the minimum of A, rotate it to the top by the shorter direction, `pb`.\nRepeat until 3 remain, finish with Hardcoded Three (with only 2 values, `sa` if needed), then\n`pa` everything back. B ends in descending order from the top, so the `pa`s rebuild A in\norder.\n\n**Lore.** Plain selection sort: the way anyone sorts a hand of cards by picking out the\nsmallest each time. No inventor to credit.\n\n**Pros**\n- Easy to prove: each extraction costs at most n/2 rotations plus 1.\n- A very common choice for the subject's O(n²) \"simple\" slot.\n- Doubles as the Five Hand.\n\n**Cons**\n- Each rotation passes over values without doing anything useful with them.\n- It fails n=500.\n\n**Slots:** none. Keep Three is native, and the Finisher is Hardcoded Three by default.\nPresorted Shortcut is a prep card, so it fits without a slot.",
    "source": "spec/cards/selection.md"
   },
   "twin-extract": {
@@ -78,12 +101,18 @@
    "tagline": "Smallest or largest, whichever is closer",
    "family": "selection",
    "rarity": "uncommon",
-   "grasp": 4,
-   "craft": 4,
-   "lines": 80,
+   "grasp": 3,
+   "craft": 6,
+   "knows": [
+    "greedy",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 5,
+   "from": "est.: Min Extract's 3, plus choosing the nearer extreme and sinking a maximum",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1117 sim GOOD | 22318 sim FAIL | 4 | 4 | ~80 | Uncommon |\n\n**The idea.** Like Min Extract, but each time it takes whichever of the smallest or largest number is closer to the top. Small ones go on top of B, large ones to the bottom.\n\n**Step by step.**\n1. Count how far the smallest and the largest number are from the top, and take the closer one.\n2. A smallest number goes on top of B; a largest goes to the bottom of B (`pb` then `rb`).\n3. Repeat until three numbers are left in A, and sort them.\n4. Push the small ones back, then the large ones, and turn that block of large ones to the bottom of A.\n\n**Under the hood.** At each step, find the cheaper of the current min and the current max to bring\nto the top. A min goes `pb` onto the top of B. A max goes `pb` then `rb` to the bottom of B.\nAt the end, B holds the mins (descending from the top) above the maxes, and the maxes run\nfrom the largest down to the smallest. Return the mins with `pa`. The largest max is now on\nB's top, so `pa` the maxes one by one, then rotate that block of maxes to the bottom of A\n(`ra`, or `rra` if shorter).\n\n**Lore.** Double-ended selection (min and max at once) is a classic textbook tweak. Nothing\nmore to it.\n\n**Pros**\n- Cuts the average search distance by about a third compared with Min Extract: 8.6 against\n  13.0 rotations per extraction at n=100 (sim). The closer of two random positions in a stack\n  of m is about m/6 away, against m/4 for one.\n- A natural \"first optimisation\" exercise.\n\n**Cons**\n- The return phase is easy to get wrong. The obvious `rrb` + `pa` per max brings the maxes\n  back upside down: it sorted 0 of 1000 inputs (sim).\n- Still O(n²), and still fails n=500.\n\n**Slots:** none. A Finisher is optional, for example Hardcoded Three for the last 3.\nPresorted Shortcut is a prep card, so it fits without a slot.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1117 sim GOOD | 22318 sim FAIL | 3 | 6 | Uncommon |\n\n**The idea.** Like Min Extract, but each time it takes whichever of the smallest or largest number is closer to the top. Small ones go on top of B, large ones to the bottom.\n\n**Step by step.**\n1. Count how far the smallest and the largest number are from the top, and take the closer one.\n2. A smallest number goes on top of B; a largest goes to the bottom of B (`pb` then `rb`).\n3. Repeat until three numbers are left in A, and sort them.\n4. Push the small ones back, then the large ones, and turn that block of large ones to the bottom of A.\n\n**Under the hood.** At each step, find the cheaper of the current min and the current max to bring\nto the top. A min goes `pb` onto the top of B. A max goes `pb` then `rb` to the bottom of B.\nAt the end, B holds the mins (descending from the top) above the maxes, and the maxes run\nfrom the largest down to the smallest. Return the mins with `pa`. The largest max is now on\nB's top, so `pa` the maxes one by one, then rotate that block of maxes to the bottom of A\n(`ra`, or `rra` if shorter).\n\n**Lore.** Double-ended selection (min and max at once) is a classic textbook tweak. Nothing\nmore to it.\n\n**Pros**\n- Cuts the average search distance by about a third compared with Min Extract: 8.6 against\n  13.0 rotations per extraction at n=100 (sim). The closer of two random positions in a stack\n  of m is about m/6 away, against m/4 for one.\n- A natural \"first optimisation\" exercise.\n\n**Cons**\n- The return phase is easy to get wrong. The obvious `rrb` + `pa` per max brings the maxes\n  back upside down: it sorted 0 of 1000 inputs (sim).\n- Still O(n²), and still fails n=500.\n\n**Slots:** none. A Finisher is optional, for example Hardcoded Three for the last 3.\nPresorted Shortcut is a prep card, so it fits without a slot.",
    "source": "spec/cards/selection.md"
   },
   "insert-into-b": {
@@ -93,11 +122,17 @@
    "family": "insertion",
    "rarity": "uncommon",
    "grasp": 4,
-   "craft": 4,
-   "lines": 90,
+   "craft": 5,
+   "knows": [
+    "slot",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 5,
+   "from": "est.: the slot in B, the two rotations, the insertion loop, the return and the last turn",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1459 sim GOOD | 32251 sim FAIL | 4 | 4 | ~90 | Uncommon |\n\n**The idea.** Move the numbers to B one at a time, each straight into its right place, so B is always sorted. Then pour B back into A.\n\n**Step by step.**\n1. Take the number on top of A.\n2. Turn B the short way until the gap for that number is at the top.\n3. Push the number in (`pb`).\n4. When A is empty, turn B so its biggest number is on top, and push everything back.\n\n**Under the hood.** Take A's top, rotate B (the shorter way) until the slot for that value is on\ntop, then `pb`. B stays circularly sorted in descending order. At the end, rotate B's max to\nthe top and `pa` everything.\n\n**Lore.** Plain insertion sort, as when you slide each new card into place in your hand. The\ntwist here is the circular slot.\n\n**Pros**\n- It introduces the circular slot, the core idea of the whole family.\n\n**Cons**\n- It never chooses *which* value to insert, so it pays for every unlucky one.\n- About the same count as Min Extract.\n\n**Slots:** 2, from anchor (mirrored, with a caveat), pick and cost.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1459 sim GOOD | 32251 sim FAIL | 4 | 5 | Uncommon |\n\n**The idea.** Move the numbers to B one at a time, each straight into its right place, so B is always sorted. Then pour B back into A.\n\n**Step by step.**\n1. Take the number on top of A.\n2. Turn B the short way until the gap for that number is at the top.\n3. Push the number in (`pb`).\n4. When A is empty, turn B so its biggest number is on top, and push everything back.\n\n**Under the hood.** Take A's top, rotate B (the shorter way) until the slot for that value is on\ntop, then `pb`. B stays circularly sorted in descending order. At the end, rotate B's max to\nthe top and `pa` everything.\n\n**Lore.** Plain insertion sort, as when you slide each new card into place in your hand. The\ntwist here is the circular slot.\n\n**Pros**\n- It introduces the circular slot, the core idea of the whole family.\n\n**Cons**\n- It never chooses *which* value to insert, so it pays for every unlucky one.\n- About the same count as Min Extract.\n\n**Slots:** 2, from anchor (mirrored, with a caveat), pick and cost.",
    "source": "spec/cards/insertion.md"
   },
   "simple-insertion": {
@@ -107,11 +142,17 @@
    "family": "insertion",
    "rarity": "uncommon",
    "grasp": 4,
-   "craft": 4,
-   "lines": 100,
+   "craft": 5,
+   "knows": [
+    "slot",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 1,
+   "from": "counted: claude-opus-5.5-high simple.c (push_rest) on its insertion core",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1462 sim GOOD | 32242 sim FAIL | 4 | 4 | ~100 | Uncommon |\n\n**The idea.** Move everything to B, then bring the numbers back one by one, each into its right place in A.\n\n**Step by step.**\n1. Push every number to B.\n2. Take the number on top of B and turn A until its spot is on top.\n3. Push it back (`pa`), and repeat until B is empty.\n4. Turn A so the smallest number is on top.\n\n**Under the hood.** `pb` everything. Then repeatedly take B's top, rotate A to its slot, and `pa`.\nFinish by rotating A's minimum to the top.\n\n**Lore.** Same idea as Insert-into-B, mirrored. No separate history.\n\n**Pros**\n- This is the base that every Insertion technique plugs into. It is the cleanest card for\n  measuring what each technique is worth.\n\n**Cons**\n- It pushes values that were already in a good order.\n- It takes values blindly from B's top.\n\n**Slots:** 4, from anchor, pick, cost, band and order. With Quick 2-Way, it has the most\nslots of any card. It is the main **lab bench** for Insertion techniques.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 1462 sim GOOD | 32242 sim FAIL | 4 | 5 | Uncommon |\n\n**The idea.** Move everything to B, then bring the numbers back one by one, each into its right place in A.\n\n**Step by step.**\n1. Push every number to B.\n2. Take the number on top of B and turn A until its spot is on top.\n3. Push it back (`pa`), and repeat until B is empty.\n4. Turn A so the smallest number is on top.\n\n**Under the hood.** `pb` everything. Then repeatedly take B's top, rotate A to its slot, and `pa`.\nFinish by rotating A's minimum to the top.\n\n**Lore.** Same idea as Insert-into-B, mirrored. No separate history.\n\n**Pros**\n- This is the base that every Insertion technique plugs into. It is the cleanest card for\n  measuring what each technique is worth.\n\n**Cons**\n- It pushes values that were already in a good order.\n- It takes values blindly from B's top.\n\n**Slots:** 4, from anchor, pick, cost, band and order. With Quick 2-Way, it has the most\nslots of any card. It is the main **lab bench** for Insertion techniques.",
    "source": "spec/cards/insertion.md"
   },
   "lis-insertion": {
@@ -120,12 +161,21 @@
    "tagline": "Keep the longest ordered line, insert the rest",
    "family": "insertion",
    "rarity": "rare",
-   "grasp": 6,
-   "craft": 6,
-   "lines": 300,
+   "grasp": 10,
+   "craft": 13,
+   "knows": [
+    "lis",
+    "shared",
+    "slot",
+    "greedy",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 2,
+   "from": "counted: claude-opus-5.5-high simple.c (push_rest, sort_simple) on its insertion core; LIS Anchor, Cheapest Pick and Two-Way Cost add their own",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 547 sim EXC | 5059 sim EXC | 6 | 6 | ~300 | Rare |\n\n**The idea.** Some numbers are already in a good order. Keep the longest such line in A, move only the rest, and insert those back where they belong, cheapest first.\n\n**Step by step.**\n1. Find the longest line of numbers in A that already goes up.\n2. Walk A once: rotate past the numbers on that line, push the others to B.\n3. Bring the numbers back from B, always the one that is cheapest to place, turning both stacks together when they go the same way.\n4. Turn A so the smallest number is on top.\n\n**Under the hood.** Find a longest increasing subsequence (patience sorting, O(n log n)). Pass 1:\n`ra` past values on the LIS and `pb` the rest, so A becomes the LIS in circular order. Pass 2:\ninsert each value of B back, choosing the cheapest value in B, with A and B rotating together\n(`rr`/`rrr`) when their directions agree. Final rotation of the minimum to the top.\n\nThe numbers above are the bare card, with its default Two-Way Cost. The Long Line deck adds\nFour-Way Cost and `rb` Sink and measures 530 / 4425 (sim).\n\n**Lore.** Patience sorting is named after the solitaire card game. Colin Mallows named it,\ncrediting A. S. C. Ross with inventing it in the early 1960s, and in 1973 Mallows noted that\nthe number of piles equals the longest increasing subsequence. In 1977 Logan–Shepp and\nVershik–Kerov independently proved that the LIS of a random permutation grows like 2√n. That is\nwhy the anchor keeps only about 17 of 100 values.\n\n**Pros**\n- One of the strongest O(n²) cards. It is EXCELLENT at both sizes, on every sim run.\n- It pushes the fewest values possible for a non-circular anchor: n − LIS. The LIS is about\n  17 values at n=100 and 40 at n=500 (sim).\n- Easy to justify in a README.\n\n**Cons**\n- Patience sorting with predecessor links is a new idea for most peers.\n- The worst-case bound is quadratic, so it cannot serve as the subject's O(n log n) method.\n\n**Slots:** 3 (cost, band, order). LIS Anchor and Cheapest Pick are native. The cost role\nstarts as Two-Way Cost.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 547 sim EXC | 5059 sim EXC | 10 | 13 | Rare |\n\n**The idea.** Some numbers are already in a good order. Keep the longest such line in A, move only the rest, and insert those back where they belong, cheapest first.\n\n**Step by step.**\n1. Find the longest line of numbers in A that already goes up.\n2. Walk A once: rotate past the numbers on that line, push the others to B.\n3. Bring the numbers back from B, always the one that is cheapest to place, turning both stacks together when they go the same way.\n4. Turn A so the smallest number is on top.\n\n**Under the hood.** Find a longest increasing subsequence (patience sorting, O(n log n)). Pass 1:\n`ra` past values on the LIS and `pb` the rest, so A becomes the LIS in circular order. Pass 2:\ninsert each value of B back, choosing the cheapest value in B, with A and B rotating together\n(`rr`/`rrr`) when their directions agree. Final rotation of the minimum to the top.\n\nThe numbers above are the bare card, with its default Two-Way Cost. The Long Line deck adds\nFour-Way Cost and `rb` Sink and measures 530 / 4425 (sim).\n\n**Lore.** Patience sorting is named after the solitaire card game. Colin Mallows named it,\ncrediting A. S. C. Ross with inventing it in the early 1960s, and in 1973 Mallows noted that\nthe number of piles equals the longest increasing subsequence. In 1977 Logan–Shepp and\nVershik–Kerov independently proved that the LIS of a random permutation grows like 2√n. That is\nwhy the anchor keeps only about 17 of 100 values.\n\n**Pros**\n- One of the strongest O(n²) cards. It is EXCELLENT at both sizes, on every sim run.\n- It pushes the fewest values possible for a non-circular anchor: n − LIS. The LIS is about\n  17 values at n=100 and 40 at n=500 (sim).\n- Easy to justify in a README.\n\n**Cons**\n- Patience sorting with predecessor links is a new idea for most peers.\n- The worst-case bound is quadratic, so it cannot serve as the subject's O(n log n) method.\n\n**Slots:** 3 (cost, band, order). LIS Anchor and Cheapest Pick are native. The cost role\nstarts as Two-Way Cost.",
    "source": "spec/cards/insertion.md"
   },
   "turk": {
@@ -134,12 +184,20 @@
    "tagline": "Always make the cheapest move",
    "family": "insertion",
    "rarity": "common",
-   "grasp": 4,
-   "craft": 6,
-   "lines": 250,
+   "grasp": 7,
+   "craft": 11,
+   "knows": [
+    "shared",
+    "slot",
+    "greedy",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 6,
+   "from": "counted: gemini-flash-3.8 sort_complex.c and sort_complex_utils.c, 10 functions, of which Cheapest Pick's 2 and Four-Way Cost's 2 are counted on those cards",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 557 sim EXC | 5088 sim EXC | 4 | 6 | ~250 | Common |\n\n**The idea.** Before every move, price every number: how many turns it takes to bring it to the top and its spot in B to the top, together. Make the cheapest move, then price again.\n\n**Step by step.**\n1. Push two numbers to B to start.\n2. For each number in A, count the turns to bring it to the top and B's matching spot to the top, sharing turns when both stacks go the same way.\n3. Make the cheapest of those moves and push (`pb`). Repeat until three numbers are left in A.\n4. Sort those three, then bring each number back from B to its spot in A, and turn the smallest to the top.\n\n**Under the hood.** This is the most popular 42 push_swap (\"Mechanical Turk\", credited to a 42\nstudent; see sources). Start with `pb pb`. While A has more than 3 values: for **every** value\nin A, find its target in B (the largest smaller value, or B's max) and price the four rotation\ncombinations (`rr`, `rrr`, `ra+rrb`, `rra+rb`); perform the cheapest and `pb`. Finish the last\n3 with Hardcoded Three. Then return each top of B to its slot in A (the smallest larger value,\nor A's min) and rotate the min to the top.\n\n**Lore.** A 42-peer invention, popularised by a 2023 Medium post (see sources). The name comes\nfrom the Mechanical Turk, the 1770 chess automaton that hid a human player inside: the\nalgorithm looks clever, but it is a brute-force check of every move. The intuition to keep:\nprice every option, take the cheapest, repeat.\n\n**Pros**\n- EXCELLENT on every sim run at both sizes: at n=500 the mean is 5088 and the worst of 200\n  runs is 5466 (sim). Web reports range from 5100 to 6500 at n=500, depending on details.\n- Easy to explain with a picture.\n- Many peer write-ups exist.\n\n**Cons**\n- There are many fiddly details: targets, four cost cases, the empty-B start. Debugging is the\n  main cost.\n- It pushes **everything**, including values that were already in good order (compare LIS\n  Insertion).\n- O(n²) CPU per move (about 65 ms per sort at n=500 in the sim's JS) is fine at 500 but slow\n  beyond.\n- Labelling it O(n log n) is a common mistake: one insertion can cost |A|/2 + |B|/2, and the\n  measured ops ÷ n log₂ n keep rising: 0.87 at n=128, 1.69 at n=2048 (sim), 2.25 at n=5000\n  (ref).\n\n**Slots:** 3, from anchor, cost, band and order. Cheapest Pick is native. Keep Three (anchor)\nand Four-Way Cost (cost) are defaults, and Hardcoded Three is the default Finisher.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n²) · ✓ | 557 sim EXC | 5088 sim EXC | 7 | 11 | Common |\n\n**The idea.** Before every move, price every number: how many turns it takes to bring it to the top and its spot in B to the top, together. Make the cheapest move, then price again.\n\n**Step by step.**\n1. Push two numbers to B to start.\n2. For each number in A, count the turns to bring it to the top and B's matching spot to the top, sharing turns when both stacks go the same way.\n3. Make the cheapest of those moves and push (`pb`). Repeat until three numbers are left in A.\n4. Sort those three, then bring each number back from B to its spot in A, and turn the smallest to the top.\n\n**Under the hood.** This is the most popular 42 push_swap (\"Mechanical Turk\", credited to a 42\nstudent; see sources). Start with `pb pb`. While A has more than 3 values: for **every** value\nin A, find its target in B (the largest smaller value, or B's max) and price the four rotation\ncombinations (`rr`, `rrr`, `ra+rrb`, `rra+rb`); perform the cheapest and `pb`. Finish the last\n3 with Hardcoded Three. Then return each top of B to its slot in A (the smallest larger value,\nor A's min) and rotate the min to the top.\n\n**Lore.** A 42-peer invention, popularised by a 2023 Medium post (see sources). The name comes\nfrom the Mechanical Turk, the 1770 chess automaton that hid a human player inside: the\nalgorithm looks clever, but it is a brute-force check of every move. The intuition to keep:\nprice every option, take the cheapest, repeat.\n\n**Pros**\n- EXCELLENT on every sim run at both sizes: at n=500 the mean is 5088 and the worst of 200\n  runs is 5466 (sim). Web reports range from 5100 to 6500 at n=500, depending on details.\n- Easy to explain with a picture.\n- Many peer write-ups exist.\n\n**Cons**\n- There are many fiddly details: targets, four cost cases, the empty-B start. Debugging is the\n  main cost.\n- It pushes **everything**, including values that were already in good order (compare LIS\n  Insertion).\n- O(n²) CPU per move (about 65 ms per sort at n=500 in the sim's JS) is fine at 500 but slow\n  beyond.\n- Labelling it O(n log n) is a common mistake: one insertion can cost |A|/2 + |B|/2, and the\n  measured ops ÷ n log₂ n keep rising: 0.87 at n=128, 1.69 at n=2048 (sim), 2.25 at n=5000\n  (ref).\n\n**Slots:** 3, from anchor, cost, band and order. Cheapest Pick is native. Keep Three (anchor)\nand Four-Way Cost (cost) are defaults, and Hardcoded Three is the default Finisher.",
    "source": "spec/cards/insertion.md"
   },
   "chunks": {
@@ -148,12 +206,18 @@
    "tagline": "Ship it in crates",
    "family": "bucket",
    "rarity": "common",
-   "grasp": 4,
-   "craft": 4,
-   "lines": 150,
+   "grasp": 3,
+   "craft": 6,
+   "knows": [
+    "ranges",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 2,
+   "from": "counted: the explorer's reference build chunks.c (one_chunk, run_chunks); the sweep, band and retrieval cards add their own",
    "claimedClass": "n√n",
    "proof": "avg",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 4 | 4 | ~150 | Common |\n\n**The idea.** Cut the numbers into a few ranges, like crates. Ship the smallest crate to B first, then the next one; at the end, bring the numbers back biggest first.\n\n**Step by step.**\n1. Split the ranks into K equal ranges: 5 crates for 100 numbers, 11 for 500.\n2. For the first crate, bring its nearest member in A to the top and push it to B. Members from the lower half of the crate go to the bottom of B (`rb`).\n3. Repeat, crate by crate, until A is empty.\n4. Bring B's biggest number to the top and push it back, again and again.\n\n**Under the hood.** Split the ranks into K chunks (the sim uses K = round(√n / 2): 5 chunks at\nn=100 and 11 at n=500). For each chunk in order: bring its nearest member in A to the top (by\neither direction) and `pb`. If the value is in the lower half of its chunk, also `rb` (a\n\"sink\"), so B forms an hourglass. When A is empty, repeatedly bring B's max to the top and\n`pa`.\n\n**Lore.** Bucket sort's idea (split by range, then order within each range) dates from the\npunched-card era. In push_swap it is folk 42 knowledge, usually the first 'medium' method peers\nfind.\n\n**Pros**\n- Intuitive and easy to visualise.\n- EXCELLENT at n=100 on average, though 5 % of runs reach 700 or more (sim).\n- The upgrade path is short and measured. One-Way Sweep is both cheaper and provable (−16 at\n  n=100, −140 at n=500), Second-Max saves 26 / 385, and K ≈ 0.4√n is the best chunk count.\n  Together they make the Crate Runner deck: 606 / 5247, EXCELLENT on every run (sim).\n\n**Cons**\n- Sensitive to the chunk count, but tuning alone does not reach EXCELLENT at n=500: the best\n  K is 9, at 5858 (sim). Web write-ups report ~4900–5035 at n=500 with retrieval tricks this\n  card's defaults lack.\n- Max retrieval rescans B every time. That is fine for ops, but O(n²) CPU.\n- A constant chunk count (not ∝ √n) quietly breaks the O(n√n) claim. So does the default\n  Nearest-Member Sweep, which can pass the same value many times.\n\n**Slots:** 3, from anchor (with a caveat), sweep, band, retrieval and order. Defaults:\nNearest-Member Sweep, `rb` Sink and Max Retrieval, which are what the measured numbers use.\nParam: the chunk count K.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 3 | 6 | Common |\n\n**The idea.** Cut the numbers into a few ranges, like crates. Ship the smallest crate to B first, then the next one; at the end, bring the numbers back biggest first.\n\n**Step by step.**\n1. Split the ranks into K equal ranges: 5 crates for 100 numbers, 11 for 500.\n2. For the first crate, bring its nearest member in A to the top and push it to B. Members from the lower half of the crate go to the bottom of B (`rb`).\n3. Repeat, crate by crate, until A is empty.\n4. Bring B's biggest number to the top and push it back, again and again.\n\n**Under the hood.** Split the ranks into K chunks (the sim uses K = round(√n / 2): 5 chunks at\nn=100 and 11 at n=500). For each chunk in order: bring its nearest member in A to the top (by\neither direction) and `pb`. If the value is in the lower half of its chunk, also `rb` (a\n\"sink\"), so B forms an hourglass. When A is empty, repeatedly bring B's max to the top and\n`pa`.\n\n**Lore.** Bucket sort's idea (split by range, then order within each range) dates from the\npunched-card era. In push_swap it is folk 42 knowledge, usually the first 'medium' method peers\nfind.\n\n**Pros**\n- Intuitive and easy to visualise.\n- EXCELLENT at n=100 on average, though 5 % of runs reach 700 or more (sim).\n- The upgrade path is short and measured. One-Way Sweep is both cheaper and provable (−16 at\n  n=100, −140 at n=500), Second-Max saves 26 / 385, and K ≈ 0.4√n is the best chunk count.\n  Together they make the Crate Runner deck: 606 / 5247, EXCELLENT on every run (sim).\n\n**Cons**\n- Sensitive to the chunk count, but tuning alone does not reach EXCELLENT at n=500: the best\n  K is 9, at 5858 (sim). Web write-ups report ~4900–5035 at n=500 with retrieval tricks this\n  card's defaults lack.\n- Max retrieval rescans B every time. That is fine for ops, but O(n²) CPU.\n- A constant chunk count (not ∝ √n) quietly breaks the O(n√n) claim. So does the default\n  Nearest-Member Sweep, which can pass the same value many times.\n\n**Slots:** 3, from anchor (with a caveat), sweep, band, retrieval and order. Defaults:\nNearest-Member Sweep, `rb` Sink and Max Retrieval, which are what the measured numbers use.\nParam: the chunk count K.",
    "source": "spec/cards/bucket.md"
   },
   "butterfly": {
@@ -162,12 +226,18 @@
    "tagline": "A sliding window",
    "family": "bucket",
    "rarity": "uncommon",
-   "grasp": 4,
-   "craft": 4,
-   "lines": 80,
+   "grasp": 3,
+   "craft": 5,
+   "knows": [
+    "ranges",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 2,
+   "from": "est.: the window loop and its rule; the band and retrieval cards add their own",
    "claimedClass": "n√n",
    "proof": "no",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n√n) · ✕ with a constant w; ✓ with w = k·√n | 577 sim EXC | 5080 sim EXC | 4 | 4 | ~80 | Uncommon |\n\n**The idea.** Push the numbers to B in roughly increasing order through a sliding window: the ones that are due sink to B's bottom, the ones just above them stay on top, and the rest wait their turn.\n\n**Step by step.**\n1. Keep a count of how many numbers have been pushed, and a window width w.\n2. If A's top number is among the numbers already due, push it and sink it to B's bottom (`pb` then `rb`).\n3. If it falls inside the window just above those, push it to B's top (`pb`).\n4. Otherwise rotate A (`ra`) and look at the next one.\n5. When A is empty, bring B's biggest number back, again and again.\n\n**Under the hood.** Keep a counter i of how many values have been pushed so far. For A's top x:\nif rank(x) ≤ i, then `pb` + `rb` (sink it); else if rank(x) ≤ i + w, then `pb`; otherwise\n`ra`. This produces a \"butterfly\" shape in B. Then retrieve the max of B repeatedly. The sim\nuses w = 15 at n=100 and w = 30 above, like one reference build, which makes w a constant\nbeyond n=100. With w = round(1.4√n) instead (14 and 31), it measures the same at the grading\nsizes, 577 / 5077, and keeps its class (sim).\n\n**Lore.** A folk 42 name for the shape B takes: low values sunk to the bottom, high ones on\ntop, like two wings. No published origin.\n\n**Pros**\n- Very short code for its strength. It beats Chunks at both sizes in the sim.\n- No chunk bookkeeping.\n\n**Cons**\n- With a constant w, the cost per value grows with n, so claiming O(n√n) is wrong unless w\n  scales with √n. The grading sizes hide it: ops ÷ n√n is 0.45 at n=1000 and only climbs\n  after, to 0.61 at n=4096 (sim).\n- Retrieval is still a blind max search. Second-Max saves 19 at n=100 and 279 at n=500 (sim).\n\n**Slots:** 2, from band and retrieval. The window rule is native: it decides which value is\npushed next and, through its sink, where it lands. Defaults: `rb` Sink (through the window\nrule) and Max Retrieval. Param: the window w.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n√n) · ✕ with a constant w; ✓ with w = k·√n | 577 sim EXC | 5080 sim EXC | 3 | 5 | ~80 | Uncommon |\n\n**The idea.** Push the numbers to B in roughly increasing order through a sliding window: the ones that are due sink to B's bottom, the ones just above them stay on top, and the rest wait their turn.\n\n**Step by step.**\n1. Keep a count of how many numbers have been pushed, and a window width w.\n2. If A's top number is among the numbers already due, push it and sink it to B's bottom (`pb` then `rb`).\n3. If it falls inside the window just above those, push it to B's top (`pb`).\n4. Otherwise rotate A (`ra`) and look at the next one.\n5. When A is empty, bring B's biggest number back, again and again.\n\n**Under the hood.** Keep a counter i of how many values have been pushed so far. For A's top x:\nif rank(x) ≤ i, then `pb` + `rb` (sink it); else if rank(x) ≤ i + w, then `pb`; otherwise\n`ra`. This produces a \"butterfly\" shape in B. Then retrieve the max of B repeatedly. The sim\nuses w = 15 at n=100 and w = 30 above, like one reference build, which makes w a constant\nbeyond n=100. With w = round(1.4√n) instead (14 and 31), it measures the same at the grading\nsizes, 577 / 5077, and keeps its class (sim).\n\n**Lore.** A folk 42 name for the shape B takes: low values sunk to the bottom, high ones on\ntop, like two wings. No published origin.\n\n**Pros**\n- Very short code for its strength. It beats Chunks at both sizes in the sim.\n- No chunk bookkeeping.\n\n**Cons**\n- With a constant w, the cost per value grows with n, so claiming O(n√n) is wrong unless w\n  scales with √n. The grading sizes hide it: ops ÷ n√n is 0.45 at n=1000 and only climbs\n  after, to 0.61 at n=4096 (sim).\n- Retrieval is still a blind max search. Second-Max saves 19 at n=100 and 279 at n=500 (sim).\n\n**Slots:** 2, from band and retrieval. The window rule is native: it decides which value is\npushed next and, through its sink, where it lands. Defaults: `rb` Sink (through the window\nrule) and Max Retrieval. Param: the window w.",
    "source": "spec/cards/bucket.md"
   },
   "bucket-insertion": {
@@ -176,12 +246,21 @@
    "tagline": "Crates, then careful unpacking",
    "family": "bucket",
    "rarity": "rare",
-   "grasp": 6,
-   "craft": 6,
-   "lines": 300,
+   "grasp": 8,
+   "craft": 12,
+   "knows": [
+    "shared",
+    "slot",
+    "greedy",
+    "ranges",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 4,
+   "from": "counted: claude-opus-5.5-high medium.c (push_bucket, sort_medium) on its insertion core, plus 2 est. for the pick and the return within a bucket",
    "claimedClass": "n√n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 6 | 6 | ~300 | Rare |\n\n**The idea.** Ship the numbers to B in crates, like Chunks, then unpack each crate the smart way: from the highest crate down, move back whichever member is cheapest to put in its place.\n\n**Step by step.**\n1. Split the ranks into buckets of about c·√n.\n2. Push them bucket by bucket in a single sweep, sinking the lower half of each bucket to B's bottom.\n3. Starting with the highest bucket, pick the member that costs the fewest turns, both stacks together, to put in its spot in A, and push it back.\n4. When B is empty, turn A so the smallest number is on top.\n\n**Under the hood.** Buckets of about c·√n ranks (a reference build uses ⌊4√n⌋), each pushed in a\n**One-Way Sweep**, with lower-half sinking. The return is **cheapest insertion restricted to\nthe current bucket**: pick the member of the highest remaining bucket whose combined A and B\nrotation is cheapest, sharing `rr`/`rrr`. Restricting the choice to one bucket keeps the\nO(n√n) proof valid.\n\n**Lore.** A recombination rather than an invention: Chunks' buckets plus Turk's cheapest\nreturn, restricted per bucket so the proof survives. One reference build did it this way.\n\n**Pros**\n- Takes Turk's cost-based return and gives it a provable O(n√n) bound. This makes a strong\n  \"medium\" method for the subject.\n- It is the medium method of one reference build: 576 / 4121 (ref, 5 seeds). The sim's\n  version measures 606 / 4291, EXCELLENT on every run. Either way it beats Turk at n=500 with\n  a provable class.\n\n**Cons**\n- Two phases, each with its own tuning.\n- The proof needs care: an unrestricted cheapest pick breaks it.\n\n**Slots:** 3, from sweep, band, cost and order. The bucket-restricted pick and return are\nnative. Defaults: One-Way Sweep, `rb` Sink and Two-Way Cost. Param: the bucket width.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 8 | 12 | Rare |\n\n**The idea.** Ship the numbers to B in crates, like Chunks, then unpack each crate the smart way: from the highest crate down, move back whichever member is cheapest to put in its place.\n\n**Step by step.**\n1. Split the ranks into buckets of about c·√n.\n2. Push them bucket by bucket in a single sweep, sinking the lower half of each bucket to B's bottom.\n3. Starting with the highest bucket, pick the member that costs the fewest turns, both stacks together, to put in its spot in A, and push it back.\n4. When B is empty, turn A so the smallest number is on top.\n\n**Under the hood.** Buckets of about c·√n ranks (a reference build uses ⌊4√n⌋), each pushed in a\n**One-Way Sweep**, with lower-half sinking. The return is **cheapest insertion restricted to\nthe current bucket**: pick the member of the highest remaining bucket whose combined A and B\nrotation is cheapest, sharing `rr`/`rrr`. Restricting the choice to one bucket keeps the\nO(n√n) proof valid.\n\n**Lore.** A recombination rather than an invention: Chunks' buckets plus Turk's cheapest\nreturn, restricted per bucket so the proof survives. One reference build did it this way.\n\n**Pros**\n- Takes Turk's cost-based return and gives it a provable O(n√n) bound. This makes a strong\n  \"medium\" method for the subject.\n- It is the medium method of one reference build: 576 / 4121 (ref, 5 seeds). The sim's\n  version measures 606 / 4291, EXCELLENT on every run. Either way it beats Turk at n=500 with\n  a provable class.\n\n**Cons**\n- Two phases, each with its own tuning.\n- The proof needs care: an unrestricted cheapest pick breaks it.\n\n**Slots:** 3, from sweep, band, cost and order. The bucket-restricted pick and return are\nnative. Defaults: One-Way Sweep, `rb` Sink and Two-Way Cost. Param: the bucket width.",
    "source": "spec/cards/bucket.md"
   },
   "lsd-radix": {
@@ -190,12 +269,17 @@
    "tagline": "One bit at a time",
    "family": "digit",
    "rarity": "common",
-   "grasp": 4,
+   "grasp": 3,
    "craft": 2,
-   "lines": 40,
+   "knows": [
+    "digits",
+    "rank"
+   ],
+   "fns": 2,
+   "from": "counted: gpt-6-sol-high sort_complex.c (radix_pass, sort_complex)",
    "claimedClass": "n log n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 4 | 2 | ~40 | Common |\n\n**The idea.** Write each number's rank in binary and sort by one bit at a time, from the last bit to the first. Each pass is a simple walk through A; after the last bit everything is in order.\n\n**Step by step.**\n1. Replace the numbers by their ranks, from 0 to n−1.\n2. Walk A once: push the numbers whose current bit is 0 to B, and rotate past the ones whose bit is 1.\n3. Push everything back from B.\n4. Move to the next bit, until all bits are done.\n\n**Under the hood.** Replace values with ranks 0..n−1. For each bit from least to most\nsignificant: walk A once, `pb` if the bit is 0 and `ra` if it is 1, then `pa` everything back.\nEvery pass costs exactly n + (number of zeros). Passes = ⌈log₂ n⌉.\n\n**Lore.** Radix sort is older than computers. Herman Hollerith's punched-card machines date\nfrom the 1890 US census, and card sorters split a deck one column at a time into ten pockets.\nSorting from the least significant column first was a trick found by machine operators: it was\nfirst written down in 1930 and appears in IBM's earliest known sorter manual (1936). Each pass\nis stable, so earlier columns stay in order, and that is exactly this card. Harold Seward\nbrought radix sort to computers in 1954.\n\n**Pros**\n- The shortest real O(n log n) card, and trivially provable.\n- **Zero spread**: the count is identical for every random input of the same n. Its 6784 at\n  n=500 is exactly the count in the subject's own large-input example.\n- The classic first n log n card.\n- Peephole Cancel trims 78 ops at n=100 and 55 at n=500 (sim): the run of `pb`s at the end of\n  a pass is undone by the `pa`s that follow.\n\n**Cons**\n- It never reaches EXCELLENT.\n- It ignores existing order completely: a nearly sorted input costs the same as a random one.\n- B is only a bucket. No rotation is ever used cleverly.\n\n**Slots:** none: radix never chooses which value to move or where it lands. Param: skip sorted\npasses (stop when A is already sorted; this helps only on structured inputs).\n\n**Teaching role:** the Path's first \"fast\" card. Peers often stop here. The Meta page shows\nthe gap to EXCELLENT.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 3 | 2 | Common |\n\n**The idea.** Write each number's rank in binary and sort by one bit at a time, from the last bit to the first. Each pass is a simple walk through A; after the last bit everything is in order.\n\n**Step by step.**\n1. Replace the numbers by their ranks, from 0 to n−1.\n2. Walk A once: push the numbers whose current bit is 0 to B, and rotate past the ones whose bit is 1.\n3. Push everything back from B.\n4. Move to the next bit, until all bits are done.\n\n**Under the hood.** Replace values with ranks 0..n−1. For each bit from least to most\nsignificant: walk A once, `pb` if the bit is 0 and `ra` if it is 1, then `pa` everything back.\nEvery pass costs exactly n + (number of zeros). Passes = ⌈log₂ n⌉.\n\n**Lore.** Radix sort is older than computers. Herman Hollerith's punched-card machines date\nfrom the 1890 US census, and card sorters split a deck one column at a time into ten pockets.\nSorting from the least significant column first was a trick found by machine operators: it was\nfirst written down in 1930 and appears in IBM's earliest known sorter manual (1936). Each pass\nis stable, so earlier columns stay in order, and that is exactly this card. Harold Seward\nbrought radix sort to computers in 1954.\n\n**Pros**\n- The shortest real O(n log n) card, and trivially provable.\n- **Zero spread**: the count is identical for every random input of the same n. Its 6784 at\n  n=500 is exactly the count in the subject's own large-input example.\n- The classic first n log n card.\n- Peephole Cancel trims 78 ops at n=100 and 55 at n=500 (sim): the run of `pb`s at the end of\n  a pass is undone by the `pa`s that follow.\n\n**Cons**\n- It never reaches EXCELLENT.\n- It ignores existing order completely: a nearly sorted input costs the same as a random one.\n- B is only a bucket. No rotation is ever used cleverly.\n\n**Slots:** none: radix never chooses which value to move or where it lands. Param: skip sorted\npasses (stop when A is already sorted; this helps only on structured inputs).\n\n**Teaching role:** the Path's first \"fast\" card. Peers often stop here. The Meta page shows\nthe gap to EXCELLENT.",
    "source": "spec/cards/digit.md"
   },
   "ternary-radix": {
@@ -204,12 +288,18 @@
    "tagline": "Three-way digits using both ends of B",
    "family": "digit",
    "rarity": "rare",
-   "grasp": 6,
-   "craft": 6,
-   "lines": 150,
+   "grasp": 5,
+   "craft": 5,
+   "knows": [
+    "digits",
+    "partition",
+    "rank"
+   ],
+   "fns": 5,
+   "from": "est.: a three-way split pass, a gather, the digit and the loop, on LSD Radix's pattern",
    "claimedClass": "n log n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 6 | 6 | ~150 | Rare |\n\n**The idea.** Radix sort in base 3 instead of base 2: three groups per pass instead of two, so fewer passes, using both ends of B as extra bins.\n\n**Step by step.**\n1. Write each rank in base 3.\n2. For the current digit: a 0 goes to B's bottom (`pb` then `rb`), a 1 to B's top (`pb`), and a 2 stays in A (`ra`).\n3. Gather the three groups back into A, in order.\n4. Move to the next digit, until all digits are done.\n\n**Under the hood.** Base-3 digits of the rank. Per pass, digit 0 → `pb` + `rb` (bottom of B),\ndigit 1 → `pb` (top of B), digit 2 → `ra` (stays in A). Then gather the three groups back into\nA in digit order with `rrb`/`pa` and `pa`. There are ⌈log₃ n⌉ passes: 5 for n=100 and 6 for\nn=500, against 7 and 9 for binary.\n\n**Lore.** Same lineage as LSD Radix, with base 3 instead of 2. Card sorters used base 10, one\npocket per digit; here B's two ends plus A act as three pockets.\n\n**Pros**\n- Fewer passes. It uses B's bottom, which binary radix ignores.\n- A good bridge to Four-End Quicksort's \"four locations\" idea.\n\n**Cons**\n- Each pass costs more: about 2.3n ops against 1.5n for binary. The values sent to B's bottom\n  pay `pb rb` on the way out and `rrb pa` on the way back. As described it measures\n  1333 / 7362 (sim), **worse** than binary radix at both sizes. Choosing the cheaper top and\n  bottom assignment per pass only gets it to 1115 / 7300 (sim). A gather that skips the\n  `rrb` return trip is the open question.\n- It still ignores existing order.\n\n**Slots:** none. Param: the gather order, that is, which digit goes to which location.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 5 | 5 | Rare |\n\n**The idea.** Radix sort in base 3 instead of base 2: three groups per pass instead of two, so fewer passes, using both ends of B as extra bins.\n\n**Step by step.**\n1. Write each rank in base 3.\n2. For the current digit: a 0 goes to B's bottom (`pb` then `rb`), a 1 to B's top (`pb`), and a 2 stays in A (`ra`).\n3. Gather the three groups back into A, in order.\n4. Move to the next digit, until all digits are done.\n\n**Under the hood.** Base-3 digits of the rank. Per pass, digit 0 → `pb` + `rb` (bottom of B),\ndigit 1 → `pb` (top of B), digit 2 → `ra` (stays in A). Then gather the three groups back into\nA in digit order with `rrb`/`pa` and `pa`. There are ⌈log₃ n⌉ passes: 5 for n=100 and 6 for\nn=500, against 7 and 9 for binary.\n\n**Lore.** Same lineage as LSD Radix, with base 3 instead of 2. Card sorters used base 10, one\npocket per digit; here B's two ends plus A act as three pockets.\n\n**Pros**\n- Fewer passes. It uses B's bottom, which binary radix ignores.\n- A good bridge to Four-End Quicksort's \"four locations\" idea.\n\n**Cons**\n- Each pass costs more: about 2.3n ops against 1.5n for binary. The values sent to B's bottom\n  pay `pb rb` on the way out and `rrb pa` on the way back. As described it measures\n  1333 / 7362 (sim), **worse** than binary radix at both sizes. Choosing the cheaper top and\n  bottom assignment per pass only gets it to 1115 / 7300 (sim). A gather that skips the\n  `rrb` return trip is the open question.\n- It still ignores existing order.\n\n**Slots:** none. Param: the gather order, that is, which digit goes to which location.",
    "source": "spec/cards/digit.md"
   },
   "msd-radix": {
@@ -218,12 +308,19 @@
    "tagline": "Biggest digit first, then recurse",
    "family": "digit",
    "rarity": "uncommon",
-   "grasp": 6,
+   "grasp": 7,
    "craft": 6,
-   "lines": 200,
+   "knows": [
+    "digits",
+    "partition",
+    "recursion",
+    "rank"
+   ],
+   "fns": 2,
+   "from": "est.: the top-bit cut and an entry, on the two-way partition it shares with Quick 2-Way",
    "claimedClass": "n log n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 6 | 6 | ~200 | Uncommon |\n\n**The idea.** Split the numbers by their top bit, the smaller half to B and the larger half staying in A, then sort each half the same way, one bit lower each time.\n\n**Step by step.**\n1. Look at the highest bit of the ranks in the current group.\n2. Push the numbers with that bit at 0 to B, and rotate past the others.\n3. Sort the half left in A the same way, then the half in B.\n4. Groups of two are fixed with a single swap.\n\n**Under the hood.** Split the chunk by the top bit of its rank range: values below the\npower-of-two cut go to B, the rest stay in A, and each half is sorted recursively, top bit\nfirst. On ranks 0..n−1 this is exactly Quick 2-Way with the pivot moved to a power of two, and\nthe sim builds it that way: same pushes, same restores, same 2-value leaves.\n\n**Lore.** MSD radix is the other way card sorters could be run: split on the most significant\ncolumn first, then sort each pocket separately. It needs a separate pile per pocket, which is\nwhy operators preferred LSD. On stacks, the \"piles\" are recursion, so MSD turns out to be a\nquicksort.\n\n**Pros**\n- The subject names it, and it shows that radix and quicksort are cousins.\n- Like Quick 2-Way, a sorted chunk costs nothing: sorted input is free.\n\n**Cons**\n- A power-of-two cut splits unevenly when the range is not a power of two, so it is a little\n  worse than the median: 757 / 5263 against Quick 2-Way's 718 / 5235 (sim).\n- It shares Quick 2-Way's restore overhead.\n\n**Slots:** none. A Finisher is optional; by default, leaves of 2 are fixed with `sa`/`sb`.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 7 | 6 | Uncommon |\n\n**The idea.** Split the numbers by their top bit, the smaller half to B and the larger half staying in A, then sort each half the same way, one bit lower each time.\n\n**Step by step.**\n1. Look at the highest bit of the ranks in the current group.\n2. Push the numbers with that bit at 0 to B, and rotate past the others.\n3. Sort the half left in A the same way, then the half in B.\n4. Groups of two are fixed with a single swap.\n\n**Under the hood.** Split the chunk by the top bit of its rank range: values below the\npower-of-two cut go to B, the rest stay in A, and each half is sorted recursively, top bit\nfirst. On ranks 0..n−1 this is exactly Quick 2-Way with the pivot moved to a power of two, and\nthe sim builds it that way: same pushes, same restores, same 2-value leaves.\n\n**Lore.** MSD radix is the other way card sorters could be run: split on the most significant\ncolumn first, then sort each pocket separately. It needs a separate pile per pocket, which is\nwhy operators preferred LSD. On stacks, the \"piles\" are recursion, so MSD turns out to be a\nquicksort.\n\n**Pros**\n- The subject names it, and it shows that radix and quicksort are cousins.\n- Like Quick 2-Way, a sorted chunk costs nothing: sorted input is free.\n\n**Cons**\n- A power-of-two cut splits unevenly when the range is not a power of two, so it is a little\n  worse than the median: 757 / 5263 against Quick 2-Way's 718 / 5235 (sim).\n- It shares Quick 2-Way's restore overhead.\n\n**Slots:** none. A Finisher is optional; by default, leaves of 2 are fixed with `sa`/`sb`.",
    "source": "spec/cards/digit.md"
   },
   "quick-2way": {
@@ -232,12 +329,18 @@
    "tagline": "Split at the median, recurse",
    "family": "divide",
    "rarity": "uncommon",
-   "grasp": 6,
+   "grasp": 5,
    "craft": 6,
-   "lines": 200,
+   "knows": [
+    "partition",
+    "recursion",
+    "rank"
+   ],
+   "fns": 2,
+   "from": "est.: the median cut and the leaves of 2 and 3, on its two-way partition",
    "claimedClass": "n log n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 6 | 6 | ~200 | Uncommon |\n\n**The idea.** Quicksort with two stacks: split a group at its middle value, send the lower half to B, and sort each half the same way.\n\n**Step by step.**\n1. Take the group on top of A and find its middle value, the median rank.\n2. Push the smaller half to B and rotate past the bigger half. Undo those rotations, unless the group was the whole stack.\n3. Sort the half in A the same way, then bring the half in B back and sort it too.\n4. Groups of two are fixed with a single swap.\n\n**Under the hood.** Sort a chunk of k values on top of A by pushing the lower half (below the\nmedian rank) to B and rotating the rest past (`ra`). Then undo those rotations (`rra`) if the\nchunk was not the whole stack, recurse on the upper half in A, then do the mirror operation\nfor the half in B (push the upper part back with `pa`, rotate the rest with `rb`). Leaves of\nsize 2 are fixed with `sa`/`sb`.\n\nAlways restoring the rotations, even when the chunk is the whole stack, would cost 857 / 5967\n(sim): the whole-stack case of Restore Skip is part of this card.\n\n**Why the class holds.** Ranks make the median exact, so the recursion depth is ⌈log₂ n⌉. At\neach level a value is pushed or rotated at most once, and rotated back at most once by a\nrestore, so a level costs at most 2 ops per value, plus the leaves. That is O(n log n) in the\nworst case. Measured ops stay between 1.0 and 1.35 × n log₂ n on random input up to n=4096\nand on reversed and organ-pipe inputs up to n=8192 (sim).\n\n**Lore.** Tony Hoare invented quicksort in 1959 while studying in Moscow. He was working on\nmachine translation and needed to sort words before looking them up in a dictionary stored on\ntape. It was published in 1961 (Algorithm 64, Communications of the ACM) and is still the\ndefault sort in many libraries. The intuition: pick a pivot, split, and never compare across\nthe split again.\n\n**Pros**\n- A real O(n log n) partition method that also uses existing order: a sorted chunk is\n  detected and skipped.\n- The hardest part is the recursion itself. Once it works, it is compact.\n\n**Cons**\n- \"Undo the rotations\" is pure overhead. It is the main reason this card loses to Four-End\n  Quicksort.\n- GOOD, not EXCELLENT, at n=100: only 10 % of runs get under 700 (sim). As a build's complex\n  method, it costs EXCELLENT on about half of the n=100 runs (see 05-meta, Builds).\n- Bugs in the B-side mirror are easy to make.\n\n**Slots:** 4 (ends, split, pivot, order). Defaults: two ends with the rotations restored,\nhalves, and Median Pivot. A Finisher is optional; by default, leaves of 2 are fixed with\n`sa`/`sb`.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 5 | 6 | Uncommon |\n\n**The idea.** Quicksort with two stacks: split a group at its middle value, send the lower half to B, and sort each half the same way.\n\n**Step by step.**\n1. Take the group on top of A and find its middle value, the median rank.\n2. Push the smaller half to B and rotate past the bigger half. Undo those rotations, unless the group was the whole stack.\n3. Sort the half in A the same way, then bring the half in B back and sort it too.\n4. Groups of two are fixed with a single swap.\n\n**Under the hood.** Sort a chunk of k values on top of A by pushing the lower half (below the\nmedian rank) to B and rotating the rest past (`ra`). Then undo those rotations (`rra`) if the\nchunk was not the whole stack, recurse on the upper half in A, then do the mirror operation\nfor the half in B (push the upper part back with `pa`, rotate the rest with `rb`). Leaves of\nsize 2 are fixed with `sa`/`sb`.\n\nAlways restoring the rotations, even when the chunk is the whole stack, would cost 857 / 5967\n(sim): the whole-stack case of Restore Skip is part of this card.\n\n**Why the class holds.** Ranks make the median exact, so the recursion depth is ⌈log₂ n⌉. At\neach level a value is pushed or rotated at most once, and rotated back at most once by a\nrestore, so a level costs at most 2 ops per value, plus the leaves. That is O(n log n) in the\nworst case. Measured ops stay between 1.0 and 1.35 × n log₂ n on random input up to n=4096\nand on reversed and organ-pipe inputs up to n=8192 (sim).\n\n**Lore.** Tony Hoare invented quicksort in 1959 while studying in Moscow. He was working on\nmachine translation and needed to sort words before looking them up in a dictionary stored on\ntape. It was published in 1961 (Algorithm 64, Communications of the ACM) and is still the\ndefault sort in many libraries. The intuition: pick a pivot, split, and never compare across\nthe split again.\n\n**Pros**\n- A real O(n log n) partition method that also uses existing order: a sorted chunk is\n  detected and skipped.\n- The hardest part is the recursion itself. Once it works, it is compact.\n\n**Cons**\n- \"Undo the rotations\" is pure overhead. It is the main reason this card loses to Four-End\n  Quicksort.\n- GOOD, not EXCELLENT, at n=100: only 10 % of runs get under 700 (sim). As a build's complex\n  method, it costs EXCELLENT on about half of the n=100 runs (see 05-meta, Builds).\n- Bugs in the B-side mirror are easy to make.\n\n**Slots:** 4 (ends, split, pivot, order). Defaults: two ends with the rotations restored,\nhalves, and Median Pivot. A Finisher is optional; by default, leaves of 2 are fixed with\n`sa`/`sb`.",
    "source": "spec/cards/divide.md"
   },
   "four-end-quicksort": {
@@ -246,12 +349,19 @@
    "tagline": "Four bins, never step over anyone",
    "family": "divide",
    "rarity": "rare",
-   "grasp": 8,
-   "craft": 8,
-   "lines": 400,
+   "grasp": 6,
+   "craft": 7,
+   "knows": [
+    "partition",
+    "recursion",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 2,
+   "from": "counted: claude-opus-5.5-high quick.c (quick_chunk, sort_complex); Four Ends and Thirds Split add their own",
    "claimedClass": "n log n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 8 | 8 | ~400 | Rare |\n\n**The idea.** Quicksort that uses the top and the bottom of both stacks as four places to put things. A group splits into three parts at once, and nothing ever has to be moved back out of the way.\n\n**Step by step.**\n1. Take a group sitting at one of the four ends.\n2. Split it by rank into three parts: small, middle and big.\n3. Send each part to one of the other three ends, at most three moves per number.\n4. Sort each part the same way, biggest first, so the sorted numbers pile up on top of A.\n\n**Under the hood.** Treat the tops and bottoms of A and B as **four locations**. A chunk sitting\nat one location is split by **exact rank** into three parts, and each part is sent to one of\nthe other three locations. Every move costs at most 3 ops and never passes over another value,\nso nothing is ever \"undone\". The parts are sorted max first, so sorted values pile up on top\nof A; only the max part may be sent there. The bare card has no Finisher: the recursion goes\ndown to single values. Five Hand cannot serve, because its Hardcoded Three rotates A and would\ndisturb the sorted values below the leaf. BFS Leaf solves leaves of ≤ 5 optimally around them.\n\nWithout a Finisher, its op count depends only on n, not on the order of the input (sim): every\nvalue's path is fixed by its rank. The numbers above are that bare card. With Pivot by Leaf\nCount, BFS Leaf ≤ 5 and Peephole, the Four Corners deck, the sim measures 533 / 3825. That\nmatches the reference build's 528 / 3824, which is that method's own mean over 5 seeds, not\nthe build's `--adaptive` mean (529.8 / 3948.0).\n\n**Lore.** Three-way partitioning goes back to Dijkstra's 'Dutch national flag' problem (1976):\nsort red, white and blue in one pass. Multi-pivot quicksort became mainstream when Java 7\nadopted Yaroslavskiy's dual-pivot version in 2011. The four-ends twist is push_swap's own: the\nfour stack ends are four cheap pockets.\n\n**Pros**\n- The strongest provable O(n log n) card in the roster. Bare, it is EXCELLENT at n=500; as\n  Four Corners, at both sizes on every run (sim).\n- The class has a simple argument: every move costs at most 3 ops and never passes over\n  another value, and exact-rank thirds give a depth of about log₃ n. The constant the\n  reference build states, ≤ 3n⌈log₃ n⌉ + 13n/5, is its own claim, and the study notes that\n  nobody has checked it independently.\n- Once the \"four locations\" model is understood, the code is regular.\n\n**Cons**\n- The hardest mental model in the deck: chunks move between ends, and directions flip\n  depending on the location.\n- Bare, it is only GOOD at n=100 (735). The gains come from its techniques, and they compound:\n  BFS Leaf ≤ 5 saves 142 / 657, and Pivot by Leaf Count adds 27 / 334 on top, a synergy (sim).\n\n**Slots:** 3 (split, pivot, order). Four Ends is native. Thirds Split is the default split, and\n**DP Splits** replaces it in the Legendary deck (a simplified DP saves 17 / 214 more, sim). The\nFinisher slot is empty by default; BFS Leaf is the one to play.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 6 | 7 | Rare |\n\n**The idea.** Quicksort that uses the top and the bottom of both stacks as four places to put things. A group splits into three parts at once, and nothing ever has to be moved back out of the way.\n\n**Step by step.**\n1. Take a group sitting at one of the four ends.\n2. Split it by rank into three parts: small, middle and big.\n3. Send each part to one of the other three ends, at most three moves per number.\n4. Sort each part the same way, biggest first, so the sorted numbers pile up on top of A.\n\n**Under the hood.** Treat the tops and bottoms of A and B as **four locations**. A chunk sitting\nat one location is split by **exact rank** into three parts, and each part is sent to one of\nthe other three locations. Every move costs at most 3 ops and never passes over another value,\nso nothing is ever \"undone\". The parts are sorted max first, so sorted values pile up on top\nof A; only the max part may be sent there. The bare card has no Finisher: the recursion goes\ndown to single values. Five Hand cannot serve, because its Hardcoded Three rotates A and would\ndisturb the sorted values below the leaf. BFS Leaf solves leaves of ≤ 5 optimally around them.\n\nWithout a Finisher, its op count depends only on n, not on the order of the input (sim): every\nvalue's path is fixed by its rank. The numbers above are that bare card. With Pivot by Leaf\nCount, BFS Leaf ≤ 5 and Peephole, the Four Corners deck, the sim measures 533 / 3825. That\nmatches the reference build's 528 / 3824, which is that method's own mean over 5 seeds, not\nthe build's `--adaptive` mean (529.8 / 3948.0).\n\n**Lore.** Three-way partitioning goes back to Dijkstra's 'Dutch national flag' problem (1976):\nsort red, white and blue in one pass. Multi-pivot quicksort became mainstream when Java 7\nadopted Yaroslavskiy's dual-pivot version in 2011. The four-ends twist is push_swap's own: the\nfour stack ends are four cheap pockets.\n\n**Pros**\n- The strongest provable O(n log n) card in the roster. Bare, it is EXCELLENT at n=500; as\n  Four Corners, at both sizes on every run (sim).\n- The class has a simple argument: every move costs at most 3 ops and never passes over\n  another value, and exact-rank thirds give a depth of about log₃ n. The constant the\n  reference build states, ≤ 3n⌈log₃ n⌉ + 13n/5, is its own claim, and the study notes that\n  nobody has checked it independently.\n- Once the \"four locations\" model is understood, the code is regular.\n\n**Cons**\n- The hardest mental model in the deck: chunks move between ends, and directions flip\n  depending on the location.\n- Bare, it is only GOOD at n=100 (735). The gains come from its techniques, and they compound:\n  BFS Leaf ≤ 5 saves 142 / 657, and Pivot by Leaf Count adds 27 / 334 on top, a synergy (sim).\n\n**Slots:** 3 (split, pivot, order). Four Ends is native. Thirds Split is the default split, and\n**DP Splits** replaces it in the Legendary deck (a simplified DP saves 17 / 214 more, sim). The\nFinisher slot is empty by default; BFS Leaf is the one to play.",
    "source": "spec/cards/divide.md"
   },
   "tape-merge": {
@@ -260,12 +370,17 @@
    "tagline": "Merge sort on four tapes",
    "family": "divide",
    "rarity": "legendary",
-   "grasp": 8,
-   "craft": 8,
-   "lines": 350,
+   "grasp": 3,
+   "craft": 5,
+   "knows": [
+    "merge",
+    "rank"
+   ],
+   "fns": 5,
+   "from": "counted: the explorer's reference build tape.c (runs_on_top, distribute, merge_pair, merge, tape_merge)",
    "claimedClass": "n log n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 8 | 8 | ~350 | Legendary |\n\n**The idea.** Merge sort, the way old computers sorted on tape drives: make short sorted runs at the stack ends, then keep merging two runs into one longer run until only one is left.\n\n**Step by step.**\n1. Split the input into short sorted runs, spread over the four stack ends.\n2. Take two runs, compare their front numbers, and move the smaller one to the output end.\n3. Repeat until the two runs are one.\n4. Keep merging runs in pairs until a single run holds every number.\n\n**Under the hood.** Treat the four stack ends like the tapes in old **external merge sort**.\nFirst split the input into sorted runs (natural runs, or small runs sorted by a Finisher),\nspread across the ends. Then repeatedly merge pairs of runs: compare the heads at two\nlocations, move the smaller to the output location, and repeat. **Polyphase merge** (a\nFibonacci distribution of runs) reduces the number of passes.\n\n**As built (ref).** A balanced two-way merge in which every value costs one op per merge step.\nEach pass starts with all runs ascending on A's top. Distribute: runs alternately go to A's bottom\n(`ra`) and to B's top (`pb`), so a run at A's bottom has its largest value lowest and a run on B's\ntop has its largest value on top. Merge: take the larger head, A's bottom with `rra` or B's top\nwith `pa`, onto A's top, so each pair becomes one ascending run there and the next pass starts\nthe same way. A pass costs exactly 2n, and there are ⌈log₂ runs⌉ passes. Random input has\nabout n/2 natural runs, so the count barely varies: exactly 1200 on every n=100 run, and 8000\nor 9000 at n=500, 8400 on average over the study's seeds 1000–1004 (ref). Its reference build is\nC in the Norm's style (`study/explorer-refs/tape_merge`: 6 functions on a shared kit of 31), and\nit gives the card's count on each of those seeds. A Finisher sorts the first runs as blocks: Distance Tables (blocks of 4)\nsaves 50 / 355, BFS Leaf (blocks of 5) 23 / 215. It beats Natural Merge (1495 / 10165) by not\nrotating past the runs it is not merging, but it stays far from Four-End Quicksort. Polyphase\ndistribution is still open.\n\n**Lore.** John von Neumann wrote a merge routine in 1945 for the EDVAC, among the first\nprograms written for a stored-program computer. When data lived on magnetic tape, merging runs\nbetween tapes was the way to sort, and polyphase merge (written up by R. L. Gilstad in the\nearly 1960s) did it with fewer tape drives. Stacks behave much like tapes, which is why this\ncard exists.\n\n**Pros**\n- It uses existing order directly: natural runs make nearly sorted input cheap.\n- It is a classic algorithm (Knuth, Vol. 3) that few 42 peers have tried, so there is room\n  for new ideas here.\n\n**Cons**\n- Every pass touches every value twice (distribute, then merge), so it pays 2n per pass where\n  Four-End Quicksort pays at most 3 per value per level of a shallower recursion: 1200 / 8400\n  (ref) against 735 / 5033 bare (sim).\n- It ignores existing order inside the distribution, so a nearly sorted input with a few long\n  runs is cheap only when the runs are few.\n\n**Slots:** none. The Finisher is optional and sorts the first runs (BFS Leaf or Distance\nTables). Without one, the runs are the natural runs; the distribution is balanced.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 3 | 5 | Legendary |\n\n**The idea.** Merge sort, the way old computers sorted on tape drives: make short sorted runs at the stack ends, then keep merging two runs into one longer run until only one is left.\n\n**Step by step.**\n1. Split the input into short sorted runs, spread over the four stack ends.\n2. Take two runs, compare their front numbers, and move the smaller one to the output end.\n3. Repeat until the two runs are one.\n4. Keep merging runs in pairs until a single run holds every number.\n\n**Under the hood.** Treat the four stack ends like the tapes in old **external merge sort**.\nFirst split the input into sorted runs (natural runs, or small runs sorted by a Finisher),\nspread across the ends. Then repeatedly merge pairs of runs: compare the heads at two\nlocations, move the smaller to the output location, and repeat. **Polyphase merge** (a\nFibonacci distribution of runs) reduces the number of passes.\n\n**As built (ref).** A balanced two-way merge in which every value costs one op per merge step.\nEach pass starts with all runs ascending on A's top. Distribute: runs alternately go to A's bottom\n(`ra`) and to B's top (`pb`), so a run at A's bottom has its largest value lowest and a run on B's\ntop has its largest value on top. Merge: take the larger head, A's bottom with `rra` or B's top\nwith `pa`, onto A's top, so each pair becomes one ascending run there and the next pass starts\nthe same way. A pass costs exactly 2n, and there are ⌈log₂ runs⌉ passes. Random input has\nabout n/2 natural runs, so the count barely varies: exactly 1200 on every n=100 run, and 8000\nor 9000 at n=500, 8400 on average over the study's seeds 1000–1004 (ref). Its reference build is\nC in the Norm's style (`study/explorer-refs/tape_merge`: 6 functions on a shared kit of 31), and\nit gives the card's count on each of those seeds. A Finisher sorts the first runs as blocks: Distance Tables (blocks of 4)\nsaves 50 / 355, BFS Leaf (blocks of 5) 23 / 215. It beats Natural Merge (1495 / 10165) by not\nrotating past the runs it is not merging, but it stays far from Four-End Quicksort. Polyphase\ndistribution is still open.\n\n**Lore.** John von Neumann wrote a merge routine in 1945 for the EDVAC, among the first\nprograms written for a stored-program computer. When data lived on magnetic tape, merging runs\nbetween tapes was the way to sort, and polyphase merge (written up by R. L. Gilstad in the\nearly 1960s) did it with fewer tape drives. Stacks behave much like tapes, which is why this\ncard exists.\n\n**Pros**\n- It uses existing order directly: natural runs make nearly sorted input cheap.\n- It is a classic algorithm (Knuth, Vol. 3) that few 42 peers have tried, so there is room\n  for new ideas here.\n\n**Cons**\n- Every pass touches every value twice (distribute, then merge), so it pays 2n per pass where\n  Four-End Quicksort pays at most 3 per value per level of a shallower recursion: 1200 / 8400\n  (ref) against 735 / 5033 bare (sim).\n- It ignores existing order inside the distribution, so a nearly sorted input with a few long\n  runs is cheap only when the runs are few.\n\n**Slots:** none. The Finisher is optional and sorts the first runs (BFS Leaf or Distance\nTables). Without one, the runs are the natural runs; the distribution is balanced.",
    "source": "spec/cards/divide.md"
   },
   "natural-merge": {
@@ -274,12 +389,17 @@
    "tagline": "Merge the runs that are already there",
    "family": "divide",
    "rarity": "rare",
-   "grasp": 4,
-   "craft": 6,
-   "lines": 150,
+   "grasp": 3,
+   "craft": 4,
+   "knows": [
+    "merge",
+    "rank"
+   ],
+   "fns": 4,
+   "from": "est.: finding the runs, merging two past the rest, a pass and the loop",
    "claimedClass": "n log n",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 4 | 6 | ~150 | Rare |\n\n**The idea.** Use the sorted stretches the input already has: merge them two at a time until the whole stack is one sorted run.\n\n**Step by step.**\n1. Find the stretches of A that already go up.\n2. Push the first stretch to B.\n3. Merge it with the next stretch onto the bottom of A, smallest first.\n4. Do the same with the next pair, and make more passes until one run is left.\n\n**Under the hood.** Find the ascending runs in A. Merge them in pairs: push the first run to B,\nthen merge both smallest first onto A's bottom. A value of the second run is already on A's\ntop (`ra`); a value of the first is at B's bottom (`rrb pa ra`). The merged run ends up behind\nthe runs not yet merged, so the next pair is on top. Repeat passes until one run is left.\n\n**Lore.** This is the natural merge sort of the tape era, and the core of Timsort (Tim Peters,\n2002), Python's and Java's sort for objects: real data has runs, so merge them instead of\nstarting from scratch.\n\n**Pros**\n- A clean O(n log n) proof: ⌈log₂ runs⌉ passes, at most 4 ops per value per pass.\n- Sorted input is free.\n\n**Cons**\n- **It is the lesson card for this model.** Every pass rotates all of A, even when only two\n  runs need merging, so nearly sorted input is not cheap: one random swap at n=100 costs 454,\n  against 106 for Long Line (sim). Timsort's trick depends on cheap random access to the runs,\n  which stacks do not have.\n- Random input has about n/2 runs, so it is the most expensive n log n card: 1495 / 10165, and\n  its worst random run at n=500 (11791) is close to the PASS limit.\n\n**Slots:** none.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | rarity |\n| --- | --- | --- | --- | --- | --- |\n| O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 3 | 4 | Rare |\n\n**The idea.** Use the sorted stretches the input already has: merge them two at a time until the whole stack is one sorted run.\n\n**Step by step.**\n1. Find the stretches of A that already go up.\n2. Push the first stretch to B.\n3. Merge it with the next stretch onto the bottom of A, smallest first.\n4. Do the same with the next pair, and make more passes until one run is left.\n\n**Under the hood.** Find the ascending runs in A. Merge them in pairs: push the first run to B,\nthen merge both smallest first onto A's bottom. A value of the second run is already on A's\ntop (`ra`); a value of the first is at B's bottom (`rrb pa ra`). The merged run ends up behind\nthe runs not yet merged, so the next pair is on top. Repeat passes until one run is left.\n\n**Lore.** This is the natural merge sort of the tape era, and the core of Timsort (Tim Peters,\n2002), Python's and Java's sort for objects: real data has runs, so merge them instead of\nstarting from scratch.\n\n**Pros**\n- A clean O(n log n) proof: ⌈log₂ runs⌉ passes, at most 4 ops per value per pass.\n- Sorted input is free.\n\n**Cons**\n- **It is the lesson card for this model.** Every pass rotates all of A, even when only two\n  runs need merging, so nearly sorted input is not cheap: one random swap at n=100 costs 454,\n  against 106 for Long Line (sim). Timsort's trick depends on cheap random access to the runs,\n  which stacks do not have.\n- Random input has about n/2 runs, so it is the most expensive n log n card: 1495 / 10165, and\n  its worst random run at n=500 (11791) is close to the PASS limit.\n\n**Slots:** none.",
    "source": "spec/cards/divide.md"
   },
   "lookahead-greedy": {
@@ -288,12 +408,21 @@
    "tagline": "Think k moves ahead",
    "family": "search",
    "rarity": "rare",
-   "grasp": 6,
-   "craft": 6,
-   "lines": 300,
+   "grasp": 9,
+   "craft": 14,
+   "knows": [
+    "heuristic",
+    "shared",
+    "slot",
+    "greedy",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 13,
+   "from": "est.: Turk's 10 (gemini-flash-3.8) plus 3 to price each pick two moves deep",
    "claimedClass": "n²",
    "proof": "yes",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| O(n²·bᵏ) CPU · heuristic | 557 sim EXC | 5284 sim EXC | 6 | 6 | ~300 | ●●○○○ | Rare |\n\n**The idea.** Turk, but it looks one move further: it makes the move whose cost plus the best move after it is lowest, instead of the cheapest move on its own.\n\n**Step by step.**\n1. Price every candidate move, as Turk does.\n2. For the cheapest few, also price the best move that would follow each one.\n3. Make the first move of the cheapest pair.\n4. Plan again after every move.\n\n**Under the hood.** Turk, but instead of taking the single cheapest move, evaluate the best\n**sequence** of k moves (for example k = 2: the cost of this move plus the cheapest next move\nafter it). Only consider the top b candidates per level to bound the CPU cost.\n\nThe sim measures k = 2 among the 10 cheapest moves, re-planning after every move.\n\n**Lore.** Lookahead is the oldest idea in game-playing programs: Shannon's 1950 chess paper\nalready proposed looking a few moves ahead. Here it turns out not to help (see the card), which\nis itself the lesson.\n\n**Pros**\n- Built on Turk's code, so it is a short step from it.\n- The idea is right: Turk's short-sightedness does cost ops, as Beam over Orders shows on LIS\n  Insertion.\n\n**Cons**\n- **It is not an upgrade.** At n=100 it ties Turk (557); at n=500 it is worse, 5284 against\n  5088, and only 96.5 % of its runs are EXCELLENT (sim). Re-planning every move, it keeps\n  paying now for a cheap next move it then never takes. Committing to both moves halves the\n  loss (+88 at n=500) but does not turn it into a gain.\n- CPU grows with bᵏ.\n\n**Slots:** 2, from anchor and band. The lookahead pick and its pricing are native, and it has\nno order role: the lookahead already searches over the next moves. Defaults as Turk: Keep\nThree and Hardcoded Three.",
+   "doc": "| class | @100 | @500 | Grasp | Craft | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| O(n²·bᵏ) CPU · heuristic | 557 sim EXC | 5284 sim EXC | 9 | 14 | ●●○○○ | Rare |\n\n**The idea.** Turk, but it looks one move further: it makes the move whose cost plus the best move after it is lowest, instead of the cheapest move on its own.\n\n**Step by step.**\n1. Price every candidate move, as Turk does.\n2. For the cheapest few, also price the best move that would follow each one.\n3. Make the first move of the cheapest pair.\n4. Plan again after every move.\n\n**Under the hood.** Turk, but instead of taking the single cheapest move, evaluate the best\n**sequence** of k moves (for example k = 2: the cost of this move plus the cheapest next move\nafter it). Only consider the top b candidates per level to bound the CPU cost.\n\nThe sim measures k = 2 among the 10 cheapest moves, re-planning after every move.\n\n**Lore.** Lookahead is the oldest idea in game-playing programs: Shannon's 1950 chess paper\nalready proposed looking a few moves ahead. Here it turns out not to help (see the card), which\nis itself the lesson.\n\n**Pros**\n- Built on Turk's code, so it is a short step from it.\n- The idea is right: Turk's short-sightedness does cost ops, as Beam over Orders shows on LIS\n  Insertion.\n\n**Cons**\n- **It is not an upgrade.** At n=100 it ties Turk (557); at n=500 it is worse, 5284 against\n  5088, and only 96.5 % of its runs are EXCELLENT (sim). Re-planning every move, it keeps\n  paying now for a cheap next move it then never takes. Committing to both moves halves the\n  loss (+88 at n=500) but does not turn it into a gain.\n- CPU grows with bᵏ.\n\n**Slots:** 2, from anchor and band. The lookahead pick and its pricing are native, and it has\nno order role: the lookahead already searches over the next moves. Defaults as Turk: Keep\nThree and Hardcoded Three.",
    "source": "spec/cards/search.md"
   },
   "beam-sorter": {
@@ -302,12 +431,22 @@
    "tagline": "Keep the best few futures",
    "family": "search",
    "rarity": "legendary",
-   "grasp": 10,
-   "craft": 10,
-   "lines": 600,
+   "grasp": 14,
+   "craft": 30,
+   "knows": [
+    "beam",
+    "lis",
+    "heuristic",
+    "shared",
+    "slot",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 30,
+   "from": "counted: the explorer's reference build (lis.c 3, beam.c 5, beam_cost.c 5, beam_kids.c 5, beam_level.c 5, beam_mem.c 4, beam_end.c 3)",
    "claimedClass": "heuristic",
    "proof": "no",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| heuristic | 479 ref EXC | 4601 ref EXC | 10 | 10 | ~600 | ●○○○○ | Legendary |\n\n**The idea.** Explore many move sequences at once, but keep only the most promising few at every step: smarter than one greedy choice, and far cheaper than trying everything.\n\n**Step by step.**\n1. Start with the input as the only plan.\n2. Extend every plan by each useful next move.\n3. Score each new plan by its moves so far plus a guess of the moves still needed.\n4. Keep the W best plans, and repeat until one of them sorts the stack.\n\n**Under the hood.** Keep the W best partial solutions (the beam). At each step, expand each\npartial solution by the useful next moves, score every candidate with (ops so far + heuristic\nestimate of the remaining cost), and keep the top W. The heuristic can be a **pattern\ndatabase**: exact distances for small groups of ranks, summed. Applied to the whole problem,\nthe beam is too slow at 500, so the strongest reference build uses it **inside** other cards:\nfor leaves of up to ~32 values and for choosing insertion orders.\n\n**As built (ref).** The explorer's Beam Sorter searches whole insertion plans on the Insertion\nbench (LIS kept, `rb` Sink in pass 1): W = 64 plans, each expanded by its 4 cheapest next\ninsertions, scored by ops so far plus h × (mean cheapest cost of the values left) × √(values\nleft), with h = 0.25. On the study's seeds 1000–1004 it measures 479.2 at n=100, ahead of Long\nLine's 512.4 on the same inputs, but 4601.0 at n=500, behind Long Line's 4529.4 (ref). Its\nreference build is C in the Norm's style (`study/explorer-refs/beam_sorter`: 31 functions on a\nshared kit of 31) and gives the card's count on each of those seeds; it takes 1.3 s per sort at\nn=500 (5 s in the explorer's JavaScript). That keeps the verdict: a whole-problem beam pays at\nn=100 and is the wrong tool at n=500.\n\n**Lore.** Beam search comes from speech recognition: Bruce Lowerre's Harpy system (1976) kept\nonly the best few hypotheses at each step to stay fast. Pattern databases come from puzzle\nsolving (Culberson and Schaeffer, mid-1990s): precompute exact costs for small parts and use\nthem as estimates. They are what later made optimal Rubik's Cube solving possible.\n\n**Pros**\n- The strongest known results come from search layered on a structured algorithm. The\n  reference build that uses it inside Four-End Quicksort averages 420 / 3111 on that method\n  (ref, 5 seeds).\n- One knob, W, trades CPU for ops.\n\n**Cons**\n- The Grasp and Craft limits of the deck: hashing, memory limits, heuristics, a time budget.\n- Hard to justify as \"one method\" in the README. The subject wants a stated complexity class.\n\n**Slots:** none. Params: the beam width W and the heuristic. Inside other cards, the same\nsearch plays as Beam Leaf (a Finisher) and Beam over Orders (order).",
+   "doc": "| class | @100 | @500 | Grasp | Craft | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| heuristic | 479 ref EXC | 4601 ref EXC | 14 | 30 | ●○○○○ | Legendary |\n\n**The idea.** Explore many move sequences at once, but keep only the most promising few at every step: smarter than one greedy choice, and far cheaper than trying everything.\n\n**Step by step.**\n1. Start with the input as the only plan.\n2. Extend every plan by each useful next move.\n3. Score each new plan by its moves so far plus a guess of the moves still needed.\n4. Keep the W best plans, and repeat until one of them sorts the stack.\n\n**Under the hood.** Keep the W best partial solutions (the beam). At each step, expand each\npartial solution by the useful next moves, score every candidate with (ops so far + heuristic\nestimate of the remaining cost), and keep the top W. The heuristic can be a **pattern\ndatabase**: exact distances for small groups of ranks, summed. Applied to the whole problem,\nthe beam is too slow at 500, so the strongest reference build uses it **inside** other cards:\nfor leaves of up to ~32 values and for choosing insertion orders.\n\n**As built (ref).** The explorer's Beam Sorter searches whole insertion plans on the Insertion\nbench (LIS kept, `rb` Sink in pass 1): W = 64 plans, each expanded by its 4 cheapest next\ninsertions, scored by ops so far plus h × (mean cheapest cost of the values left) × √(values\nleft), with h = 0.25. On the study's seeds 1000–1004 it measures 479.2 at n=100, ahead of Long\nLine's 512.4 on the same inputs, but 4601.0 at n=500, behind Long Line's 4529.4 (ref). Its\nreference build is C in the Norm's style (`study/explorer-refs/beam_sorter`: 31 functions on a\nshared kit of 31) and gives the card's count on each of those seeds; it takes 1.3 s per sort at\nn=500 (5 s in the explorer's JavaScript). That keeps the verdict: a whole-problem beam pays at\nn=100 and is the wrong tool at n=500.\n\n**Lore.** Beam search comes from speech recognition: Bruce Lowerre's Harpy system (1976) kept\nonly the best few hypotheses at each step to stay fast. Pattern databases come from puzzle\nsolving (Culberson and Schaeffer, mid-1990s): precompute exact costs for small parts and use\nthem as estimates. They are what later made optimal Rubik's Cube solving possible.\n\n**Pros**\n- The strongest known results come from search layered on a structured algorithm. The\n  reference build that uses it inside Four-End Quicksort averages 420 / 3111 on that method\n  (ref, 5 seeds).\n- One knob, W, trades CPU for ops.\n\n**Cons**\n- The Grasp and Craft limits of the deck: hashing, memory limits, heuristics, a time budget.\n- Hard to justify as \"one method\" in the README. The subject wants a stated complexity class.\n\n**Slots:** none. Params: the beam width W and the heuristic. Inside other cards, the same\nsearch plays as Beam Leaf (a Finisher) and Beam over Orders (order).",
    "source": "spec/cards/search.md"
   },
   "annealer": {
@@ -316,12 +455,20 @@
    "tagline": "Shake it until it settles",
    "family": "search",
    "rarity": "legendary",
-   "grasp": 8,
-   "craft": 6,
-   "lines": 200,
+   "grasp": 7,
+   "craft": 18,
+   "knows": [
+    "anneal",
+    "greedy",
+    "ranges",
+    "rank",
+    "rotdist"
+   ],
+   "fns": 18,
+   "from": "counted: the explorer's reference build (anneal.c 5, anneal_mem.c 2, chunks.c 4, retrieve.c 3, and util.c's square root, exponential and random draws 4)",
    "claimedClass": "heuristic",
    "proof": "no",
-   "doc": "| class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| heuristic | 572 ref EXC | 5094 ref EXC | 8 | 6 | ~200 | ●○○○○ | Legendary |\n\n**The idea.** Take a working plan, such as where Chunks cuts its crates, and keep making small random changes, keeping the ones that help. Early on it also accepts some worse changes, so it does not get stuck.\n\n**Step by step.**\n1. Start from a plan, such as Chunks' crate boundaries.\n2. Change it a little at random and count the moves again.\n3. Keep the change if it is better, or sometimes even if it is worse while the temperature is still high.\n4. Cool down step by step, until it stops changing.\n\n**Under the hood.** Simulated annealing over a **plan**, not over raw ops. The plan can be the\ninsertion order (LIS Insertion), the chunk boundaries (Chunks), or the pivots (quicksort). Make\na small random change, re-simulate, and keep the change if it is better (or occasionally if it\nis worse, with a probability that falls over time).\n\n**Lore.** Simulated annealing (Kirkpatrick, Gelatt and Vecchi, 1983) copies how metal cools:\nearly on, accept bad moves often, so the search can escape local optima; later, almost never.\n\n**Pros**\n- Works with any card that has a plan to tweak.\n- Easy to bolt on top of an existing build.\n\n**Cons**\n- Not deterministic unless seeded.\n- Each candidate needs a full re-simulation, which is slow.\n- **As built (ref):** annealing over the chunk boundaries of Crate Runner (Chunks with One-Way\n  Sweep and Second-Max), 400 trials: 571.6 / 5094.0 against Crate Runner's 608.8 / 5326.2 on\n  the study's seeds 1000–1004. Its reference build is C in the Norm's style\n  (`study/explorer-refs/annealer`: 15 functions on a shared kit of 31), gives the card's count on\n  each of those seeds, and takes 0.02 s per sort at n=100 and 0.5 s at n=500. The gain is real\n  but small: plans are cheap to perturb, and the boundaries barely matter once the sweep and\n  retrieval are good.\n\n**Slots:** none. Param: what to perturb. Inside another card, the same idea plays as the\nAnnealed Plan technique (order).",
+   "doc": "| class | @100 | @500 | Grasp | Craft | Speed | rarity |\n| --- | --- | --- | --- | --- | --- | --- |\n| heuristic | 572 ref EXC | 5094 ref EXC | 7 | 18 | ●○○○○ | Legendary |\n\n**The idea.** Take a working plan, such as where Chunks cuts its crates, and keep making small random changes, keeping the ones that help. Early on it also accepts some worse changes, so it does not get stuck.\n\n**Step by step.**\n1. Start from a plan, such as Chunks' crate boundaries.\n2. Change it a little at random and count the moves again.\n3. Keep the change if it is better, or sometimes even if it is worse while the temperature is still high.\n4. Cool down step by step, until it stops changing.\n\n**Under the hood.** Simulated annealing over a **plan**, not over raw ops. The plan can be the\ninsertion order (LIS Insertion), the chunk boundaries (Chunks), or the pivots (quicksort). Make\na small random change, re-simulate, and keep the change if it is better (or occasionally if it\nis worse, with a probability that falls over time).\n\n**Lore.** Simulated annealing (Kirkpatrick, Gelatt and Vecchi, 1983) copies how metal cools:\nearly on, accept bad moves often, so the search can escape local optima; later, almost never.\n\n**Pros**\n- Works with any card that has a plan to tweak.\n- Easy to bolt on top of an existing build.\n\n**Cons**\n- Not deterministic unless seeded.\n- Each candidate needs a full re-simulation, which is slow.\n- **As built (ref):** annealing over the chunk boundaries of Crate Runner (Chunks with One-Way\n  Sweep and Second-Max), 400 trials: 571.6 / 5094.0 against Crate Runner's 608.8 / 5326.2 on\n  the study's seeds 1000–1004. Its reference build is C in the Norm's style\n  (`study/explorer-refs/annealer`: 15 functions on a shared kit of 31), gives the card's count on\n  each of those seeds, and takes 0.02 s per sort at n=100 and 0.5 s at n=500. The gain is real\n  but small: plans are cheap to perturb, and the boundaries barely matter once the sweep and\n  retrieval are good.\n\n**Slots:** none. Param: what to perturb. Inside another card, the same idea plays as the\nAnnealed Plan technique (order).",
    "source": "spec/cards/search.md"
   }
  },
@@ -332,8 +479,8 @@
    "tagline": "Forget the values, keep the order",
    "role": "prep",
    "rarity": "common",
-   "grasp": 0,
-   "craft": 2,
+   "grasp": 1,
+   "craft": 0,
    "effect": "enables most cards; 0 ops by itself",
    "doc": "**The idea.** Forget the actual numbers and keep only their order: the smallest becomes 0, the next 1, and so on. Every card works on these ranks.\n\n**Under the hood.** Replace each value with its rank 0..n−1. This can be done with a merge sort in O(n log n),\nwhich also detects duplicates (equal neighbours) and counts inversions for free.\n\n- **Pros:** Radix needs it. Chunks and buckets become arithmetic. It removes INT_MIN/INT_MAX\n  edge cases from the algorithm code.\n- **Cons:** none for ops. The O(n²) counting version is slow but fine at n=500.\n- **Hosts:** all cards. It is always on in the explorer and shown in the input panel. The\n  Codex keeps it as a card so peers learn that it is a choice.",
    "source": "spec/techniques/prep.md"
@@ -356,7 +503,7 @@
    "tagline": "How messy is it?",
    "role": "prep",
    "rarity": "common",
-   "grasp": 2,
+   "grasp": 1,
    "craft": 2,
    "effect": "none on its own: it feeds the Adaptive Selector",
    "doc": "**The idea.** Measure how messy the input is, from 0 (sorted) to 1 (reversed), so a meta card can pick a hand that suits it.\n\n**Under the hood.** Disorder = inversions ÷ (n(n−1)/2), as the subject defines it, computed with a merge-sort\ncount in O(n log n). Alternatives are runs, LIS deficit and displacement (see the Adaptive\nSelector).\n\n- **Pros:** required for `--adaptive` and `--bench`.\n- **Cons:** the inversion ratio is a poor predictor for some cards. For example, a rotated\n  sorted input has high disorder but is nearly free.\n- **Hosts:** the Adaptive Selector.",
@@ -368,8 +515,8 @@
    "tagline": "Keep the longest ordered line",
    "role": "anchor",
    "rarity": "rare",
-   "grasp": 4,
-   "craft": 2,
+   "grasp": 3,
+   "craft": 3,
    "effect": "Simple Insertion −65 @100, −366 @500; on Turk −9 / +49",
    "doc": "**The idea.** Keep the longest line of numbers in A that already goes up, and never move it: everything else is inserted around it.\n\n**Under the hood.** Keep a longest increasing subsequence, found by patience sorting with predecessor links in\nO(n log n). The expected LIS of a random permutation approaches 2√n, but it is shorter at\nthese sizes: about 17 values at n=100 and 40 at n=500 (sim).\n\n- **Measured:** on Simple Insertion, −65 at n=100 (1462 → 1397) and −366 at n=500 (sim). With\n  Cheapest Pick added, it is the bare LIS Insertion card (547). The two overlap: Cheapest Pick\n  alone takes Simple Insertion to 588, so the anchor adds only −41 on top of it.\n- **Pros:** optimal for its job: the fewest pushes possible while keeping A ordered.\n- **Cons:** pass 1 must still `ra` past the kept values, so each one costs a rotation instead\n  of two pushes. The saving is smaller than \"2 per kept value\".\n- **On Turk:** keeping the LIS instead of three values gives −9 at n=100 but **+49** at n=500\n  (sim). Turk's cheapest pick already avoids most of what the anchor saves, and the kept values\n  sit between the ones it still has to push.\n- **Hosts:** Simple Insertion, Turk (replacing Keep Three), Insert-into-B (mirrored).\n- **Conflicts:** other anchors.",
    "source": "spec/techniques/anchor.md"
@@ -380,8 +527,8 @@
    "tagline": "The line can wrap around",
    "role": "anchor",
    "rarity": "rare",
-   "grasp": 2,
-   "craft": 2,
+   "grasp": 4,
+   "craft": 5,
    "effect": "LIS host −6 @100, −17 @500; on Turk −13 / +45",
    "doc": "**The idea.** Like LIS Anchor, but A is a circle, so the kept line may wrap around from the bottom back to the top.\n\n**Under the hood.** A is a circle, so the kept set only needs to be increasing **circularly**. Take the best LIS\nover all n rotations (O(n² log n)).\n\n- **Measured:** on LIS Insertion (Four-Way Cost, one band), −6 ± 1 at n=100, −7 ± 4 at n=200\n  and −17 ± 11 at n=500 (sim). The anchor is about 2 values longer at n=100 and 4 at n=500.\n  An earlier run reported +15 at n=500 from 40 inputs, which was within its noise.\n- **On Turk:** −13 at n=100 and +45 at n=500 instead of Keep Three (sim), like LIS Anchor.\n- **Pros:** never shorter than the plain LIS.\n- **Cons:** a small gain for an O(n² log n) search over rotations. Keeping more values does not\n  save much, because each kept value still costs a rotation in pass 1.\n- **Hosts:** as LIS Anchor.",
    "source": "spec/techniques/anchor.md"
@@ -393,7 +540,7 @@
    "role": "anchor",
    "rarity": "uncommon",
    "grasp": 0,
-   "craft": 2,
+   "craft": 1,
    "effect": "Simple Insertion + Cheapest Pick −7 @100, −20 @500; on Turk +20 / +83",
    "doc": "**The idea.** Keep the longest block of neighbours that is already in order, and move only the rest.\n\n**Under the hood.** Keep the longest stretch of **adjacent** values that are already in order. It is trivial to\nfind in O(n).\n\n- **Measured:** on Simple Insertion + Cheapest Pick, −7 at n=100 and −20 ± 12 at n=500; on Turk\n  instead of Keep Three, +20 / +83 (sim).\n- **Pros:** very easy. It is free on nearly sorted inputs.\n- **Cons:** on random input the longest run is short, about 5 values at n=100–500 (sim), so\n  the effect is small, and on Turk it is negative.\n- **Hosts:** as LIS Anchor.",
    "source": "spec/techniques/anchor.md"
@@ -416,8 +563,8 @@
    "tagline": "Look at everyone before moving",
    "role": "pick",
    "rarity": "common",
-   "grasp": 2,
-   "craft": 4,
+   "grasp": 1,
+   "craft": 2,
    "effect": "LIS host −850 @100 (1397 → 547); alone on Simple Insertion −874",
    "doc": "**The idea.** Instead of always moving the top number, look at every number and move the one that costs the fewest turns.\n\n**Under the hood.** Instead of taking the top of the source stack, evaluate every value in it and move the one\nwhose total rotation cost is lowest.\n\n- **Measured:** on an LIS-anchored Simple Insertion, 1397 → 547 at n=100 (−850) and −26,817 at\n  n=500 (sim). Alone, without the anchor, it takes Simple Insertion from 1462 to 588. This is\n  the largest single technique effect in the deck.\n- **Pros:** turns O(n²) blind insertion into an EXCELLENT-grade card.\n- **Cons:** O(n) candidates per move, each needing a slot lookup. That is O(n³) CPU per sort\n  with a linear slot search, and O(n² log n) with a binary search, since A is circularly\n  sorted. Both are fine at 500: the sim's linear version takes about 45 ms per sort.\n- **Param: the candidate window.** Only the w values nearest either end of the source stack\n  are priced. On Turk, w = 20 gives the same ops at n=100 and +65 at n=500, w = 50 the same at\n  both, w = 5 costs +23 / +2658 (sim). The best move is almost always near an end, so the window\n  cuts CPU from O(n) candidates per move to 2w. It does not change the class.\n- **Hosts:** Simple Insertion, Insert-into-B. It is native in Turk and LIS Insertion.\n- **Requires:** a cost card (it defaults to Two-Way Cost).",
    "source": "spec/techniques/pick-cost.md"
@@ -428,7 +575,7 @@
    "tagline": "",
    "role": "cost",
    "rarity": "common",
-   "grasp": 0,
+   "grasp": 3,
    "craft": 2,
    "effect": "baseline for Cheapest Pick",
    "doc": "**The idea.** Price a move by turning each stack the short way; when both turn the same way, they turn together.\n\n**Under the hood.** Price each stack independently by its shorter direction. If both directions agree, the cost\nis max(a, b), because `rr`/`rrr` move both stacks at once; otherwise it is a + b.\n\n- **Pros:** simple.\n- **Cons:** it misses the case where going the **longer** way on one stack lets both stacks\n  share rotations.\n- **Hosts:** any card with Cheapest Pick.",
@@ -440,7 +587,7 @@
    "tagline": "Price all four ways",
    "role": "cost",
    "rarity": "common",
-   "grasp": 2,
+   "grasp": 3,
    "craft": 2,
    "effect": "LIS host −4 @100, −19 @500; Turk −4 / −19",
    "doc": "**The idea.** Price all four ways of lining up both stacks (both up, both down, or one each way) and take the cheapest.\n\n**Under the hood.** Price `rr` (max(fa, fb)), `rrr` (max(ba, bb)), `ra+rrb` (fa + bb) and `rra+rb` (ba + fb), and\ntake the minimum.\n\n- **Measured:** on LIS Insertion, −4 at n=100, −9 at n=200 and −19 at n=500, and the same on\n  Turk, −4 / −19 (sim). A reference build rejected it as not worth the code. Turk peers usually\n  include it.\n- **Pros:** per move it is never worse than Two-Way Cost, because Two-Way's choice is one of\n  its four. About ten extra lines.\n- **Cons:** a small gain, and not a guaranteed one. A cheaper move now can leave a worse\n  layout, so over a whole sort Four-Way ends worse than Two-Way on 11 % of inputs at n=100\n  and 17 % at n=500 (sim).\n- **Conflicts:** Two-Way Cost.",
@@ -453,7 +600,7 @@
    "role": "cost",
    "rarity": "rare",
    "grasp": 2,
-   "craft": 4,
+   "craft": 3,
    "effect": "worse: Turk −2 @100, +175 @500; Long Line +25 / +297",
    "doc": "**The idea.** Price a move together with the best move right after it, not on its own.\n\n**Under the hood.** Score a candidate by its cost plus the cheapest follow-up move after it (depth k, keeping the\ntop-b candidates).\n\n- **Measured (k = 2):** it makes things **worse**. Among the 3 cheapest moves: Turk −2 at n=100\n  but +175 at n=500, Long Line +25 / +297; among the 10 cheapest it is no better (sim).\n- **Why it loses:** it re-plans after every move, so it keeps paying extra now for a cheap\n  follow-up it then never takes. Committing to both moves of the best pair halves the loss at\n  n=500 (+88 instead of +175), but it is still worse than the plain greedy (sim). Beam over Orders, which compares\n  whole partial plans, is the version that gains.\n- **Cons:** CPU grows with bᵏ.\n- **Hosts:** Turk, LIS Insertion, Bucket Insertion.",
    "source": "spec/techniques/pick-cost.md"
@@ -464,8 +611,8 @@
    "tagline": "Low ones to the floor",
    "role": "band",
    "rarity": "uncommon",
-   "grasp": 2,
-   "craft": 2,
+   "grasp": 1,
+   "craft": 1,
    "effect": "LIS host −14 @100, −93 @200, −616 @500",
    "doc": "**The idea.** When a pushed number is from the lower half of its range, drop it to the bottom of B, so B splits into a high band on top and a low band below.\n\n**Under the hood.** Role: band. Right after pushing a value from the lower half of its range, `rb` it to the bottom\nof B. B becomes two bands (an \"hourglass\"): high values near the top, low values near the\nbottom. When the next op is an `ra`, the `rb` merges into one `rr`.\n\n- **Measured:** on LIS Insertion, −14 at n=100, −93 at n=200 and −616 at n=500 (sim). The\n  effect grows with n. The split point is a param: sinking below 0.4·n or 0.5·n is best, and\n  0.7·n costs +23 / +222 (sim).\n- **Pros:** cheap to add. Retrieval rotations shorten because B is roughly ordered.\n- **Cons:** an extra `rb` per sunk value, unless it pairs with an `ra`.\n- **Hosts:** Chunks and Bucket Insertion (default), Butterfly (through its window rule),\n  Simple Insertion, LIS Insertion, Turk (variant).",
    "source": "spec/techniques/layout.md"
@@ -476,8 +623,8 @@
    "tagline": "More floors",
    "role": "band",
    "rarity": "rare",
-   "grasp": 2,
-   "craft": 4,
+   "grasp": 1,
+   "craft": 2,
    "effect": "not buildable as written",
    "doc": "**The idea.** Split B into more than two bands, using both of its ends.\n\n**Under the hood.** Role: band. Generalise to k bands, using both the top and bottom of B with a split per band.\n\n- **Not buildable as written:** B has only two cheap ends, so a third band has nowhere to go\n  without rotating past the others. Its measurable part is the split point of `rb` Sink, which\n  is a param of that card (see above). Proposal: drop this card, or make it the split param.\n- **Pros:** B is closer to sorted before retrieval.\n- **Cons:** more bookkeeping.",
    "source": "spec/techniques/layout.md"
@@ -489,7 +636,7 @@
    "role": "band",
    "rarity": "uncommon",
    "grasp": 0,
-   "craft": 0,
+   "craft": 1,
    "effect": "Turk +0.3: the sb costs more than it saves",
    "doc": "**The idea.** After Turk pushes its first two numbers, swap them if needed so B starts in order.\n\n**Under the hood.** Role: band. After Turk's opening `pb pb`, `sb` if needed so the two seeds are in descending\norder.\n\n- **Measured:** +0.3 on Turk at both sizes (sim): the `sb` it sometimes spends is not won back.\n- **Pros:** one op, and slightly better early targets.\n- **Cons:** a net loss, however small.\n- **Hosts:** Turk.",
    "source": "spec/techniques/layout.md"
@@ -500,8 +647,8 @@
    "tagline": "",
    "role": "band",
    "rarity": "uncommon",
-   "grasp": 2,
-   "craft": 2,
+   "grasp": 1,
+   "craft": 1,
    "effect": "Chunks +141 @100, +1794 @500 instead of rb Sink",
    "doc": "**The idea.** Push the middle chunks first, then the ones further out, above and below, so B ends up sorted chunk by chunk.\n\n**Under the hood.** Role: band. Push the chunks from the middle outwards: chunks above the middle go on top of B,\nchunks below it are sunk. B ends up sorted chunk by chunk, from the highest at the top to the\nlowest at the bottom.\n\n- **Measured:** instead of `rb` Sink on Chunks, +141 at n=100 and +1794 at n=500 (sim). The push\n  phase costs the same; the whole loss is in retrieval.\n- **Why it loses:** `rb` Sink splits each chunk across B's top and bottom, so max retrieval only\n  searches half a chunk in either direction. Here each chunk sits whole on one side, so\n  retrieval searches all of it.\n- **Hosts:** Chunks.",
    "source": "spec/techniques/layout.md"
@@ -512,8 +659,8 @@
    "tagline": "",
    "role": "sweep",
    "rarity": "common",
-   "grasp": 0,
-   "craft": 2,
+   "grasp": 1,
+   "craft": 1,
    "effect": "Chunks +16 @100, +140 @500 vs One-Way",
    "doc": "**The idea.** To find the next number of a crate, look both up and down A and take the nearer one.\n\n**Under the hood.** Role: sweep. When pushing a chunk, bring the **nearest** member of the chunk to the top,\nsearching both directions, instead of rotating `ra` until one appears.\n\n- **Pros:** none measured. It looks smarter than a blind `ra` sweep, but on Chunks it costs\n  16 more ops at n=100 and 140 more at n=500 (sim).\n- **Why it loses:** an `ra` sweep gets every member for free, because each `pb` takes the top\n  value and so moves the sweep forward. An `rra` sweep pays one `rra` for every value it pulls\n  up, members included. Picking the nearest member by distance alone ignores that.\n- **Cons:** it can pass the same value many times, which weakens the O(n√n) proof.\n- **Hosts:** Chunks (default), Bucket Insertion (with a caveat: it breaks the proof).",
    "source": "spec/techniques/layout.md"
@@ -524,8 +671,8 @@
    "tagline": "Pass each value once",
    "role": "sweep",
    "rarity": "rare",
-   "grasp": 2,
-   "craft": 2,
+   "grasp": 1,
+   "craft": 1,
    "effect": "Chunks −16 @100, −140 @500 vs Nearest-Member; gives the n√n proof",
    "doc": "**The idea.** Sweep each crate in one direction only and never turn back, so every number is passed at most once.\n\n**Under the hood.** Role: sweep. Per chunk, pick a direction and sweep once, never reversing. Price the two\ndirections honestly: an `ra` sweep pays only for the non-members it passes, while an `rra`\nsweep pays for every value it pulls up, members included. So `ra` nearly always wins.\n\n- **Pros:** gives a clean O(n√n) argument, because each chunk pass costs ≤ n. It is also the\n  cheapest sweep measured: −16 at n=100 and −140 at n=500 against Nearest-Member on Chunks\n  (sim).\n- **Cons:** priced by distance alone, without the `rra` surcharge, it picks `rra` too often,\n  loses that edge and ties Nearest-Member.\n- **Hosts:** Bucket Insertion (default), Chunks.",
    "source": "spec/techniques/layout.md"
@@ -536,7 +683,7 @@
    "tagline": "",
    "role": "retrieval",
    "rarity": "common",
-   "grasp": 0,
+   "grasp": 1,
    "craft": 2,
    "effect": "baseline for buckets",
    "doc": "**The idea.** To bring numbers back, always take B's biggest: turn B the short way, then push it back.\n\n**Under the hood.** Bring B's maximum to the top by the shorter direction and `pa`. Repeat.\n\n- **Pros:** trivially correct. A ends up sorted with no final rotation.\n- **Cons:** blind. It pays the full distance to every max.",
@@ -549,7 +696,7 @@
    "role": "retrieval",
    "rarity": "uncommon",
    "grasp": 2,
-   "craft": 2,
+   "craft": 3,
    "effect": "Chunks −26 @100, −385 @500; Butterfly −19 / −279",
    "doc": "**The idea.** On the way to B's biggest, if the second biggest is closer, bring it back first and fix the order with one swap.\n\n**Under the hood.** If the second-largest value is cheaper to reach than the largest (by more than ~2 ops),\n`pa` it first, then `pa` the max, then `sa`.\n\n- **Pros:** a few lines, with a steady saving of about 3–6.5 %: −26 at n=100 and −385 at\n  n=500 on Chunks, and −19 / −279 on Butterfly (sim).\n- **Cons:** adds `sa` ops. It needs a threshold.\n- **Requires:** a host whose default retrieval is Max Retrieval. It replaces Max Retrieval in\n  the retrieval role and keeps its logic.",
    "source": "spec/techniques/retrieval.md"
@@ -560,7 +707,7 @@
    "tagline": "",
    "role": "retrieval",
    "rarity": "uncommon",
-   "grasp": 2,
+   "grasp": 1,
    "craft": 2,
    "effect": "0 by construction: a correctness and CPU fix",
    "doc": "**The idea.** Know which rank comes back next and look for exactly that one, instead of scanning all of B.\n\n**Under the hood.** Search for the max **by rank range** (for example, \"the next expected rank\") rather than by\nscanning. It also fixes the bug of assuming a chunk stays contiguous in B.\n\n- **Measured:** 0 by construction: it finds the same max as Max Retrieval.\n- **Pros:** correctness and CPU.\n- **Cons:** no ops gained.",
@@ -572,8 +719,8 @@
    "tagline": "Turk on the way back",
    "role": "retrieval",
    "rarity": "rare",
-   "grasp": 2,
-   "craft": 4,
+   "grasp": 3,
+   "craft": 6,
    "effect": "Chunks +21 @100, −494 @500",
    "doc": "**The idea.** On the way back, move whichever number in B is cheapest to put in its spot in A, Turk-style, instead of always the biggest.\n\n**Under the hood.** Instead of the max, pick the B value (optionally restricted to the current bucket) whose\nB rotation plus A slot rotation is cheapest, and insert it into A's circular order. Finish by\nrotating the minimum to the top.\n\n- **Measured:** on Chunks, +21 at n=100 but −494 at n=500; restricted to the top bucket, +38 /\n  −541 (sim). It pays off at n=500 only.\n- **Pros:** the biggest retrieval upgrade at n=500. It turns Chunks into Bucket Insertion.\n- **Cons:** brings in Turk's complexity, and it is worse than Max Retrieval at n=100.\n  Restricting it to one bucket is needed to keep the O(n√n) proof.\n- **Conflicts:** Max Retrieval.",
    "source": "spec/techniques/retrieval.md"
@@ -584,7 +731,7 @@
    "tagline": "",
    "role": "ends",
    "rarity": "rare",
-   "grasp": 4,
+   "grasp": 1,
    "craft": 4,
    "effect": "vs Quick 2-Way, both with 2-value leaves: +6 @100, −355 @500",
    "doc": "**The idea.** Use the top and the bottom of both stacks as four places to send numbers, so nothing has to be moved back later.\n\n**Under the hood.** Role: ends. Use the top and bottom of both stacks as four destinations. A part sent to the\nbottom of the current stack costs one rotation and never needs restoring.\n\n- **Measured:** on Quick 2-Way with halves, both with 2-value leaves: +6 at n=100 and −355 at\n  n=500 (sim).\n- **Pros:** removes the \"undo the rotations\" overhead of Quick 2-Way. This is the key idea of\n  Four-End Quicksort.\n- **Cons:** direction logic depends on which end a chunk sits at. Only the max part may go to\n  the top of A, because sorted output piles up there.",
@@ -597,7 +744,7 @@
    "role": "ends",
    "rarity": "uncommon",
    "grasp": 0,
-   "craft": 2,
+   "craft": 1,
    "effect": "the whole-stack case is in the bare Quick 2-Way (−139 / −732 vs always restoring)",
    "doc": "**The idea.** In Quick 2-Way, skip undoing the rotations when there is nothing underneath to protect.\n\n**Under the hood.** Role: ends, as a variant of Quick 2-Way's two ends. In Quick 2-Way, skip the `rra` restore\nwhen the chunk is the whole stack, or when the remaining part can be processed from the\nbottom instead. The first case is part of the bare Quick 2-Way: always restoring would cost\n+139 at n=100 and +732 at n=500 (sim). The second case is not built in the sim; carried\nthrough, it becomes Four Ends.\n\n- **Pros:** an easy saving.\n- **Cons:** many special cases.",
    "source": "spec/techniques/partition.md"
@@ -608,8 +755,8 @@
    "tagline": "Three-way partition",
    "role": "split",
    "rarity": "rare",
-   "grasp": 4,
-   "craft": 4,
+   "grasp": 2,
+   "craft": 1,
    "effect": "given Four Ends, no Finisher: −86 @100, −330 @500",
    "doc": "**The idea.** Split a group into three parts, low, middle and high, instead of two, and send each part to a different end.\n\n**Under the hood.** Role: split. Split by two pivots into low, mid and high parts, and send each to a different\nplace.\n\n- **Measured:** with Four Ends and no Finisher, −86 at n=100 and −330 at n=500 against halves\n  (sim).\n- **Pros:** recursion depth log₃ n. Fewer passes over each value.\n- **Cons:** needs at least three destinations. That is natural with Four Ends, awkward\n  without.\n- **Requires:** Four Ends, or a host with a third destination. **Conflicts:** Median Pivot,\n  which cuts into two.",
    "source": "spec/techniques/partition.md"
@@ -620,8 +767,8 @@
    "tagline": "Plan every split in advance",
    "role": "split",
    "rarity": "legendary",
-   "grasp": 4,
-   "craft": 6,
+   "grasp": 3,
+   "craft": 24,
    "effect": "vs Pivot by Leaf Count, BFS Leaf ≤ 5: −17 @100, −214 @500",
    "doc": "**The idea.** Plan the size and the destination of every split in advance, to need the fewest moves on average.\n\n**Under the hood.** Role: split. A dynamic program over (chunk size, location, whether the stacks hold other\nvalues) chooses part sizes and destinations that minimise the **expected** op count. It\nincludes `rr` merges and free cases, such as a chunk alone on its stack.\n\n- **Measured (sim, simplified):** a DP over (size, end) using per-value move costs and the BFS\n  leaves' average costs, without `rr` merges or free reads. Instead of Pivot by Leaf Count, with\n  BFS Leaf ≤ 5: −17 at n=100 and −214 at n=500.\n- **Measured (ref):** the build that uses the full DP, together with beam leaves, averages 3111\n  at n=500 on its complex method, against 3824 for the reference Four-End Quicksort without\n  them (5 seeds).\n- **Pros:** the strongest partition card.\n- **Cons:** Legendary Grasp. It needs measured leaf costs as input.\n- **Requires:** Four Ends. **Conflicts:** Median Pivot and Pivot by Leaf Count, because it\n  chooses the part sizes itself.",
    "source": "spec/techniques/partition.md"
@@ -644,8 +791,8 @@
    "tagline": "",
    "role": "pivot",
    "rarity": "rare",
-   "grasp": 2,
-   "craft": 2,
+   "grasp": 0,
+   "craft": 1,
    "effect": "with BFS Leaf ≤ 5: −27 @100, −334 @500; without it +12 / −89",
    "doc": "**The idea.** Choose the split points so the last small groups come out full, which makes the Finisher's work cheaper.\n\n**Under the hood.** Role: pivot. Choose pivots so that the final leaves come out full (for example, ⌈m/5⌉ leaves of\nup to 5 values), instead of splitting in equal thirds.\n\n- **Measured:** with BFS Leaf ≤ 5, −27 at n=100 and −334 at n=500; without a Finisher, +12 /\n  −89 (sim). Together with BFS Leaf it is a **synergy**: the pair saves 39 / 245 more than the\n  two alone add up to.\n- **Pros:** fewer wasted small leaves. Pairs with BFS Leaf.\n- **Cons:** more arithmetic, and on its own it barely helps.",
    "source": "spec/techniques/partition.md"
@@ -656,8 +803,8 @@
    "tagline": "",
    "role": "order",
    "rarity": "legendary",
-   "grasp": 4,
-   "craft": 6,
+   "grasp": 5,
+   "craft": 13,
    "effect": "Long Line: W = 4 −7 @100, W = 16 −14, W = 64 −19; @500 about −46",
    "doc": "**The idea.** Try many insertion orders at once, and keep only the best few as they grow.\n\n**Under the hood.** Keep the W best partial insertion orders, expanding each by the cheapest few next insertions,\nand score them by ops so far. Width can be scaled by size, for example W = budget ÷ b².\n\n- **Measured:** on Long Line, keeping the 3 cheapest next insertions per order: W = 4 gives −7\n  at n=100, W = 16 −14 and W = 64 −19. At n=500 it is about −46 ± 30 with W = 16–64, from 40\n  inputs (sim). Unlike Lookahead-k, it gains, because it compares whole partial plans.\n- **Measured (ref):** one reference build uses it in its medium method (√n buckets,\n  488 / 3394) and its simple method (LIS insertion, 471 / 4312).\n- **Pros:** fixes greedy regret systematically.\n- **Cons:** CPU cost, and Legendary Craft.\n- **Hosts:** LIS Insertion, Bucket Insertion, Turk.",
    "source": "spec/techniques/order.md"
@@ -668,8 +815,8 @@
    "tagline": "",
    "role": "order",
    "rarity": "legendary",
-   "grasp": 4,
-   "craft": 4,
+   "grasp": 3,
+   "craft": 10,
    "effect": "chunk boundaries on Chunks, 200 trials: −47 @100, −263 @500",
    "doc": "**The idea.** Tweak the plan (insertion order, crate cuts or pivots) at random and keep the changes that help, as the Annealer does.\n\n**Under the hood.** Simulated annealing over a plan: insertion order, chunk boundaries or pivots. See the Annealer\ncard.\n\n- **Measured:** over the chunk boundaries of Chunks, 200 trials per input: −47 at n=100 and −263\n  at n=500 (sim). Each trial re-runs the whole card.\n- **No fixed schedule hides in it:** averaged over inputs, the boundaries it settles on are\n  equal widths, and reusing that average as a fixed schedule saves only 2 / 8 (sim). The gain\n  is per input, so the search has to run at runtime.\n- **Pros:** works with any host that has a plan.\n- **Cons:** needs seeding to be deterministic, and CPU grows with the number of trials.",
    "source": "spec/techniques/order.md"
@@ -681,7 +828,7 @@
    "role": "leaf",
    "rarity": "common",
    "grasp": 0,
-   "craft": 0,
+   "craft": 1,
    "effect": "optimal for 3",
    "doc": "**The idea.** Three numbers have only six orders: look up the right answer for each one.\n\n**Under the hood.** optimal. Turk, Min Extract",
    "source": "spec/techniques/leaf.md"
@@ -692,8 +839,8 @@
    "tagline": "",
    "role": "leaf",
    "rarity": "common",
-   "grasp": 0,
-   "craft": 2,
+   "grasp": 1,
+   "craft": 3,
    "effect": "good, not optimal: up to 6 more than the Oracle at 5",
    "doc": "**The idea.** Park the two smallest numbers in B, sort the three left, then bring the two back.\n\n**Under the hood.** good. push two mins, Three, pull back",
    "source": "spec/techniques/leaf.md"
@@ -704,8 +851,8 @@
    "tagline": "",
    "role": "leaf",
    "rarity": "rare",
-   "grasp": 2,
-   "craft": 6,
+   "grasp": 3,
+   "craft": 18,
    "effect": "Four-End Quicksort: ≤ 3 −95 / −635, ≤ 5 −142 / −657",
    "doc": "**The idea.** Search every move sequence for the last few numbers and use the shortest, without disturbing the rest of the stacks.\n\n**Under the hood.** optimal. the rest of each stack is a fixed **wall** the search cannot touch. States pack into an integer key. On Four-End Quicksort: ≤ 3 saves 95 / 635, ≤ 5 saves 142 / 657 at n=100 / 500 (sim).",
    "source": "spec/techniques/leaf.md"
@@ -716,8 +863,8 @@
    "tagline": "",
    "role": "leaf",
    "rarity": "legendary",
-   "grasp": 2,
-   "craft": 6,
+   "grasp": 5,
+   "craft": 21,
    "effect": "the same ops as BFS Leaf ≤ 4 (−105 / −657), only faster",
    "doc": "**The idea.** The same perfect answers as BFS Leaf, looked up in a table computed in advance.\n\n**Under the hood.** optimal, O(1) lookup. precomputed backward BFS from the goal. The same ops as BFS Leaf ≤ 4 (−105 / −657), only faster.",
    "source": "spec/techniques/leaf.md"
@@ -728,8 +875,8 @@
    "tagline": "",
    "role": "leaf",
    "rarity": "legendary",
-   "grasp": 6,
-   "craft": 8,
+   "grasp": 8,
+   "craft": 45,
    "effect": "ref only",
    "doc": "**The idea.** A beam search for leftovers of up to about 32 numbers: nearly perfect, and far bigger than a full search can handle.\n\n**Under the hood.** near optimal. pattern-database heuristic. Falls back to splitting if the beam result is too long. Not built in the sim (ref only).",
    "source": "spec/techniques/leaf.md"
@@ -741,7 +888,7 @@
    "role": "post",
    "rarity": "common",
    "grasp": 0,
-   "craft": 2,
+   "craft": 0,
    "effect": "switched off: Turk +98 @100, +1224 @500; Long Line +69 / +852",
    "doc": "**The idea.** When both stacks need to turn the same way, turn them together with one move (`rr` or `rrr`) instead of two.\n\n**Under the hood.** When planning a move, emit `rr`/`rrr` for the shared part instead of separate `ra` and `rb`\nops. Cost cards assume it. Without it, the planner's prices are lies.\n\nIt is a **post** card that acts as each move is emitted, like No-op Suppression, and it is\nalways on. It is not a cost card, so it never competes with Two-Way or Four-Way Cost for the\ncost role.\n\n- **Measured:** switching it off costs Turk +98 at n=100 and +1224 at n=500, and Long Line\n  +69 / +852 (sim). It is the biggest effect after Cheapest Pick itself.\n- **Pros:** without it, Cheapest Pick saves much less.\n- **Cons:** none. It is listed so peers notice that it is a choice.",
    "source": "spec/techniques/pick-cost.md"
@@ -753,7 +900,7 @@
    "role": "post",
    "rarity": "common",
    "grasp": 0,
-   "craft": 0,
+   "craft": 1,
    "effect": "under 0.5 op per stream on every card",
    "doc": "**The idea.** Leave out moves that do nothing, such as rotating a stack that holds a single number.\n\n**Under the hood.** Drop an op that changes nothing at the moment it is emitted: rotating or swapping a stack of\nsize < 2, or pushing from an empty stack. Record `rr` with one idle half as the single half.\n\n- **Measured:** under 0.5 op per stream on every sim card: Long Line 0.4 (a sink with one value\n  in B), Four-End Quicksort 0.4, Butterfly 0.05, the rest 0 (sim).\n- **Pros:** makes every later rewrite an exact identity.\n- **Cons:** none.",
    "source": "spec/techniques/post.md"
@@ -764,7 +911,7 @@
    "tagline": "",
    "role": "post",
    "rarity": "uncommon",
-   "grasp": 0,
+   "grasp": 2,
    "craft": 2,
    "effect": "Radix −78 @100, −55 @500; Turk and LIS hosts < 1",
    "doc": "**The idea.** Remove moves that undo each other straight away, such as `ra` then `rra`.\n\n**Under the hood.** Remove adjacent inverse pairs: `ra/rra`, `rb/rrb`, `rr/rrr`, `pa/pb`, `sa/sa`, `sb/sb`. Do it\nin one left-to-right pass that treats the output as a stack, so cascades also cancel.\n\n- **Measured:** on LSD Radix, −78 at n=100 and −55 at n=500: the `pb`s that end a pass are\n  undone by the `pa`s that follow. Under one op on Turk and LIS hosts (sim): hosts that plan\n  carefully leave little to cancel.",
@@ -776,8 +923,8 @@
    "tagline": "",
    "role": "post",
    "rarity": "uncommon",
-   "grasp": 0,
-   "craft": 2,
+   "grasp": 2,
+   "craft": 1,
    "effect": "Chunks −17 / −106; Butterfly −20 / −166; with Cancel on Four-End Quicksort −33 / −217",
    "doc": "**The idea.** Merge two neighbouring moves into one double move: `ra` then `rb` becomes `rr`.\n\n**Under the hood.** Merge adjacent halves: `ra+rb → rr`, `rra+rrb → rrr`, `sa+sb → ss`.\n\n- **Measured:** −17 at n=100 and −106 at n=500 on Chunks, and −20 / −166 on Butterfly, mostly\n  a sunk value's `rb` meeting the next `ra`. Nothing on LSD Radix, which never rotates B, and\n  under one op on Turk and LIS hosts, which already share rotations (sim). Together with\n  Peephole Cancel on Four-End Quicksort: −33 / −217.",
    "source": "spec/techniques/post.md"
@@ -789,7 +936,7 @@
    "role": "post",
    "rarity": "rare",
    "grasp": 2,
-   "craft": 4,
+   "craft": 3,
    "effect": "after Cancel + Fuse: ~0 on every card",
    "doc": "**The idea.** Moves on different stacks can trade places, so it reorders them to let more pairs cancel or merge.\n\n**Under the hood.** Ops on different stacks commute. For example, `ra pb`… cannot be reordered, but `ra rb` can be\npulled together across an unrelated op on the other stack. Reorder within a window before\ncancelling and fusing.\n\n- **Measured:** after Cancel and Fuse, a window of 8 ops finds nothing more on any sim card\n  except Four-End Quicksort, −0.15 at n=100 (sim). A reference build measured −0.4 and\n  rejected it.\n- **Lesson:** most of the value is already caught by the simple peephole.",
    "source": "spec/techniques/post.md"
@@ -801,9 +948,9 @@
    "name": "Adaptive Selector",
    "tagline": "Read the table, pick the deck",
    "rarity": "common",
-   "grasp": 4,
-   "craft": 4,
-   "doc": "| cost | Grasp | Craft | rarity |\n| --- | --- | --- | --- |\n| one disorder measurement | 4 | 4 | Common (required by the subject's `--adaptive`) |\n\n**The idea.** Measure how messy the stack is, then play the hand that suits it best.\n\n**Under the hood.** Tiny stacks come first: three numbers or fewer go to Hardcoded Three, and\nfour or five to the Oracle's search, whatever their disorder. That is optimal: the worst order\nof 5 takes 8 moves (Five Hand needs 10), well inside the subject's 12. In C this is a BFS over\nthe 120 orders, or a table of them computed once. Otherwise, measure the input's disorder (inversions ÷\npairs, by the subject's definition), then dispatch to a hand per range. The subject's baseline is < 0.2 → the O(n²)\nhand, < 0.5 → the O(n√n) hand, and otherwise → the O(n log n) hand. These are also the\nsubject's class targets: whatever runs at disorder ≥ 0.5 must be O(n log n), and whatever\nruns at 0.2–0.5 must be O(n√n) or better. In the Lab, the thresholds can be edited and drawn\non the Disorder map, so you can see whether the subject's cut points are where the hands\nactually cross. Moving them flags any regime whose hand misses its class target.\n\n**Uniform input sits on the cut.** The disorder of a uniform random input is 0.500 ± 0.034 at\nn=100 and ± 0.015 at n=500, so about half of the evaluation's random inputs go to the medium\nhand and half to the complex one (sim). The subject's own `--bench` example shows a random\n500-value input at 49.93 % going to the O(n√n) method. A build's grade therefore depends on\nboth hands, and its worst runs come from the weaker one.\n\n**Builds.** This card wrapped around a simple, a medium and a complex hand is a **build**: the\nthing the evaluation actually runs. The Meta page ranks builds ([05-meta.md](../05-meta.md)).\n\n**Variants (params):**\n- **Metric choice:** inversions, runs, LIS deficit (n − LIS), displacement. Some metrics\n  predict a card's cost better than others.\n- **Predict, don't measure:** estimate each hand's cost from the metric with a fitted curve,\n  instead of fixed thresholds.\n\n**Lore.** Required by the subject; the disorder metric is the classic inversion count, which\nmeasures how far a list is from sorted (it is also the number of swaps bubble sort needs).\n\n**Pros**\n- Required by the subject, and it makes \"which card when?\" explicit.\n\n**Cons**\n- With bad thresholds, it picks a worse hand than any single one would, or breaks a class\n  target.\n- The Disorder map makes both visible.",
+   "grasp": 1,
+   "craft": 3,
+   "doc": "| cost | Grasp | Craft | rarity |\n| --- | --- | --- | --- |\n| one disorder measurement | 1 | 3 | Common (required by the subject's `--adaptive`) |\n\n**The idea.** Measure how messy the stack is, then play the hand that suits it best.\n\n**Under the hood.** Tiny stacks come first: three numbers or fewer go to Hardcoded Three, and\nfour or five to the Oracle's search, whatever their disorder. That is optimal: the worst order\nof 5 takes 8 moves (Five Hand needs 10), well inside the subject's 12. In C this is a BFS over\nthe 120 orders, or a table of them computed once. Otherwise, measure the input's disorder (inversions ÷\npairs, by the subject's definition), then dispatch to a hand per range. The subject's baseline is < 0.2 → the O(n²)\nhand, < 0.5 → the O(n√n) hand, and otherwise → the O(n log n) hand. These are also the\nsubject's class targets: whatever runs at disorder ≥ 0.5 must be O(n log n), and whatever\nruns at 0.2–0.5 must be O(n√n) or better. In the Lab, the thresholds can be edited and drawn\non the Disorder map, so you can see whether the subject's cut points are where the hands\nactually cross. Moving them flags any regime whose hand misses its class target.\n\n**Uniform input sits on the cut.** The disorder of a uniform random input is 0.500 ± 0.034 at\nn=100 and ± 0.015 at n=500, so about half of the evaluation's random inputs go to the medium\nhand and half to the complex one (sim). The subject's own `--bench` example shows a random\n500-value input at 49.93 % going to the O(n√n) method. A build's grade therefore depends on\nboth hands, and its worst runs come from the weaker one.\n\n**Builds.** This card wrapped around a simple, a medium and a complex hand is a **build**: the\nthing the evaluation actually runs. The Meta page ranks builds ([05-meta.md](../05-meta.md)).\n\n**Variants (params):**\n- **Metric choice:** inversions, runs, LIS deficit (n − LIS), displacement. Some metrics\n  predict a card's cost better than others.\n- **Predict, don't measure:** estimate each hand's cost from the metric with a fitted curve,\n  instead of fixed thresholds.\n\n**Lore.** Required by the subject; the disorder metric is the classic inversion count, which\nmeasures how far a list is from sorted (it is also the number of swaps bubble sort needs).\n\n**Pros**\n- Required by the subject, and it makes \"which card when?\" explicit.\n\n**Cons**\n- With bad thresholds, it picks a worse hand than any single one would, or breaks a class\n  target.\n- The Disorder map makes both visible.",
    "source": "spec/cards/meta.md"
   }
  },

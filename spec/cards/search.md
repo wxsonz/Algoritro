@@ -7,9 +7,9 @@ time for ops, and they appear in the strongest builds.
 
 ## Lookahead Greedy — *"Think k moves ahead"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| O(n²·bᵏ) CPU · heuristic | 557 sim EXC | 5284 sim EXC | 6 | 6 | ~300 | ●●○○○ | Rare |
+| class | @100 | @500 | Grasp | Craft | Speed | rarity |
+| --- | --- | --- | --- | --- | --- | --- |
+| O(n²·bᵏ) CPU · heuristic | 557 sim EXC | 5284 sim EXC | 9 | 14 | ●●○○○ | Rare |
 
 **The idea.** Turk, but it looks one move further: it makes the move whose cost plus the best move after it is lowest, instead of the cheapest move on its own.
 
@@ -49,9 +49,9 @@ Three and Hardcoded Three.
 
 ## Beam Sorter — *"Keep the best few futures"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| heuristic | 479 ref EXC | 4601 ref EXC | 10 | 10 | ~600 | ●○○○○ | Legendary |
+| class | @100 | @500 | Grasp | Craft | Speed | rarity |
+| --- | --- | --- | --- | --- | --- | --- |
+| heuristic | 479 ref EXC | 4601 ref EXC | 14 | 30 | ●○○○○ | Legendary |
 
 **The idea.** Explore many move sequences at once, but keep only the most promising few at every step: smarter than one greedy choice, and far cheaper than trying everything.
 
@@ -100,9 +100,9 @@ search plays as Beam Leaf (a Finisher) and Beam over Orders (order).
 
 ## Annealer — *"Shake it until it settles"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| heuristic | 572 ref EXC | 5094 ref EXC | 8 | 6 | ~200 | ●○○○○ | Legendary |
+| class | @100 | @500 | Grasp | Craft | Speed | rarity |
+| --- | --- | --- | --- | --- | --- | --- |
+| heuristic | 572 ref EXC | 5094 ref EXC | 7 | 18 | ●○○○○ | Legendary |
 
 **The idea.** Take a working plan, such as where Chunks cuts its crates, and keep making small random changes, keeping the ones that help. Early on it also accepts some worse changes, so it does not get stuck.
 

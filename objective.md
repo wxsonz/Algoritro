@@ -1,7 +1,7 @@
 # Objective: the Table plays a push_swap build
 
 Planned on 2026-10-10 and extended the same day: the study review, one global seed, the cache
-and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–8 of
+and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–9 of
 the build order are built (see `spec/CHANGELOG.md`); the rest is planned. Each step in
 [Build order](#build-order) ships on its own, with its tests, UI checks and spec updates.
 
@@ -143,7 +143,7 @@ your build against, not something the subject allows.
   The seats replace them.
 - **Draw**, the **Book of Codex** on the Table, and the **right column**.
 
-### 8. Grasp and Craft, redefined (the numbers still need a check)
+### 8. Grasp and Craft, redefined (built: see `spec/grasp-craft.md`)
 
 The 0 to 10 points cannot say "this takes a week to understand". Time was considered and
 dropped: it depends too much on the person. Instead:

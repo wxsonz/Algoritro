@@ -197,8 +197,10 @@ check('the played card shows class, slot tier and push_swap tier', (await ev(`[.
 check('Grasp and Craft carry a bulb and a hammer', (await ev(`document.querySelectorAll('#played .gem svg').length`)) === 2);
 check('tooltips are the themed kind', await has('body > .tip'));
 check('the move log lists the moves', (await ev(`document.querySelectorAll('#movelog .logrow').length`)) >= 1);
-await go('index.html#deck=four-end-quicksort+pivot-by-leaf-count+bfs-leaf+peephole-cancel+peephole-fuse&n=100&gen=uniform&seed=1000', 2500);
-check('a hand past 10 catches fire', (await ev(`document.querySelectorAll('.manarow.onfire .flames i').length`)) === 18, await ev(T('mana')));
+await go('index.html#s=lis-insertion+four-way-cost+rb-sink&m=bucket-insertion&c=four-end-quicksort+dp-splits+bfs-leaf+peephole-cancel+peephole-fuse&n=100&gen=uniform&seed=1000', 2500);
+check('a build past its fire lines burns', (await ev(`document.querySelectorAll('.manarow.onfire .flames i').length`)) === 18, await ev(T('mana')));
+await go('index.html#s=min-extract&m=chunks&c=lsd-radix&n=100&gen=uniform&seed=1000', 2500);
+check('a classic radix build does not', (await ev(`document.querySelectorAll('.manarow.onfire').length`)) === 0 && /Grasp\s*9[^0-9]/.test(await ev(T('mana'))), await ev(T('mana')));
 // The playback console: the speed dial (type, scroll, auto), the keyboard, the timeline
 await go('index.html#deck=turk&n=100&gen=uniform&seed=1000', 2500);
 const speed = () => ev(`document.querySelector('#console .speedval').value`), stepNow = async () => +(await ev(`document.querySelector('#console .stepno').textContent`)).split(' / ')[0];

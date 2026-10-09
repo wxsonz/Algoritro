@@ -3,7 +3,7 @@ import { chunks, bucketCuts } from '../engines/bucket.js';
 // insertion restricted to the highest bucket left, which keeps the O(n√n) proof.
 export default {
   id: 'bucket-insertion', kind: 'algorithm', family: 'bucket', name: 'Bucket Insertion', tagline: 'Crates, then careful unpacking',
-  rarity: 'rare', claimedClass: 'n√n', proof: 'yes', grasp: 6, craft: 6, lines: 300,
+  rarity: 'rare', claimedClass: 'n√n', proof: 'yes', knows: ['ranges',  'slot',  'rotdist',  'greedy'], fns: 4, uses: ['insert-core'], from: "counted: claude-opus-5.5-high medium.c (push_bucket, sort_medium) on its insertion core, plus 2 est. for the pick and the return within a bucket",
   slots: 3, natives: { pick: 'cheapest, within the current bucket', retrieval: 'cheapest, within the current bucket' },
   open: ['sweep', 'band', 'cost', 'order'], defaults: { sweep: 'one-way-sweep', band: 'rb-sink', cost: 'two-way-cost' },
   caveats: { sweep: 'Playable, but a nearest-member sweep can pass the same value many times. That breaks the O(n√n) proof that One-Way Sweep gives.' },

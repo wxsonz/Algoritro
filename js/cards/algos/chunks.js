@@ -4,7 +4,7 @@ import { Machine } from '../../core/machine.js';
 // retrieve B's max repeatedly.
 export default {
   id: 'chunks', kind: 'algorithm', family: 'bucket', name: 'Chunks', tagline: 'Ship it in crates',
-  rarity: 'common', claimedClass: 'n√n', proof: 'avg', grasp: 4, craft: 4, lines: 150,
+  rarity: 'common', claimedClass: 'n√n', proof: 'avg', knows: ['ranges'], fns: 2, from: "counted: the explorer's reference build chunks.c (one_chunk, run_chunks); the sweep, band and retrieval cards add their own",
   slots: 3, natives: {}, open: ['anchor', 'sweep', 'band', 'retrieval', 'order'],
   defaults: { sweep: 'nearest-member-sweep', band: 'rb-sink', retrieval: 'max-retrieval' },
   caveats: { anchor: 'Possible (skip LIS values while sweeping), but kept values sit between chunk members and add rotations. Expect a small effect.' },

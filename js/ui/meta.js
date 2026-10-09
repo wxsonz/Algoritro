@@ -31,7 +31,7 @@ function hands() {
   return out;
 }
 const HANDS = hands();
-const capped = x => x;   // Grasp and Craft run 0–10; a hand past 10 shows its real total
+const capped = x => x;   // Grasp and Craft are uncapped: a hand shows its real total
 
 const render = {
   tiers() {
@@ -57,16 +57,16 @@ const render = {
   pareto() {
     const box = el('div', {}, el('p.lede', {}, 'Mean ops against Hand Craft. The front is the best result at each level of effort: the chart for deciding what to build next.'));
     for (const n of [100, 500]) {
-      const pts = HANDS.filter(h => h.at[n]).map(h => ({ x: Math.min(h.craft, 14), y: h.at[n].mean, h }));
+      const CAP = 60, pts = HANDS.filter(h => h.at[n]).map(h => ({ x: Math.min(h.craft, CAP), y: h.at[n].mean, h }));
       const lim = n === 100 ? 2000 : 12000, shown = pts.filter(p => p.y < lim);
-      const front = []; for (let c = 0; c <= 14; c++) { const best = shown.filter(p => p.x <= c).sort((a, b) => a.y - b.y)[0]; if (best && (!front.length || best.y < front[front.length - 1].y)) front.push(best); }
-      const W = 640, H = 300, y0 = Math.min(...shown.map(p => p.y)) * 0.95, y1 = lim, X = x => 50 + (x - 1) * (W - 70) / 14, Y = y => 10 + (H - 40) * (Math.log(y) - Math.log(y1)) / (Math.log(y0) - Math.log(y1));
+      const front = []; for (let c = 0; c <= CAP; c++) { const best = shown.filter(p => p.x <= c).sort((a, b) => a.y - b.y)[0]; if (best && (!front.length || best.y < front[front.length - 1].y)) front.push(best); }
+      const W = 640, H = 300, y0 = Math.min(...shown.map(p => p.y)) * 0.95, y1 = lim, X = x => 50 + x * (W - 70) / CAP, Y = y => 10 + (H - 40) * (Math.log(y) - Math.log(y1)) / (Math.log(y0) - Math.log(y1));
       let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pareto front at n=${n}">`;
-      for (let c = 2; c <= 14; c += 2) svg += `<text x="${X(c) - 4}" y="${H - 14}">${c === 14 ? '14+' : c}</text>`;
-      svg += `<text x="${W / 2 - 30}" y="${H - 1}">Hand Craft →</text>`;
+      for (let c = 10; c <= CAP; c += 10) svg += `<text x="${X(c) - 4}" y="${H - 14}">${c === CAP ? CAP + '+' : c}</text>`;
+      svg += `<text x="${W / 2 - 60}" y="${H - 1}">Hand Craft, in functions →</text>`;
       for (const v of n === 100 ? [500, 700, 1000, 1500] : [4000, 5500, 8000]) svg += `<line class="axis" x1="45" x2="${W - 10}" y1="${Y(v)}" y2="${Y(v)}" stroke-dasharray="3 3"/><text x="2" y="${Y(v) + 4}">${v}</text>`;
       svg += `<path d="${front.map((p, i) => `${i ? 'L' : 'M'}${X(p.x)},${Y(p.y)}`).join('')}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
-      for (const p of shown) svg += `<circle cx="${X(p.x) + (Math.random() - 0.5) * 18}" cy="${Y(p.y)}" r="${p.h.kind === 'deck' ? 4 : 2.5}" fill="${front.includes(p) ? 'var(--accent)' : 'var(--muted)'}" opacity="${front.includes(p) ? 1 : 0.6}"><title>${p.h.name}: ${f0(p.y)} ops, Craft ${p.h.craft}</title></circle>`;
+      for (const p of shown) svg += `<circle cx="${X(p.x) + (Math.random() - 0.5) * 6}" cy="${Y(p.y)}" r="${p.h.kind === 'deck' ? 4 : 2.5}" fill="${front.includes(p) ? 'var(--accent)' : 'var(--muted)'}" opacity="${front.includes(p) ? 1 : 0.6}"><title>${p.h.name}: ${f0(p.y)} ops, Craft ${p.h.craft}</title></circle>`;
       box.append(el('h3', {}, `n = ${n}`), el('div', { html: svg + '</svg>' }), el('p.small', {}, 'Front: ', front.map(p => el('a', { href: play(p.h.deck, p.h.presets, n) }, `${p.h.name} (${f0(p.y)}, Craft ${p.h.craft})`)).flatMap((x, i) => i ? [' → ', x] : [x])));
     }
     return box;

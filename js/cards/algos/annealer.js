@@ -4,7 +4,7 @@ import { Machine } from '../../core/machine.js';
 // Runner hand (Chunks with One-Way Sweep and Second-Max); every trial re-runs the whole hand.
 export default {
   id: 'annealer', kind: 'algorithm', family: 'search', name: 'Annealer', tagline: 'Shake it until it settles',
-  rarity: 'legendary', claimedClass: 'heuristic', proof: 'no', grasp: 8, craft: 6, lines: 200, slots: 0,
+  rarity: 'legendary', claimedClass: 'heuristic', proof: 'no', knows: ['ranges',  'rotdist',  'greedy',  'anneal'], fns: 18, from: "counted: the explorer's reference build (anneal.c 5, anneal_mem.c 2, chunks.c 4, retrieve.c 3, and util.c's square root, exponential and random draws 4)", slots: 0,
   // Its reference build (C, Norm style, study/explorer-refs): moves on the study's seeds 1000–1004,
   // each stream checked by the study's independent replayer. tests/reference.test.mjs runs this card
   // on the same inputs and expects the same counts.

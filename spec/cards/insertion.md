@@ -8,9 +8,9 @@ gap between its predecessor and successor, and you can reach it by rotating eith
 
 ## Insert-into-B — *"Keep B sorted as you go"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n²) · ✓ | 1459 sim GOOD | 32251 sim FAIL | 4 | 4 | ~90 | Uncommon |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n²) · ✓ | 1459 sim GOOD | 32251 sim FAIL | 4 | 5 | Uncommon |
 
 **The idea.** Move the numbers to B one at a time, each straight into its right place, so B is always sorted. Then pour B back into A.
 
@@ -40,9 +40,9 @@ twist here is the circular slot.
 
 ## Simple Insertion — *"Empty A, then insert back"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n²) · ✓ | 1462 sim GOOD | 32242 sim FAIL | 4 | 4 | ~100 | Uncommon |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n²) · ✓ | 1462 sim GOOD | 32242 sim FAIL | 4 | 5 | Uncommon |
 
 **The idea.** Move everything to B, then bring the numbers back one by one, each into its right place in A.
 
@@ -72,9 +72,9 @@ slots of any card. It is the main **lab bench** for Insertion techniques.
 
 ## LIS Insertion — *"Keep the longest ordered line, insert the rest"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n²) · ✓ | 547 sim EXC | 5059 sim EXC | 6 | 6 | ~300 | Rare |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n²) · ✓ | 547 sim EXC | 5059 sim EXC | 10 | 13 | Rare |
 
 **The idea.** Some numbers are already in a good order. Keep the longest such line in A, move only the rest, and insert those back where they belong, cheapest first.
 
@@ -115,9 +115,9 @@ starts as Two-Way Cost.
 
 ## Turk — *"Always make the cheapest move"*
 
-| class | @100 | @500 | Grasp | Craft | Lines | rarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| O(n²) · ✓ | 557 sim EXC | 5088 sim EXC | 4 | 6 | ~250 | Common |
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n²) · ✓ | 557 sim EXC | 5088 sim EXC | 7 | 11 | Common |
 
 **The idea.** Before every move, price every number: how many turns it takes to bring it to the top and its spot in B to the top, together. Make the cheapest move, then price again.
 

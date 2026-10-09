@@ -9,6 +9,6 @@ export function sortThree(m) {
 }
 export default {
   id: 'hardcoded-three', kind: 'algorithm', family: 'small', name: 'Hardcoded Three', tagline: 'Six cases, no thinking',
-  rarity: 'common', claimedClass: '1', proof: 'yes', grasp: 2, craft: 2, lines: 20, slots: 0, maxN: 3, playsAs: 'hardcoded-three',
+  rarity: 'common', claimedClass: '1', proof: 'yes', knows: [], fns: 1, from: "counted: sort_three, one function in gpt-6-sol-high sort_small.c and in gemini-flash-3.8 sort_small.c", slots: 0, maxN: 3, playsAs: 'hardcoded-three',
   run(m) { m.phase('three'); sortThree(m); },
 };

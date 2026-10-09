@@ -50,6 +50,18 @@
   every stack keeps its ★, in 17,988 moves against the strong build's 20,270. **Use this
   build** copies it in. Both search the cache (every legal hand × every subset of the post cards)
   in about 50 ms. Portfolio is gone from the cards, the Codex and the spec as well.
+- **Step 9, Grasp and Craft redefined.** Grasp is now the prior knowledge a card needs: the sum
+  of the weights of the concepts you must know first (18 concepts, weights 1 to 3; the stacks, the
+  moves, loops and arrays are free). Craft is the number of functions under the Norm, counted from
+  real C where a study build or a reference build has the card, and estimated where none does.
+  Both add up as sets: a concept or a piece of code counts once in a hand or a build. A build's
+  totals add the base kit (30 functions) and the tiny seat, and the Table's Grasp and Craft rows
+  now show the build's: a classic radix build is 9 / 58, the strong build 21 / 84. Fire moved to
+  build level, past Grasp 20 or Craft 100. Every card's concepts and functions, with the file each
+  count comes from, are in the new `spec/grasp-craft.md`, generated from the card data and kept
+  current by a test. The Codex grid splits at Grasp 6 and Craft 10, which puts MSD Radix and
+  Four-End Quicksort in the Elegant corner, empty until now; the Meta page plots hands against
+  their functions; the "Craft ≤ 3" challenge became "Craft ≤ 5". The "Lines" stat is gone.
 - **Step 8, reference builds.** Tape Merge, the Annealer and Beam Sorter, the three cards only
   the explorer had measured, have reference builds: C in the Norm's style, one card per binary,
   kept beside the study's builds (`study/explorer-refs/`, outside this repo like the others). On

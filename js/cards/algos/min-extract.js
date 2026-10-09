@@ -9,7 +9,7 @@ export function minExtract(m, rest = 3, finish = sortThree) {
 }
 export default {
   id: 'min-extract', kind: 'algorithm', family: 'selection', name: 'Min Extract', tagline: 'Grab the smallest, every time',
-  rarity: 'common', claimedClass: 'n²', proof: 'yes', grasp: 2, craft: 2, lines: 40,
+  rarity: 'common', claimedClass: 'n²', proof: 'yes', knows: ['rotdist'], fns: 3, from: "counted: gpt-6-sol-high sort_simple.c (sort_simple) and sort_utils.c (find_value, bring_top)",
   slots: 0, natives: { anchor: 'keep-three' }, open: [], defaults: {}, finisher: 'hardcoded-three', finishers: ['hardcoded-three', 'five-hand', 'bfs-leaf', 'distance-tables'],
   run(m, { finisher }) { minExtract(m, finisher.rest, finisher.finish); },
 };

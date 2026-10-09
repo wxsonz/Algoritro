@@ -45,15 +45,16 @@ const link = (id, node) => { node.style.cursor = 'pointer'; node.onclick = e => 
 // ---- Grasp × Craft grid --------------------------------------------------------------------
 function quad() {
   const box = $('quad'); box.innerHTML = '';
-  // Scores run 0–10: 0–4 count as low, 5–10 as high.
-  const lo = v => v <= 4;
-  const Q = [['Starter', 'Grasp low · Craft low', a => lo(a.grasp) && lo(a.craft)], ['Grinder', 'Grasp low · Craft high', a => lo(a.grasp) && !lo(a.craft)], ['Elegant', 'Grasp high · Craft low', a => !lo(a.grasp) && lo(a.craft)], ['Boss', 'Grasp high · Craft high', a => !lo(a.grasp) && !lo(a.craft)]];
+  // Grasp is high from 6 (two heavy ideas), Craft from 10 functions (two files under the Norm).
+  const loG = v => v < 6, loC = v => v < 10;
+  const Q = [['Starter', 'Grasp low · Craft low', a => loG(a.grasp) && loC(a.craft)], ['Grinder', 'Grasp low · Craft high', a => loG(a.grasp) && !loC(a.craft)], ['Elegant', 'Grasp high · Craft low', a => !loG(a.grasp) && loC(a.craft)], ['Boss', 'Grasp high · Craft high', a => !loG(a.grasp) && !loC(a.craft)]];
   const pills = f => ALGOS.filter(f).map(a => el('a.pill', { href: '#' + a.id, title: `Grasp ${a.grasp} · Craft ${a.craft}` }, a.name));
   box.append(el('div.quad', {}, Q.map(([name, sub, f]) => { const p = pills(f); return el('div', {}, el('h4', {}, name, el('span.muted', {}, ' · ' + sub)), p.length ? p : el('p.muted', {}, 'No bare card here yet: an open space.')); })));
-  // The same as a table in bands of two points: Grasp rows (high at the top) by Craft columns.
-  const BANDS = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], inB = (v, [a, b]) => v >= a && v <= b, hi = ([a]) => a >= 5;
-  const cell = (g, c) => el('td', { className: hi(g) === hi(c) ? (hi(g) ? 'q-boss' : 'q-starter') : hi(g) ? 'q-elegant' : 'q-grinder' }, ALGOS.filter(a => inB(a.grasp, g) && inB(a.craft, c)).map(a => el('a.pill', { href: '#' + a.id, style: { borderLeft: `3px solid var(--f-${a.family})` } }, a.name)));
-  box.append(el('div.tablewrap', {}, el('table.data.gc', {}, el('tr', {}, el('th', {}, 'Grasp ↓ · Craft →'), BANDS.map(c => el('th', {}, c.join('–')))), [...BANDS].reverse().map(g => el('tr', {}, el('th', {}, g.join('–')), BANDS.map(c => cell(g, c)))))));
+  // The same as a table in bands: Grasp rows (high at the top) by Craft columns.
+  const GB = [[0, 2], [3, 5], [6, 8], [9, 11], [12, 99]], CB = [[0, 4], [5, 9], [10, 14], [15, 19], [20, 999]];
+  const inB = (v, [a, b]) => v >= a && v <= b, hiG = ([a]) => a >= 6, hiC = ([a]) => a >= 10, name = ([a, b]) => b > 90 ? `${a}+` : `${a}–${b}`;
+  const cell = (g, c) => el('td', { className: hiG(g) === hiC(c) ? (hiG(g) ? 'q-boss' : 'q-starter') : hiG(g) ? 'q-elegant' : 'q-grinder' }, ALGOS.filter(a => inB(a.grasp, g) && inB(a.craft, c)).map(a => el('a.pill', { href: '#' + a.id, style: { borderLeft: `3px solid var(--f-${a.family})` } }, a.name)));
+  box.append(el('div.tablewrap', {}, el('table.data.gc', {}, el('tr', {}, el('th', {}, 'Grasp ↓ · Craft →'), CB.map(c => el('th', {}, name(c)))), [...GB].reverse().map(g => el('tr', {}, el('th', {}, name(g)), CB.map(c => cell(g, c)))))));
 }
 
 // ---- card pages ------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ function pathsOf(match) { const out = []; for (const p of PATHS) p.steps.forEach
 function algoPage(a, box, back) {
   const d = DOC?.algorithms?.[a.id], st = META?.cards?.[a.id];
   const side = el('div', {}, algoCard(a, { stats: st }), el('p', {}, el('a', { href: `index.html#deck=${a.id}&n=${a.maxN ? Math.min(a.maxN, 7) : 100}&gen=uniform&seed=42` }, 'Play on the Table →')));
-  const main = el('div', {}, el('h1', {}, `${FAMILIES[a.family].icon} ${a.name}`), el('p.lede', {}, `“${a.tagline}” · ${cls(a.claimedClass)} ${proofMark(a.proof)} · Grasp ${a.grasp} · Craft ${a.craft} · ~${a.lines} lines · ${RARITY[a.rarity]}`));
+  const main = el('div', {}, el('h1', {}, `${FAMILIES[a.family].icon} ${a.name}`), el('p.lede', {}, `“${a.tagline}” · ${cls(a.claimedClass)} ${proofMark(a.proof)} · Grasp ${a.grasp} · Craft ${a.craft} functions · ${RARITY[a.rarity]}`));
   main.append(el('div.doc', { html: markdown(d?.doc || '', d?.source) }));
   main.append(el('h3', {}, 'Measured (explorer)'), statsTable(st));
   if (st?.growth) {

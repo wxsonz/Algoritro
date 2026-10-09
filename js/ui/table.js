@@ -8,7 +8,8 @@ import { ALGOS, TECHS, byId, techById, FAMILIES, ROLES, label } from '../cards/i
 import { DECKS, deckById, BUILDS } from '../cards/decks.js';
 import { GENERATORS, generate, parseManual, describe } from '../core/input.js';
 import { resolve, fits, parseDeck, deckString } from '../core/hand.js';
-import { runAdaptive, routeOf, tinyCard, TARGETS, meetsTarget, classProblems } from '../core/meta-run.js';
+import { runAdaptive, routeOf, tinyCard, TARGETS, meetsTarget, classProblems, buildTotals } from '../core/meta-run.js';
+import { FIRE, KIT_FNS, conceptWords } from '../cards/stats.js';
 import { grade, thresholds } from '../core/metrics.js';
 import { useDpTables } from '../cards/engines/divide.js';
 import { loadData } from '../core/data.js';
@@ -481,19 +482,25 @@ function countUp(to) {
   countTimer = requestAnimationFrame(step);
   juice(e, 'bump');
 }
+// Grasp and Craft of the whole build (spec/03 §3.4): the three seats and the tiny seat, plus the
+// base kit, with what they share counted once. The ten gems fill up to the fire line; past it, the
+// row burns.
 function mana() {
   const R = S.resolved; if (!R) return;
-  const was = S.onFire || {};
-  const row = (k, name, v, over, hint) => {
-    const r = el('div', { className: 'manarow ' + k + (over ? ' onfire' : ''), title: `Hand ${name}: ${v} of 10${over ? '. Over the top: the hand is on fire!' : ''}\n${hint}` },
+  const T = buildTotals(S.build), was = S.onFire || {}, on = { grasp: T.grasp > FIRE.grasp, craft: T.craft > FIRE.craft };
+  const row = (k, name, v, hint) => {
+    const over = on[k], step = FIRE[k] / 10;
+    const r = el('div', { className: 'manarow ' + k + (over ? ' onfire' : ''), title: `Build ${name}: ${v}${over ? `, past ${FIRE[k]}: the build is on fire!` : `, burns past ${FIRE[k]}`}\n${hint}` },
       el('span.mlabel', { html: `${icon(k === 'grasp' ? 'bulb' : 'hammer')}<span>${name}</span>` }),
-      el('span.gems', {}, Array.from({ length: 10 }, (_, i) => el('i', { className: i < v ? 'full' : '' }))), el('b', { className: 'mval' + (over ? ' over' : '') }, v),
+      el('span.gems', {}, Array.from({ length: 10 }, (_, i) => el('i', { className: i < Math.round(v / step) ? 'full' : '' }))), el('b', { className: 'mval' + (over ? ' over' : '') }, v),
       over ? el('span.flames', { 'aria-hidden': 'true' }, Array.from({ length: 9 }, (_, i) => el('i', { style: { '--i': i } })), Array.from({ length: 4 }, (_, i) => el('b', { style: { '--i': i } }))) : '');
     if (over && !was[k]) requestAnimationFrame(() => juice(r, 'ignite'));   // it just caught fire
     return r;
   };
-  $('mana').replaceChildren(row('grasp', 'Grasp', R.handGrasp, R.over.grasp, 'How much your hand asks you to understand.'), row('craft', 'Craft', R.handCraft, R.over.craft, 'How much your hand asks you to build.'));
-  S.onFire = { grasp: R.over.grasp, craft: R.over.craft };
+  $('mana').replaceChildren(
+    row('grasp', 'Grasp', T.grasp, `What the build asks you to know first, each idea once: ${conceptWords(T.concepts)}.\nThe seat on the mat alone: ${R.grasp}.`),
+    row('craft', 'Craft', T.craft, `Functions under the Norm: the base kit (${KIT_FNS}) and the code of every seat, shared code once.\nThe seat on the mat alone: ${R.craft}, past the kit.`));
+  S.onFire = on;
 }
 function notes() {
   const R = S.resolved;
@@ -1068,7 +1075,7 @@ function inspect(kind, id) {
       el('div.srow', {}, el('b', { className: 'sbadge tier-' + (t || 'small') }, t || (a.maxN ? `≤${a.maxN}` : '–')), el('p', {}, el('strong', {}, 'push_swap. '),
         t ? `${f0(n1.mean)} moves on average at 100 (worst ${f0(n1.max)}) and ${f0(n5.mean)} at 500 (worst ${f0(n5.max)}). ${PS_TIER_TEXT[t]}`
           : small ? `Only for ${a.maxN} numbers or fewer: ${small[1].mean.toFixed(1)} moves on average at ${small[0]}, at most ${small[1].max}.` : 'Not measured yet.'))),
-      el('p.dim.small', {}, `Grasp ${a.grasp} of 10, Craft ${a.craft} of 10: about ${a.lines} lines of C.`));
+      el('p.dim.small', {}, `Grasp ${a.grasp}: ${conceptWords(a.concepts) || 'nothing beyond the stacks and the moves'}. Craft ${a.craft}: functions under the Norm with its natives and defaults, past the base kit (its own: ${a.from}).`));
     const extra = ['Why the class holds', 'Plays as', 'Variants', 'Teaching role', 'As built (ref)'].filter(k => sec[k]);
     body.append(
       el('aside.icard', {}, face, actions),
@@ -1108,7 +1115,7 @@ function inspect(kind, id) {
             : !(f.ok || id === 'double-op-sharing') ? el('p', {}, f.reason ? f.reason.replace(/^[a-z]/, c => c.toUpperCase()) : 'Does not fit here.')
             : hostEff ? [el('p', {}, `Playing it here changes the moves by:`), deltaChips(hostEff)] : el('p', {}, 'Fits here; not measured on this card yet.'),
           here.length && f.ok ? needsEl(here) : '',
-          el('p.dim.small', {}, `${ROLE_NAMES[t.role]} card: ${ROLE_HINT[t.role]}. Costs +${t.grasp ?? 0} Grasp and +${t.craft ?? 0} Craft.`)),
+          el('p.dim.small', {}, `${ROLE_NAMES[t.role]} card: ${ROLE_HINT[t.role]}. Asks +${t.grasp} Grasp (${conceptWords(t.concepts) || 'nothing new to know'}) and +${t.craft} Craft (${t.from}).`)),
         notes.good.length ? panel('good' + lone, 'diamond', 'Good at', noteList(notes.good, src)) : '',
         notes.watch.length ? panel('bad' + lone, 'cross', 'Watch out', noteList(notes.watch, src)) : '',
         table || notes.measured.length ? panel('measured wide', 'curve', 'Measured', table ? [el('p.tag', {}, `Moves saved (−) or added (+) against the card without it: the mean over ${seeds[100]} random stacks of 100 and ${seeds[500]} of 500.`), table] : '',

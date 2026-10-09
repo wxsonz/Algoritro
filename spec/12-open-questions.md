@@ -10,9 +10,10 @@ every tier row shows the share of runs under its bar (11). Lesson cards stay, ma
    removes them anyway. Should Sandbox be the only mode at first?
 2. **Card art.** Pure CSS card frames with the mini replay as the "art", or illustrated
    icons per family?
-3. **Grasp and Craft scoring.** Who scores them? Proposal: the spec's scores are the starting
-   point, and peers can vote on the Codex later. That needs storage, so it is out of scope for
-   now.
+3. **Grasp and Craft scoring.** Grasp now sums weighted concepts and Craft counts functions under
+   the Norm, counted from real C where it exists ([grasp-craft.md](grasp-craft.md)). Open: do the
+   concept weights match what peers find hard? Peers could vote on them on the Codex later; that
+   needs storage, so it is out of scope for now.
 4. **External streams.** Should the Table accept a pasted stdout from a peer's C build as an
    "Imported" Algorithm card, so it can be compared with the decks? It is cheap, and peers
    would love it, but it blurs the non-goal.
@@ -27,10 +28,10 @@ every tier row shows the share of runs under its bar (11). Lesson cards stay, ma
 9. **Presorted Shortcut always on?** The subject's "smallest list" means 0 ops on sorted
    input, and bare LSD Radix spends 6784 at n=500 on it. Making the card always on (like Rank
    Compression) fixes that everywhere, but hides what the card is worth.
-10. **Additive difficulty.** Hand Grasp and Hand Craft add up technique costs, but measured
-    effects overlap (LIS Anchor and Cheapest Pick, [05-meta.md](05-meta.md#53-interactions-seed)).
-    Long Line scores 5 / 5 by the formula, the same as Beam Sorter. Should totals use the
-    maximum plus a smaller increment instead?
+10. **Additive difficulty.** Settled on 2026-10-10: Grasp and Craft add up as sets, so a concept
+    or a piece of code counts once in a hand or a build. Long Line is now Grasp 11 and Craft 14,
+    Beam Sorter 14 and 30. Still open: whether knowing one concept makes a neighbour cheaper
+    (LIS after patience sorting, say).
 11. **Tiers by pass rate?** Tiers rank hands by their mean, but the evaluation grades each run.
     Should a tier also require, say, 95 % of runs under its bar?
 12. **Cards that measure as losses.** Lookahead-k, `sb` Seed and Middle-Out Push make things

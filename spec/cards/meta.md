@@ -11,7 +11,7 @@ several streams" as one method, and the Table's cheats now show that ceiling ins
 
 | cost | Grasp | Craft | rarity |
 | --- | --- | --- | --- |
-| one disorder measurement | 4 | 4 | Common (required by the subject's `--adaptive`) |
+| one disorder measurement | 1 | 3 | Common (required by the subject's `--adaptive`) |
 
 **The idea.** Measure how messy the stack is, then play the hand that suits it best.
 

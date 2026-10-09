@@ -2,7 +2,8 @@
 // Finisher, post cards in order. The rules are spec/04-compatibility.md.
 import { Machine } from './machine.js';
 import { replay } from './replay.js';
-import { byId, techById, label } from '../cards/index.js';
+import { byId, techById, label, ALWAYS, findCard } from '../cards/index.js';
+import { tally } from '../cards/stats.js';
 
 // A hand: { algo, techs: [ids], finisher: id | null | undefined (the default), params: {},
 //           sharing: true, sandbox: true }. techs may hold slot, leaf, prep and post cards.
@@ -91,12 +92,12 @@ export function resolve(hand) {
   if (why) errors.push(why);
   // Params: declared as functions of n; numbers in hand.params override them.
   const params = n => Object.fromEntries(Object.entries(algo.params).map(([k, p]) => [k, hand.params?.[k] ?? (p.presets && hand.presets?.[k] ? p.presets[hand.presets[k]](n) : p.def(n))]));
-  // Hand totals (spec/03 §3.4): the Algorithm's scores plus the added costs of played cards, on a
-  // 0–10 scale. A hand can go past 10; the totals are not capped, only flagged.
-  const added = [...played, ...prep, ...post, ...(finisher && finisherId !== algo.finisher ? [finisher] : [])];
-  const grasp = algo.grasp + added.reduce((s, t) => s + (t.grasp || 0), 0), craft = algo.craft + added.reduce((s, t) => s + (t.craft || 0), 0);
+  // Hand totals (spec/03 §3.4): the union of the concepts and the code of every card in play,
+  // natives, defaults and the cards always in play included. The base kit is the build's.
+  const cards = [algo, ...Object.values(use).map(u => techById[u.id]).filter(Boolean), ...prep, ...post, ...(finisher ? [finisher] : []), ...ALWAYS];
+  const T = tally(cards, { find: findCard });
   return { ok: errors.length === 0, errors, caveats, algo, use, played, finisher, prep, post, opt, params, slotsUsed, stepAside,
-    grasp, craft, handGrasp: grasp, handCraft: craft, over: { grasp: grasp > 10, craft: craft > 10 } };
+    cards, grasp: T.grasp, craft: T.craft, concepts: T.concepts };
 }
 
 export function runHand(hand, ranks, { keepSteps = true } = {}) {

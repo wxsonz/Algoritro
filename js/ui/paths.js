@@ -41,8 +41,8 @@ export const PATHS = [
 
 // Challenges check the current hand and input. ctx: { hand, resolved, n, gen, mean(n, k), runOn(deck) }.
 export const CHALLENGES = [
-  { id: 'excellent-craft3', name: 'Reach EXCELLENT at n=100 with Craft ≤ 3', hint: 'Turk is Craft 3. Can a Craft-2 card get there?',
-    async check(c) { if (c.resolved.craft > 3) return [false, `Hand Craft is ${c.resolved.craft}.`]; const m = await c.mean(100, 30); return [m < 700, `mean ${m.toFixed(1)} over 30 seeds at n=100${m < 700 ? '' : ': not under 700'}`]; } },
+  { id: 'excellent-craft5', name: 'Reach EXCELLENT at n=100 with Craft ≤ 5', hint: 'Butterfly is Craft 5: one loop and two helpers. Can a smaller hand get there?',
+    async check(c) { if (c.resolved.craft > 5) return [false, `Hand Craft is ${c.resolved.craft}.`]; const m = await c.mean(100, 30); return [m < 700, `mean ${m.toFixed(1)} over 30 seeds at n=100${m < 700 ? '' : ': not under 700'}`]; } },
   { id: 'bucket-5000', name: 'Beat 5000 at n=500 using only Bucket-family cards', hint: 'The Bucket family is Chunks, Butterfly and Bucket Insertion. Techniques are allowed.',
     async check(c) { if (c.resolved.algo.family !== 'bucket') return [false, `${c.resolved.algo.name} is not a Bucket card.`]; const m = await c.mean(500, 12); return [m < 5000, `mean ${m.toFixed(1)} over 12 seeds at n=500`]; } },
   { id: 'turk-loses', name: 'Find an input where Turk loses to Radix', hint: 'Type values in the manual field, or try the generators. Turk is checked against LSD Radix on the input on the Table.',

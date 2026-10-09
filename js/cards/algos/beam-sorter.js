@@ -3,7 +3,7 @@ import { beamSorter } from '../engines/insertion.js';
 // the rest, over the whole problem.
 export default {
   id: 'beam-sorter', kind: 'algorithm', family: 'search', name: 'Beam Sorter', tagline: 'Keep the best few futures',
-  rarity: 'legendary', claimedClass: 'heuristic', proof: 'no', grasp: 10, craft: 10, lines: 600, slots: 0, maxN: 1000,
+  rarity: 'legendary', claimedClass: 'heuristic', proof: 'no', knows: ['lis',  'slot',  'rotdist',  'shared',  'beam',  'heuristic'], fns: 30, from: "counted: the explorer's reference build (lis.c 3, beam.c 5, beam_cost.c 5, beam_kids.c 5, beam_level.c 5, beam_mem.c 4, beam_end.c 3)", slots: 0, maxN: 1000,
   // Its reference build (C, Norm style, study/explorer-refs): moves on the study's seeds 1000–1004,
   // each stream checked by the study's independent replayer. tests/reference.test.mjs runs this card
   // on the same inputs and expects the same counts.

@@ -38,29 +38,29 @@ marks the grade of the mean; the card files give the share of runs under each ba
 
 | card | family | class (claimed · proof) | @100 | @500 | Grasp | Craft | rarity |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Hardcoded Three | ◆ | O(1) · ✓ | — | — | 2 | 2 | Common |
-| Five Hand | ◆ | O(1) · ✓ | — | — | 2 | 4 | Common |
-| Oracle (BFS / IDA*) | ◆ | exponential · ✓ | n ≤ 8–9 only | — | 4 | 6 | Rare |
-| Bubble Wheel | ▲ | O(n²) · ✓ | 11301 sim FAIL | 301410 sim FAIL | 2 | 2 | Uncommon |
-| Min Extract | ▲ | O(n²) · ✓ | 1454 sim GOOD | 32298 sim FAIL | 2 | 2 | Common |
-| Twin Extract | ▲ | O(n²) · ✓ | 1117 sim GOOD | 22318 sim FAIL | 4 | 4 | Uncommon |
-| Insert-into-B | ● | O(n²) · ✓ | 1459 sim GOOD | 32251 sim FAIL | 4 | 4 | Uncommon |
-| Simple Insertion | ● | O(n²) · ✓ | 1462 sim GOOD | 32242 sim FAIL | 4 | 4 | Uncommon |
-| LIS Insertion | ● | O(n²) · ✓ | 547 sim EXC | 5059 sim EXC | 6 | 6 | Rare |
-| Turk | ● | O(n²) · ✓ | 557 sim EXC | 5088 sim EXC | 4 | 6 | Common |
-| Chunks | ■ | O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 4 | 4 | Common |
-| Butterfly | ■ | O(n√n) · ✕ if w is constant | 577 sim EXC | 5080 sim EXC | 4 | 4 | Uncommon |
-| Bucket Insertion | ■ | O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 6 | 6 | Rare |
-| LSD Radix | ♦ | O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 4 | 2 | Common |
-| Ternary Radix | ♦ | O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 6 | 6 | Rare |
-| MSD Radix | ♦ | O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 6 | 6 | Uncommon |
-| Quick 2-Way | ✦ | O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 6 | 6 | Uncommon |
-| Four-End Quicksort | ✦ | O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 8 | 8 | Rare |
-| Tape Merge | ✦ | O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 8 | 8 | Legendary |
-| Natural Merge | ✦ | O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 4 | 6 | Rare |
-| Lookahead Greedy | ✺ | O(n² · bᵏ) CPU | 557 sim EXC | 5284 sim EXC | 6 | 6 | Rare |
-| Beam Sorter | ✺ | heuristic | 479 ref EXC | 4601 ref EXC (1.3 s per sort in C) | 10 | 10 | Legendary |
-| Annealer | ✺ | heuristic | 572 ref EXC | 5094 ref EXC | 8 | 6 | Legendary |
+| Hardcoded Three | ◆ | O(1) · ✓ | — | — | 1 | 1 | Common |
+| Five Hand | ◆ | O(1) · ✓ | — | — | 2 | 3 | Common |
+| Oracle (BFS / IDA*) | ◆ | exponential · ✓ | n ≤ 8–9 only | — | 4 | 16 | Rare |
+| Bubble Wheel | ▲ | O(n²) · ✓ | 11301 sim FAIL | 301410 sim FAIL | 1 | 2 | Uncommon |
+| Min Extract | ▲ | O(n²) · ✓ | 1454 sim GOOD | 32298 sim FAIL | 2 | 4 | Common |
+| Twin Extract | ▲ | O(n²) · ✓ | 1117 sim GOOD | 22318 sim FAIL | 3 | 6 | Uncommon |
+| Insert-into-B | ● | O(n²) · ✓ | 1459 sim GOOD | 32251 sim FAIL | 4 | 5 | Uncommon |
+| Simple Insertion | ● | O(n²) · ✓ | 1462 sim GOOD | 32242 sim FAIL | 4 | 5 | Uncommon |
+| LIS Insertion | ● | O(n²) · ✓ | 547 sim EXC | 5059 sim EXC | 10 | 13 | Rare |
+| Turk | ● | O(n²) · ✓ | 557 sim EXC | 5088 sim EXC | 7 | 11 | Common |
+| Chunks | ■ | O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 3 | 6 | Common |
+| Butterfly | ■ | O(n√n) · ✕ if w is constant | 577 sim EXC | 5080 sim EXC | 3 | 5 | Uncommon |
+| Bucket Insertion | ■ | O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 8 | 12 | Rare |
+| LSD Radix | ♦ | O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 3 | 2 | Common |
+| Ternary Radix | ♦ | O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 5 | 5 | Rare |
+| MSD Radix | ♦ | O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 7 | 6 | Uncommon |
+| Quick 2-Way | ✦ | O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 5 | 6 | Uncommon |
+| Four-End Quicksort | ✦ | O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 6 | 7 | Rare |
+| Tape Merge | ✦ | O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 3 | 5 | Legendary |
+| Natural Merge | ✦ | O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 3 | 4 | Rare |
+| Lookahead Greedy | ✺ | O(n² · bᵏ) CPU | 557 sim EXC | 5284 sim EXC | 9 | 14 | Rare |
+| Beam Sorter | ✺ | heuristic | 479 ref EXC | 4601 ref EXC (1.3 s per sort in C) | 14 | 30 | Legendary |
+| Annealer | ✺ | heuristic | 572 ref EXC | 5094 ref EXC | 7 | 18 | Legendary |
 
 LIS Insertion's bare card uses its default Two-Way Cost. The Long Line deck adds Four-Way
 Cost and `rb` Sink and measures 530 / 4425 (sim). With a top-of-B pick instead (Simple

@@ -3,7 +3,7 @@ import { quick2, fourEnds } from '../engines/divide.js';
 // mirror for B. With Four Ends played it becomes the four-ends engine with 2-value leaves.
 export default {
   id: 'quick-2way', kind: 'algorithm', family: 'divide', name: 'Quick 2-Way', tagline: 'Split at the median, recurse',
-  rarity: 'uncommon', claimedClass: 'n log n', proof: 'yes', grasp: 6, craft: 6, lines: 200,
+  rarity: 'uncommon', claimedClass: 'n log n', proof: 'yes', knows: ['recursion',  'partition'], fns: 2, uses: ['quick-core'], from: "est.: the median cut and the leaves of 2 and 3, on its two-way partition",
   slots: 4, natives: {}, open: ['ends', 'split', 'pivot', 'order'],
   defaults: { ends: 'two ends, rotations restored', split: 'halves', pivot: 'median-pivot' },
   finisher: 'built-in', finisherNote: 'built in: sa / sb on leaves of 2', finishers: ['bfs-leaf', 'distance-tables'],

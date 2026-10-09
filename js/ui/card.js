@@ -64,8 +64,8 @@ export function algoCard(a, { stats, onPlay, compact = false, selected = false, 
     compact ? '' : mini(a),
     el('div.stat.nerdy', {}, el('span.k', {}, 'Class'), `${cls(a.claimedClass)} ${proofMark(a.proof)}`, stats?.classCheck?.flagged ? el('span.flag', { title: 'The growth check flags this claim' }, ' ⚑') : ''),
     small ? el('div.stat', {}, el('span.k', {}, `@${small[0]}`), el('b', {}, small[1].mean.toFixed(2)), el('span.muted', {}, ` mean · max ${small[1].max}`)) : [at(100), compact ? '' : at(500)],
-    el('div.stat', { title: 'Grasp: how hard it is to understand. Craft: how hard it is to write.' }, el('span.k', {}, 'Grasp'), el('span.dots', { title: `${a.grasp} of 10` }, dots(a.grasp, 10)), ' ', el('span.k', {}, 'Craft'), el('span.dots', { title: `${a.craft} of 10` }, dots(a.craft, 10))),
-    compact ? '' : el('div.stat.nerdy', {}, el('span.k', {}, 'Speed'), el('span.dots', { title: stats?.speedMs != null ? `${stats.speedMs} ms at n=${stats.speedN} (JS)` : '' }, speedDots(stats?.speedMs) || '—'), ' ', el('span.k', {}, 'Lines'), `~${a.lines}`),
+    el('div.stat', { title: 'Grasp: the ideas to know first, weighted. Craft: functions under the Norm.' }, el('span.k', {}, 'Grasp'), el('b', {}, a.grasp), ' ', el('span.k', {}, 'Craft'), el('b', {}, a.craft), el('span.muted', {}, ' functions')),
+    compact ? '' : el('div.stat.nerdy', {}, el('span.k', {}, 'Speed'), el('span.dots', { title: stats?.speedMs != null ? `${stats.speedMs} ms at n=${stats.speedN} (JS)` : '' }, speedDots(stats?.speedMs) || '—'),),
     el('div.stat', {}, el('span.k', {}, 'Slots'), slots, a.maxN ? el('span.muted', {}, ` · n ≤ ${a.maxN}`) : ''));
   const card = el('div.card.algo.fam-' + a.family, { tabIndex: 0, dataset: { id: a.id }, title: disabled || '', className: `card algo fam-${a.family}${selected ? ' on' : ''}${disabled ? ' off' : ''}${a.lesson ? ' lesson' : ''}` }, front);
   if (onPlay) { card.onclick = e => { if (e.target.closest('a')) return; if (!disabled) onPlay(a); }; card.onkeydown = e => { if (e.key === 'Enter' && !disabled) onPlay(a); }; }

@@ -10,6 +10,7 @@
 // Every size is in container units, so one face reads the same at any card width.
 import { el, f0, RARITY } from './common.js';
 import { icon } from './pixel.js';
+import { conceptWords } from '../cards/stats.js';
 import { cover } from './covers.js';
 import { thresholds } from '../core/metrics.js';
 import { FAMILIES, label } from '../cards/index.js';
@@ -97,9 +98,9 @@ export function algoFace(a, { stats, cls = '' } = {}) {
   const fam = FAMILIES[a.family] || { name: a.family };
   const front = el('div.face.front', {},
     el('div.tcg-top', {},
-      gem('grasp', a.grasp, `Grasp ${a.grasp} of 10\nHow much there is to understand.`),
+      gem('grasp', a.grasp, `Grasp ${a.grasp}\nWhat you must know first: ${conceptWords(a.concepts) || 'nothing beyond the stacks and the moves'}.`),
       el('div.nameplate', {}, el('b', { className: 'name' + (a.name.length > 15 ? ' long' : '') }, a.name)),
-      gem('craft', a.craft, `Craft ${a.craft} of 10\nHow much there is to build: about ${a.lines} lines of C.`)),
+      gem('craft', a.craft, `Craft ${a.craft}\nFunctions under the Norm, natives and defaults included, past the base kit.\nIts own ${a.fns}: ${a.from}.`)),
     el('div.tcg-art', { html: cover(a.id) }, rarityFx(a.rarity)),
     el('div.tcg-type', {}, px(a.family), el('span.tt', {}, `${fam.name} algorithm`), markIcon(a), rgem(a.rarity)),
     el('div.tcg-text.quote', {}, el('p.flavor', {}, `“${a.tagline}”`)),
