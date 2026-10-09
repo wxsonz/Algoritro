@@ -1,8 +1,8 @@
 # Objective: the Table plays a push_swap build
 
 Planned on 2026-10-10 and extended the same day: the study review, one global seed, the cache
-and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Nothing below
-is built yet. Each step in
+and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–7 of
+the build order are built (see `spec/CHANGELOG.md`); the rest is planned. Each step in
 [Build order](#build-order) ships on its own, with its tests, UI checks and spec updates.
 
 ## Why
@@ -130,8 +130,12 @@ your build against, not something the subject allows.
   - It ranks by fewest fails, then most ★, then fewest total moves.
   - It only uses cards that meet the seat's class target, so it is a build the subject allows.
   - The result shows as three cheat seats, which you can copy into your build with one click.
-- Both search **bare cards** first (an algorithm with its natives and defaults). Searching every
-  technique combination is a later step.
+- Both search every legal hand (563 at the moment) × every subset of the post cards, straight
+  from the cache's cells, in about 50 ms. At a seed the cache holds only partly, they search
+  what is kept and say so; ☢ fills the rest.
+- A card that breaks a class argument says so (`breaksClass`): Nearest-Member Sweep can pass the
+  same value many times, so a hand that plays it, even as Chunks' default, misses `--medium`'s
+  target, and the cheat never picks it.
 
 ### 7. Removed
 

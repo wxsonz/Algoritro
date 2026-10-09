@@ -39,6 +39,20 @@
   is the fill meter for the current seed and fills the rest in the background on a click. A first
   visit at the default seed reads 100 % and measures nothing; a second visit runs nothing it
   already ran (both UI checks).
+- **Step 7, cheats.** Two tickboxes above the stack list, one at a time and labelled as cheats.
+  **Best card per stack** sorts every stack with whichever legal hand does it in the fewest
+  moves, whatever its flag: the ceiling no single push_swap reaches (at seed 1000, Random 100 in
+  493 and Rotated 100 in 37). **Best push_swap** is the best build the subject allows: per seat,
+  among the hands that meet its class target, the fewest fails, then the most ★, then the fewest
+  moves. At seed 1000 it is Simple Insertion + Cheapest Pick + Circular LIS Anchor + Four-Way
+  Cost + `rb` Sink, Bucket Insertion + Four-Way Cost + Peephole Cancel + Commutation Peephole,
+  and Quick 2-Way + Four Ends + DP Splits + BFS Leaf + Peephole Cancel + Commutation Peephole:
+  every stack keeps its ★, in 17,988 moves against the strong build's 20,270. **Use this
+  build** copies it in. Both search the cache (every legal hand × every subset of the post cards)
+  in about 50 ms. Portfolio is gone from the cards, the Codex and the spec as well.
+- **Class targets count every card in play.** Nearest-Member Sweep has no O(n√n) bound (it can
+  pass the same value many times), so a hand that plays it, even as Chunks' default, misses
+  `--medium`'s target; Chunks + One-Way Sweep meets it.
 - **Playback lays out only the board.** Every move was laying out the whole page, stack list and
   hand included: containment on the board plate did nothing, because Chrome never lets a grid
   item be a layout boundary. The board now sits in a plain block. Layout during playback went

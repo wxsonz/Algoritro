@@ -29,7 +29,7 @@ export const tests = [
     const c = await loadData('cards');
     for (const a of ALGOS) { const x = c.algorithms[a.id]; ok(x && x.name && x.family && x.doc.length > 100, `${a.id} doc`); }
     for (const t of TECHS) { const x = c.techniques[t.id]; ok(x && x.role && x.doc.length > 20, `${t.id} doc`); }
-    for (const id of ['portfolio', 'adaptive-selector']) ok(c.meta[id].doc.length > 100, id);
+    ok(c.meta['adaptive-selector'].doc.length > 100, 'adaptive-selector');
   }],
   ['every card is told top-down: the idea, the steps, then the technical part (spec/cards/README.md)', async () => {
     const c = await loadData('cards'), at = (doc, h) => doc.indexOf(`**${h}.**`);
@@ -38,7 +38,7 @@ export const tests = [
       ok(i[0] >= 0 && i[1] > i[0] && i[2] > i[1], `${a.id}: ${i}`);
     }
     for (const t of TECHS) { const d = c.techniques[t.id].doc; ok(at(d, 'The idea') >= 0 && at(d, 'Under the hood') > at(d, 'The idea'), t.id); }
-    for (const id of ['portfolio', 'adaptive-selector']) ok(at(c.meta[id].doc, 'The idea') >= 0, id);
+    ok(at(c.meta['adaptive-selector'].doc, 'The idea') >= 0, 'adaptive-selector');
   }],
   ['the role table in spec/04 agrees with the modules (slots and open roles)', async () => {
     const md = await readFile(new URL('../spec/04-compatibility.md', import.meta.url), 'utf8');

@@ -45,7 +45,8 @@ export default [
     hosts: ['chunks', 'bucket-insertion'], hook: { band: 'middle', bands: 1 }, effect: 'Chunks +141 @100, +1794 @500 instead of rb Sink' },
   // sweep
   { id: 'nearest-member-sweep', role: 'sweep', name: 'Nearest-Member Sweep', grasp: 0, craft: 2, rarity: 'common',
-    hosts: ['chunks', 'bucket-insertion'], hook: { sweep: 'nearest' }, effect: 'Chunks +16 @100, +140 @500 vs One-Way' },
+    hosts: ['chunks', 'bucket-insertion'], hook: { sweep: 'nearest' }, effect: 'Chunks +16 @100, +140 @500 vs One-Way',
+    breaksClass: 'n√n', breaksWhy: 'it can pass the same value many times, so the O(n√n) argument no longer holds (the study cites Rosenkrantz, Stearns and Lewis)' },
   { id: 'one-way-sweep', role: 'sweep', name: 'One-Way Sweep', tagline: 'Pass each value once', grasp: 2, craft: 2, rarity: 'rare',
     hosts: ['chunks', 'bucket-insertion'], hook: { sweep: 'oneway' }, effect: 'Chunks −16 @100, −140 @500 vs Nearest-Member; gives the n√n proof' },
   // retrieval

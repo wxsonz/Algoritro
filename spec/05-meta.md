@@ -57,9 +57,9 @@ in the Hand totals ([03-stats.md §3.4](03-stats.md#34-hand-totals)).
 | **Careful Crates** | Bucket Insertion | 606 sim (576 ref) | 4291 sim (4121 ref) | 6 / 6 | A | the provable n√n champion: beats Turk at n=500 |
 | **The Turk** | Turk + Keep Three + Four-Way Cost | 557 sim | 5088 sim | 4 / 6 | A | the 42 classic; its class is O(n²), so it cannot be the n log n method |
 | **Split Second** | Quick 2-Way + Median Pivot | 718 sim | 5235 sim | 6 / 6 | A | provable n log n that sees existing order, but only GOOD at n=100 |
-| **Long Line** | LIS Insertion + Four-Way Cost + `rb` Sink | 530 sim | 4425 sim | 10 / 10 | A | best O(n²) seed deck; Portfolio over one or two bands adds −8 at n=100 and nothing at n=500 |
+| **Long Line** | LIS Insertion + Four-Way Cost + `rb` Sink | 530 sim | 4425 sim | 10 / 10 | A | best O(n²) seed deck; running a second hand and keeping the shorter (a portfolio, no longer a card) adds −8 at n=100 and nothing at n=500 |
 | **Four Corners** | Four-End Quicksort + Thirds + Pivot by Leaf + BFS Leaf + Peephole | 533 sim (528 ref) | 3825 sim (3824 ref) | 12 / 20 | S | the provable n log n champion; the sim reproduces the reference build |
-| **Oracle's Plan** | Four-End Quicksort + DP Splits + Beam Leaf + Peephole + Portfolio | 420 ref | 3111 ref | 14 / 24 (built hand) | S | the Legendary deck; the sim's version without Beam Leaf and Portfolio measures 523 / 3667 |
+| **Oracle's Plan** | Four-End Quicksort + DP Splits + Beam Leaf + Peephole | 420 ref | 3111 ref | 14 / 24 (built hand) | S | the Legendary deck (the study's build also runs a portfolio, which is not a card); the sim's version without Beam Leaf measures 523 / 3667 |
 
 The "ref" numbers are each reference method's own mean over 5 seeds, not its build's
 `--adaptive` mean. Where the sim also builds the deck, both are shown.
@@ -159,7 +159,8 @@ are tried at exact disorder levels, and on sorted input with a few random swaps.
 - **Middle-Out Push:** it makes B look tidier, but it costs +1794 on Chunks at n=500 (sim),
   because retrieval must search whole chunks instead of half chunks.
 - **`sb` Seed:** it costs more than it saves (+0.3 on Turk, sim).
-- **Portfolio as "one method":** an evaluator may challenge it.
+- **Portfolio as "one method":** an evaluator may challenge it, so it is no longer a card
+  (2026-10-10). The Table's build routes each stack to one seat instead.
 - **Min Extract as the simple method:** fine on average (1454), but a bad input reaches 2135 at
   n=100, which FAILs (sim). Long Line never left EXCELLENT under the same search.
 - **Natural Merge on nearly sorted input:** every merge pass rotates all of A, so even one

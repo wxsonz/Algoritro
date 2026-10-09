@@ -112,7 +112,7 @@ function techPage(t, box, back) {
 function metaPage(m, box, back) {
   const d = DOC?.meta?.[m.id];
   box.append(back, el('h1', {}, m.name), el('p.lede', {}, `“${m.tagline}” · cost: ${m.cost} · Grasp ${m.grasp} · Craft ${m.craft}`), el('div.doc', { html: markdown(d?.doc || '', d?.source) }),
-    el('p', {}, el('a', { href: `index.html#deck=turk&n=100&meta=${m.id === 'portfolio' ? 'portfolio' : 'adaptive'}` }, 'Try it on the Table →'), ' · ', el('a', { href: 'meta.html#builds' }, 'Builds on the Meta page →')));
+    el('p', {}, el('a', { href: 'index.html' }, 'The Table plays it: one hand per flag →'), ' · ', el('a', { href: 'meta.html#builds' }, 'Builds on the Meta page →')));
 }
 function cursedPage(c, box, back) {
   const out = el('div');

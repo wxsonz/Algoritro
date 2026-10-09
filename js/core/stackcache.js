@@ -59,3 +59,51 @@ export function filled(cache, seed) {
   for (const h of everyHand()) for (const b of STACKS) { all++; if (!runnable(h, b) || cache.hasBase(h, b, seed)) have++; }
   return have / all;
 }
+
+// ---- Cheats (objective.md §6): a "best possible on this table" line, searched in the cache ------
+// Every legal hand × every subset of the post cards is a candidate, read straight from the cells.
+import { meetsTarget, TARGETS, classProblems } from './meta-run.js';
+import { parseDeck } from './hand.js';
+const MASKS = 1 << POSTS.length;
+let BASES = null;
+const bases = () => (BASES ??= everyHand().map(h => [h, baseKey(h)]));
+// A hand back from a cell: its cards, then the post cards of the subset.
+export function handOfCell(base, mask) { const h = parseDeck(base); h.techs.push(...POSTS.filter((_, i) => mask & (1 << i))); return h; }
+// Can a hand take a flag's seat: does it meet the subject's class target there?
+export const meetsSeat = (h, k) => meetsTarget(byId[h.algo].claimedClass, TARGETS[k]) && !classProblems(h).length;
+// Best card per stack: the fewest moves any legal hand makes on each stack, ignoring the flags.
+// It is the ceiling: no single push_swap reaches it.
+export function bestPerStack(cache, seed) {
+  const out = {};
+  for (const b of STACKS) {
+    let best = null;
+    for (const [h, base] of bases()) {
+      const c = runnable(h, b) && cache.cells.get(`${base}\t${stackKey(b, seed)}`); if (!c) continue;
+      for (let m = 0; m < MASKS; m++) { const r = fromCell(b, c[m]); if (!best || r.ops < best.ops) best = { ...r, base, mask: m, algo: h.algo }; }
+    }
+    out[b.id] = best && { ...best, hand: handOfCell(best.base, best.mask) };
+  }
+  return out;
+}
+// A seat's score on its stacks: fewer fails first, then more stars, then fewer moves.
+export const seatScore = recs => [recs.filter(r => r.s === 'FAIL').length, -recs.filter(r => r.s === 'EXCELLENT' || r.s === 'PERFECT').length, recs.reduce((s, r) => s + r.ops, 0)];
+export const better = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]; return false; };
+// Best push_swap: for each flag's seat, the hand that does best on that seat's stacks among the
+// hands that meet its class target. The seats are independent, since each stack goes to one.
+// extra: hands to consider too (the build's own), measured or not, read from the cache.
+export function bestBuild(cache, seed, routes, extra = {}) {
+  const out = {};
+  for (const k of ['simple', 'medium', 'complex']) {
+    const mine = STACKS.filter(b => routes[b.id].route === k);
+    let best = null;
+    const consider = (make, recs) => { if (!mine.length || recs.some(r => !r || r.ops == null)) return; const score = seatScore(recs); if (!best || better(score, best.score)) best = { make, score, recs }; };
+    for (const [h, base] of bases()) {
+      if (!meetsSeat(h, k) || mine.some(b => !runnable(h, b))) continue;
+      const cells = mine.map(b => cache.cells.get(`${base}\t${stackKey(b, seed)}`)); if (cells.some(c => !c)) continue;
+      for (let m = 0; m < MASKS; m++) consider(() => handOfCell(base, m), cells.map((c, i) => fromCell(mine[i], c[m])));
+    }
+    for (const h of extra[k] || []) if (meetsSeat(h, k)) consider(() => h, mine.map(b => cache.get(h, b, seed)));
+    out[k] = best && { hand: best.make(), score: best.score, recs: Object.fromEntries(mine.map((b, i) => [b.id, best.recs[i]])) };
+  }
+  return out;
+}

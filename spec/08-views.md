@@ -12,7 +12,7 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 │ the stack: goal      │ build: [--simple] [--medium] [--complex] [tiny 🔒]     │
 │ moves · stamp        │ slots of the seat on the mat: [pick][anchor]…[knobs]   │
 │ Grasp, Craft gems    │ ┌ played card ┐ ┌ route: stack · disorder → flag → card┐│
-│ delta chip           │ │(click: read)│ │ board: A | B, transport, timeline   ││
+│ delta chip, cheats ☐☐│ │(click: read)│ │ board: A | B, transport, timeline   ││
 │ stacks with routes:  │ └─────────────┘ └─────────────────────────────────────┘│
 │ easy, medium, hard,  │ your hand: the techniques that fit, fanned  [algo][tech]│
 │ custom stack         │                                             deck  deck │
@@ -70,6 +70,18 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   in a pool of workers, resumes where it stopped, and a second click stops it. At the default
   seed a first visit reads 100 % and measures nothing; a new seed starts at the share of stacks it
   does not touch (65 %).
+- **Cheats.** Two tickboxes above the stack list, one at a time, both labelled as cheats: a
+  "best possible on this table" line to compare the build against, not something the subject
+  allows. **Best card per stack** sorts each stack with whichever legal hand does it in the
+  fewest moves, whatever its flag. Its rows turn purple and show those moves, the winning card's
+  icon, and how many more the build spends there. It is the ceiling: no single push_swap reaches
+  it. **Best push_swap** is the best build the subject allows. Each stack goes to one seat, so
+  the seats are searched apart: among the hands that meet the seat's class target and run all
+  its stacks, the one with the fewest fails, then the most ★, then the fewest moves. The build's
+  own hands are candidates too, so it is never worse. It shows as three dashed seats under the
+  build, and **Use this build** copies them in. Both read the cache, every legal hand × every
+  subset of the post cards (9,008 candidates), in about 50 ms. At a seed the cache holds only
+  partly they search what is kept, and say so.
 - **The route banner** above the board names the stack, why it goes where it goes (its
   disorder, or its size for the tiny seat), the flag, and the card; clicking the card opens
   Inspect. On the tiny seat the slots say it is built in, and the hand is empty.

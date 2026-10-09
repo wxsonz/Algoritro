@@ -1,33 +1,9 @@
 # Meta cards
 
-A Meta card wraps one or more **complete hands** and decides which output to use. Meta cards
-cost CPU, not ops.
-
----
-
-## Portfolio — *"Run them all, keep the shortest"*
-
-| cost | Grasp | Craft | rarity |
-| --- | --- | --- | --- |
-| CPU × (number of hands) | 2 | 2 | Rare |
-
-**The idea.** Play several hands on the same stack and keep the shortest move list.
-
-**Under the hood.** Run every wrapped hand on a copy of the input and output the shortest stream.
-The simplest version is "one band vs two bands" inside LIS Insertion: −8 ops at n=100 against
-two bands alone, and nothing at n=500, where two bands always win (sim).
-
-**Lore.** Huberman, Lukose and Hogg named algorithm portfolios in 1997 (in Science). They
-borrowed the idea from finance: when no single method wins every input, spread the effort over
-several and keep the best.
-
-**Pros**
-- Free ops. It can never be worse than its best member.
-
-**Cons**
-- An evaluator may not accept "the shortest of several streams" as **one method** for a
-  complexity class. Its class is the worst of its members' classes.
-- CPU multiplies.
+A Meta card wraps **complete hands** and decides which one plays. The one left is the Adaptive
+Selector, and the Table's build is it: one hand per flag, chosen by disorder. Portfolio (run
+several hands, keep the shortest move list) was removed: a reviewer may not accept "the shortest of
+several streams" as one method, and the Table's cheats now show that ceiling instead.
 
 ---
 

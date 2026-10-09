@@ -1,12 +1,15 @@
 // Smoke test for the pages: drives them in headless Chromium over CDP. Needs the dev server
 // (npm run dev) and chromium on PATH. Usage: node tools/ui-check.mjs [base-url]
 import { spawn } from 'node:child_process';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { runAdaptive } from '../js/core/meta-run.js';
 import { generate, ranks } from '../js/core/input.js';
 import { STACKS, SEED } from '../js/ui/stacks.js';
 import { BUILDS } from '../js/cards/decks.js';
+import { StackCache, bestPerStack, bestBuild } from '../js/core/stackcache.js';
+import { byId } from '../js/cards/index.js';
+import { stackRoute } from '../js/ui/stacks.js';
 const SHOTS = process.env.SHOTS || tmpdir(); mkdirSync(SHOTS, { recursive: true });
 const BASE = (process.argv[2] || 'http://127.0.0.1:8765/').replace(/index\.html$/, '');
 const PORT = 9333;
@@ -109,6 +112,26 @@ await click('#nuke'); await sleep(4000);
 const during = await pct(), label = await ev(`document.querySelector('#nuke .ntext').textContent`);
 await click('#nuke'); await sleep(300);
 check('☢ fills another seed in the background and stops on a second click', before4242 < 100 && during > before4242 && label === 'STOP' && (await ev(`document.querySelector('#nuke .ntext').textContent`)) === 'PRECOMPUTE', `${before4242} % → ${during} %`);
+// The cheats: a best-possible line, read from the cache, matching the same search outside the page
+{
+  const cache = new StackCache(); cache.ingest(JSON.parse(readFileSync(new URL('../data/stacks.json', import.meta.url))));
+  const routes = Object.fromEntries(STACKS.map(b => [b.id, stackRoute(b, SEED)])), strong = BUILDS.find(b => b.id === 'strong-build');
+  const ceil = bestPerStack(cache, SEED), bb = bestBuild(cache, SEED, routes, { simple: [strong.simple], medium: [strong.medium], complex: [strong.complex] });
+  await go('index.html', 3500);
+  await click('#cheatBuild'); await sleep(300);
+  check('Cheat: best push_swap shows three seats that all meet their class target', !(await ev(`document.getElementById('cheatbar').hidden`)) && (await ev(`document.querySelectorAll('#cheatbar .cheatseat .seattarget.ok').length`)) === 3 && (await ev(`document.querySelectorAll('#stacks .brow.cheat').length`)) === 26, await ev(T('cheatbar')));
+  const names = await ev(`[...document.querySelectorAll('#cheatbar .cheatseat .seatname')].map(x => x.textContent).join()`);
+  check('its seats are the search\'s, run outside the page', names === ['simple', 'medium', 'complex'].map(k => byId[bb[k].hand.algo].name).join(), `${names} · ${['simple', 'medium', 'complex'].map(k => bb[k].hand.algo).join()}`);
+  await click('#cheatStack'); await sleep(300);
+  check('the cheats are one at a time: best card per stack unticks best push_swap', (await ev(`document.getElementById('cheatStack').checked && !document.getElementById('cheatBuild').checked && document.getElementById('cheatbar').hidden`)));
+  const got = await shown(), off = STACKS.filter(b => got[b.id] !== ceil[b.id].ops).map(b => `${b.id} ${got[b.id]} vs ${ceil[b.id].ops}`);
+  check('best card per stack: every row shows the search\'s fewest moves', !off.length, off.join('; '));
+  check('…and how far the build is from it', (await ev(`[...document.querySelectorAll('#stacks .brow.cheat .bdelta.gap')].length`)) > 0);
+  await click('#cheatBuild'); await sleep(300);
+  await ev(`[...document.querySelectorAll('#cheatbar button')].find(b => b.textContent === 'Use this build').click()`); await sleep(800);
+  const seats = await ev(`[...document.querySelectorAll('#buildbar .seat .seatname')].map(x => x.textContent).join()`), h = await ev('location.hash');
+  check('Use this build copies the best push_swap into the seats, and the cheat goes off', (await ev(`!document.getElementById('cheatBuild').checked && document.getElementById('cheatbar').hidden`)) && ['simple', 'medium', 'complex'].every(k => h.includes(`${k[0]}=${bb[k].hand.algo}`)), `${seats} · ${h}`);
+}
 // Paths
 await go('index.html#deck=simple-insertion&n=100&gen=uniform&seed=1000&path=insertion-ladder&step=0');   // as a Codex link opens it
 check('Path: Insertion Ladder starts on Simple Insertion, in every seat', /Path: Insertion Ladder/.test(await ev(T('pathPanel'))) && (await ev('location.hash')).includes('s=simple-insertion&m=simple-insertion&c=simple-insertion&'), await ev('location.hash'));

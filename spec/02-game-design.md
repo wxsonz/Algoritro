@@ -11,7 +11,7 @@ vocabulary ("Turk with Four-Way Cost and Peephole").
 | **Algorithm** | large, coloured by family | The main card. Exactly one per hand. It decides how values move overall. | Turk, Radix, Butterfly, Four-End Quicksort |
 | **Technique** | small, coloured by category | A modifier that plugs into an Algorithm's slots. It changes a rule, a cost model, a layout or a post-pass. | LIS Anchor, Four-Way Cost, Peephole, `rb` Sink |
 | **Finisher** | small, grey | Handles small leftovers: the last 3 in A, a leaf of ≤ 5, and so on. One per hand, optional, in its own Finisher slot. | Hardcoded Three, BFS Leaf |
-| **Meta** | gold border | Wraps one or more complete hands: picks between them, or runs all of them and keeps the best. | Portfolio, Adaptive Selector |
+| **Meta** | gold border | Wraps complete hands and picks the one that plays. The Table's build is the Adaptive Selector. | Adaptive Selector |
 | **Cursed** | cracked frame | Classic sorts that do **not** map well onto two stacks. Kept in the Codex to explain *why*. | Heapsort, Shell sort, Bogosort |
 
 ## 2.2 Families (elements)

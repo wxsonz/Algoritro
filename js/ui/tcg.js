@@ -160,21 +160,7 @@ export function plainFace(role, text, { native = true } = {}) {
     native ? [el('span.ribbon.native', { html: icon('lock') + ' built in' }), lockSeal()] : el('span.ribbon.default', {}, 'default'));
 }
 
-// ---- Meta cards and named decks ------------------------------------------------------------
-export const META_CARDS = [
-  { id: 'portfolio', name: 'Portfolio', tag: 'Run them all, keep the shortest', text: 'Plays several hands on the same input and keeps the shortest move list.' },
-  { id: 'adaptive', name: 'Adaptive Selector', tag: 'Read the table, pick the deck', text: 'Measures how messy the input is, then plays a simple, medium or complex hand.' },
-];
-export function metaFace(m, { on = false } = {}) {
-  return el('div', { className: `tcg meta r-legendary${on ? ' on' : ''}`, tabIndex: 0, dataset: { id: m.id, kind: 'meta' }, title: `${m.name}\n${m.text}` },
-    el('div.tcg-body', {}, el('div.face.front', {}, rim('legendary'), el('div.tcg-inner', {},
-      el('div.tcg-head', {}, el('span.socket', { html: icon('meta') }), el('b.name', {}, m.name)),
-      el('div.tcg-art', {}, px('meta', 'big'), rarityFx('legendary')),
-      el('div.tcg-type', {}, el('span.tt', {}, 'Meta card'), rgem('legendary')),
-      el('div.tcg-text', {}, el('p.flavor', {}, `“${m.tag}”`)),
-      el('div.tcg-effect.hint', {}, on ? 'in play: click to set it up' : 'wraps your whole hand')))),
-    on ? el('span.ribbon.inplay', {}, 'in play') : '');
-}
+// ---- Named decks ---------------------------------------------------------------------------------
 export function deckBox(d, { on = false } = {}) {
   const h = d.hand;
   return el('button', { className: 'deckbox' + (on ? ' on' : ''), dataset: { id: d.id }, title: d.note || '' },
@@ -185,7 +171,7 @@ export function deckBox(d, { on = false } = {}) {
     d.sim ? el('span.dk-num', {}, `${f0(d.sim[0])} · ${f0(d.sim[1])} moves`) : '');
 }
 
-// ---- Backs, piles and the book -------------------------------------------------------------
+// ---- Backs and piles -----------------------------------------------------------------------------
 export function backFace(kind) {
   return el('div', { className: `tcg back back-${kind}`, 'aria-hidden': 'true' },
     el('div.tcg-body', {}, el('div.face.backart', {}, el('span.medallion', { html: icon(kind === 'algo' ? 'diamond' : 'gear') }), el('span.backlabel', {}, kind === 'algo' ? 'ALGORITHMS' : 'TECHNIQUES'))));

@@ -1,6 +1,6 @@
-// Runners for the Meta cards: Portfolio (run every hand, keep the shortest) and the Adaptive
-// Selector (measure disorder, dispatch to the simple, medium or complex hand).
-import { runHand } from './hand.js';
+// The Adaptive Selector: measure disorder, dispatch to the simple, medium or complex hand, after
+// the tiny cases. The Table's build is exactly this.
+import { runHand, resolve } from './hand.js';
 import { disorder, lisLength, runs } from './input.js';
 
 // Disorder metrics, each in [0, 1] with 0 for sorted input. 'inversions' is the subject's.
@@ -21,11 +21,6 @@ export function regimeOf(r, { thresholds = SUBJECT_THRESHOLDS, metric = 'inversi
   return { d, regime: d < thresholds.low ? 'simple' : d < thresholds.high ? 'medium' : 'complex' };
 }
 
-export function runPortfolio(hands, ranks) {
-  let best = null, bi = -1; const all = [];
-  hands.forEach((h, i) => { const res = runHand(h, ranks); all.push(res.ops.length); if (!best || res.ops.length < best.ops.length) { best = res; bi = i; } });
-  return { ...best, chosen: bi, all };
-}
 // Tiny stacks come first, as in any push_swap: three numbers or fewer take the hardcoded cases,
 // four or five the Oracle's search (120 orders at most: a BFS or a lookup table in C), which is
 // optimal, 8 moves for the worst order of 5 where Five Hand needs 10. No disorder regime applies
@@ -47,7 +42,7 @@ export function runAdaptive(build, ranks, opts = {}) {
 
 // Does a hand's class claim hold on its params? A param that stops growing on a card that claims
 // O(n√n) is flagged without measuring (spec/09). Returns the reasons it does not.
-import { byId } from '../cards/index.js';
+import { byId, techById } from '../cards/index.js';
 export function classProblems(hand) {
   const a = byId[hand.algo], out = [];
   for (const [k, p] of Object.entries(a.params || {})) {
@@ -55,6 +50,10 @@ export function classProblems(hand) {
     const grows = hand.params?.[k] != null ? false : hand.presets?.[k] ? /√n|log/.test(hand.presets[k]) : p.grows;
     if (!grows && a.claimedClass === 'n√n') out.push(`${a.name}'s ${p.label} does not grow with n, so O(n√n) does not hold`);
   }
+  // A card in play can void the host's class argument (one that says so: breaksClass), played or
+  // a default: bare Chunks sweeps by nearest member, so it has no O(n√n) bound without One-Way Sweep.
+  const R = resolve(hand), inPlay = new Set([...(hand.techs || []), ...Object.values(R.use || {}).map(u => u.id)]);
+  for (const id of inPlay) { const t = techById[id]; if (t?.breaksClass === a.claimedClass) out.push(`${t.name}: ${t.breaksWhy}`); }
   return out;
 }
 // A build complies when every regime's hand meets that regime's class target.

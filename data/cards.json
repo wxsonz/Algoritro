@@ -796,16 +796,6 @@
   }
  },
  "meta": {
-  "portfolio": {
-   "kind": "meta",
-   "name": "Portfolio",
-   "tagline": "Run them all, keep the shortest",
-   "rarity": "rare",
-   "grasp": 2,
-   "craft": 2,
-   "doc": "| cost | Grasp | Craft | rarity |\n| --- | --- | --- | --- |\n| CPU × (number of hands) | 2 | 2 | Rare |\n\n**The idea.** Play several hands on the same stack and keep the shortest move list.\n\n**Under the hood.** Run every wrapped hand on a copy of the input and output the shortest stream.\nThe simplest version is \"one band vs two bands\" inside LIS Insertion: −8 ops at n=100 against\ntwo bands alone, and nothing at n=500, where two bands always win (sim).\n\n**Lore.** Huberman, Lukose and Hogg named algorithm portfolios in 1997 (in Science). They\nborrowed the idea from finance: when no single method wins every input, spread the effort over\nseveral and keep the best.\n\n**Pros**\n- Free ops. It can never be worse than its best member.\n\n**Cons**\n- An evaluator may not accept \"the shortest of several streams\" as **one method** for a\n  complexity class. Its class is the worst of its members' classes.\n- CPU multiplies.",
-   "source": "spec/cards/meta.md"
-  },
   "adaptive-selector": {
    "kind": "meta",
    "name": "Adaptive Selector",

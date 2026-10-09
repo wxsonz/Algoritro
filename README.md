@@ -17,13 +17,14 @@ opening `index.html` from disk will not work.
 
 | page | what it is for |
 | --- | --- |
-| **Table** (`index.html`) | a card table that plays a push_swap build: one hand per flag (`--simple`, `--medium`, `--complex`) and a built-in tiny seat; every stack shows which seat sorts it; play cards and techniques, step through the result |
+| **Table** (`index.html`) | a card table that plays a push_swap build: one hand per flag (`--simple`, `--medium`, `--complex`) and a built-in tiny seat; every stack shows which seat sorts it; play cards and techniques, step through the result; two cheats show the best card per stack and the best push_swap the subject allows; ☢ precomputes every hand at the global seed |
 | **Codex** (`codex.html`) | every card, its text, measured stats and the Grasp × Craft grid; Cursed cards |
 | **Meta** (`meta.html`) | tiers, builds, Pareto front, technique value, interactions, class check |
 | **Lab** (`lab.html`) | scaling, disorder map, param sweep, optimality gap (in a Web Worker) |
 
-The URL keeps the hand and the input, for example
-`index.html#deck=four-end-quicksort+pivot-by-leaf-count+bfs-leaf+peephole-cancel+peephole-fuse&n=500&gen=uniform&seed=1000`.
+The URL keeps the build and the input, for example
+`index.html#s=lis-insertion+four-way-cost+rb-sink&m=bucket-insertion&c=four-end-quicksort+pivot-by-leaf-count+bfs-leaf+peephole-cancel+peephole-fuse&n=500&gen=uniform&seed=1000`.
+An older `#deck=…` link fills every seat with its hand.
 
 ## Test and regenerate
 
@@ -32,11 +33,12 @@ npm test                      # unit, reference (±5 % of the sim), growth and d
 npm run test:ui               # the four pages in headless Chromium (needs npm run dev and chromium)
 node tools/build-data.mjs     # data/cards.json, compat.json, seeds.json, dp-plans.json (≈1 min)
 node tools/meta.mjs           # data/meta.json: measures everything (≈3 min on many cores)
+node tools/precompute.mjs     # data/stacks.json: every legal hand on every stack at seed 1000 (≈1 min on many cores)
 npm run sim                   # the reference simulator behind the spec's "sim" numbers
 ```
 
 After changing a card's module or its text in `spec/`, run `build-data`; after changing what a
-card does, run `meta` too.
+card does, run `meta` too, and `precompute` (a test fails while `data/stacks.json` is stale).
 
 ## Layout
 

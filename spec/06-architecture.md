@@ -54,7 +54,7 @@ algoritro/  (the repository; the local folder may still be push_swap_explorer/)
 │   │   ├── data.js        loads data/*.json (fetch in the browser, fs in Node)
 │   │   ├── hand.js        resolves a hand (roles, natives, defaults, requires, conflicts) and runs it
 │   │   ├── combos.js      every legal and illegal hand of a card, for tests and Meta
-│   │   └── meta-run.js    Portfolio and Adaptive Selector, metrics, class targets, compliance
+│   │   └── meta-run.js    the Adaptive Selector and routes, metrics, class targets, compliance
 │   ├── cards/
 │   │   ├── algos/         one module per Algorithm card
 │   │   ├── techniques/    the Technique cards, one module per kind: prep, slots, leaf, post

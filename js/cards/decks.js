@@ -11,7 +11,7 @@ export const DECKS = [
   { id: 'split-second', name: 'Split Second', hand: H('quick-2way'), sim: [718, 5235], note: 'provable n log n that sees existing order, but only GOOD at n=100' },
   { id: 'long-line', name: 'Long Line', hand: H('lis-insertion', ['four-way-cost', 'rb-sink']), sim: [530, 4425], note: 'best O(n²) seed deck' },
   { id: 'four-corners', name: 'Four Corners', hand: H('four-end-quicksort', ['pivot-by-leaf-count', 'bfs-leaf', 'peephole-cancel', 'peephole-fuse']), sim: [533, 3825], ref: [528, 3824], note: 'the provable n log n champion; the sim reproduces the reference build' },
-  { id: 'oracles-plan', name: 'Oracle\'s Plan', hand: H('four-end-quicksort', ['dp-splits', 'bfs-leaf', 'peephole-cancel', 'peephole-fuse']), sim: [523, 3667], ref: [420, 3111], note: 'the Legendary deck, without Beam Leaf and Portfolio, which are not built yet' },
+  { id: 'oracles-plan', name: 'Oracle\'s Plan', hand: H('four-end-quicksort', ['dp-splits', 'bfs-leaf', 'peephole-cancel', 'peephole-fuse']), sim: [523, 3667], ref: [420, 3111], note: 'the Legendary deck, without Beam Leaf, which is not built yet (the study\'s build also runs a portfolio, which is not a card)' },
 ];
 export const deckById = Object.fromEntries(DECKS.map(d => [d.id, d]));
 

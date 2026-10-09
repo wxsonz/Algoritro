@@ -20,7 +20,7 @@ import { algoFace, techFace, plainFace, needsEl, deckBox, pile, bindCardFx, ROLE
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
 import { run as runWorker } from './worker-client.js';
-import { StackCache, handKey, stackKey, everyHand, runnable, compact, baseKey, filled } from '../core/stackcache.js';
+import { StackCache, handKey, stackKey, everyHand, runnable, compact, baseKey, filled, bestPerStack, bestBuild, meetsSeat } from '../core/stackcache.js';
 import { loadAll, keepCell, keepHand } from './cachedb.js';
 import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack, stackRoute, stackById, seeded } from './stacks.js';
 import { PATHS } from './paths.js';
@@ -40,7 +40,8 @@ const S = {
   path: null, step: 0,
   target: 'complex', pick: { algo: null, tech: null }, previewJob: null,   // Browse: the seat it places into, and the card it shows
   stamps: {}, stampKey: '', stampJob: null,
-  cache: new StackCache(), cacheReady: false, version: 'dev', fill: null,   // every result kept (objective.md §10), under the code's version
+  cache: new StackCache(), cacheReady: false, version: 'dev', fill: null,
+  cheat: null, cheatData: null,   // 'stack' or 'build': a best-possible line, searched in the cache   // every result kept (objective.md §10), under the code's version
   shownAlgo: '', handEls: new Map(), handKey: '', opener: null,
   seed: SEED,   // the global seed: every seeded stack uses it
   routes: routesAt(SEED),   // each stack's disorder and flag, at the global seed
@@ -90,6 +91,7 @@ $('familyFilter').append(...[['all', 'All'], ...Object.entries(FAMILIES).map(([k
 $('techFilter').append(...[['all', 'Whole deck'], ['fits', 'Fits the played card']].map(([k, t]) =>
   el('button.chip', { dataset: { f: k }, onclick: () => { S.techFilter = k; renderTechViewer(); } }, t)));
 syncParam();
+for (const [id, kind] of [['cheatStack', 'stack'], ['cheatBuild', 'build']]) $(id).onchange = e => setCheat(e.target.checked ? kind : null);
 
 // Overlays: one at a time, except Inspect, which opens on top of a deck.
 for (const o of document.querySelectorAll('.overlay')) o.addEventListener('click', e => { if (e.target === o || e.target.closest('.close')) closeOverlay(o); });
@@ -131,7 +133,7 @@ loadData('stacks').catch(() => null).then(async file => {
   const kept = await loadAll(S.version);
   for (const [[base, sk], cell] of kept.cells) S.cache.putCellRaw(base, sk, cell);
   for (const [[hk, sk], [ops, s, worst]] of kept.hands) S.cache.putRaw(hk, sk, { ops, s, worst });
-  S.cacheReady = true; S.stampKey = ''; stampStacks(); meter();
+  S.cacheReady = true; S.stampKey = ''; stampStacks(); meter(); if (S.cheat) setCheat(S.cheat);
 });
 readHash();
 // A link pasted into the address bar (or back and forward) changes only the hash: read it again.
@@ -152,6 +154,7 @@ function meter() {
     meterTimer = 0;
     const f = filled(S.cache, S.seed), pct = Math.floor(100 * f), b = $('nuke');
     b.querySelector('.npct').textContent = `${pct} %`;
+    if (S.cheat && Date.now() - (S.cheatAt || 0) > 900) { S.cheatAt = Date.now(); cheatData(); refreshStamps(); }
     b.querySelector('.ntext').textContent = S.fill ? 'STOP' : 'PRECOMPUTE';
     b.classList.toggle('running', !!S.fill); b.classList.toggle('full', pct >= 100);
     b.title = `Precompute ☢\nEvery legal hand on every stack at seed ${S.seed}: ${pct} % kept.\n` + (S.fill ? 'Filling in the background: click to stop.' : pct >= 100 ? 'All of it is kept: nothing will be measured twice.' : 'Click to fill the rest in the background. It resumes where it stopped.');
@@ -178,10 +181,46 @@ function nuke() {
   meter();
   Promise.all(Array.from({ length: lanes }, (_, k) => lane(k))).then(() => { if (S.fill === fill) S.fill = null; meter(); });
 }
+// ---- Cheats: a "best possible on this table" line to compare the build against ------------------
+function setCheat(kind) {
+  S.cheat = kind; $('cheatStack').checked = kind === 'stack'; $('cheatBuild').checked = kind === 'build';
+  cheatData(); refreshStamps();
+}
+// Searched in the cache: every legal hand × every subset of the post cards (and the build's own
+// hands). At a seed the cache holds only partly, the search covers what is kept.
+function cheatData() {
+  if (!S.cheat || !S.cacheReady) { S.cheatData = null; $('cheatNote').hidden = true; return; }
+  S.cheatData = S.cheat === 'stack' ? bestPerStack(S.cache, S.seed) : bestBuild(S.cache, S.seed, S.routes, Object.fromEntries(SEATS.map(k => [k, [S.build[k]]])));
+  const pct = Math.floor(100 * filled(S.cache, S.seed));
+  $('cheatNote').hidden = false;
+  $('cheatNote').textContent = (S.cheat === 'stack' ? 'Cheat: each stack sorted by the hand that does it in the fewest moves, whatever its flag. No single push_swap reaches this.' : 'Cheat: the best build the subject allows, one hand per seat, among the hands that meet the seat\'s class target.')
+    + (pct < 100 ? ` It searches what is kept at this seed (${pct} %): press ☢ to search every hand.` : '');
+}
+// What a stack shows under a cheat: its record, and the card that made it.
+function cheatOn(b) {
+  const D = S.cheatData; if (!D) return null;
+  if (S.cheat === 'stack') { const r = D[b.id]; return r && { rec: r, algo: r.algo }; }
+  const route = S.routes[b.id].route;
+  if (route === 'tiny') { const r = S.stamps[b.id]; return r && { rec: r, algo: tinyCard(b.n) }; }
+  const seat = D[route]; return seat && { rec: seat.recs[b.id], algo: seat.hand.algo };
+}
+function renderCheatBar() {
+  const box = $('cheatbar'), D = S.cheat === 'build' && S.cheatData;
+  box.hidden = !D; if (!D) return;
+  box.replaceChildren(...SEATS.map(k => {
+    const s = D[k]; if (!s) return el('div', { className: `seat f-${k}` }, el('span.seathead', {}, el('span.rflag', {}, flag(k)), el('span.seatrange', {}, 'nothing kept that fits')));
+    const a = byId[s.hand.algo], [fails, stars, moves] = s.score, n = Object.keys(s.recs).length;
+    return el('div', { className: `seat cheatseat f-${k}`, title: `Best for ${flag(k)}\n${deckString(s.hand).replace(/\+/g, ' + ')}\n${f0(moves)} moves on its ${n} stacks` },
+      el('span.seathead', {}, el('span.rflag', {}, flag(k)), el('span.seatrange', {}, 'best'), el('span.seattarget.ok', {}, `O(${TARGETS[k]}) ✓`)),
+      el('span.seatbody', {}, el('span', { className: 'seatcard fam-' + a.family, html: icon(a.family) }), el('b.seatname', {}, a.name), s.hand.techs.length ? el('span.seatplus', {}, `+${s.hand.techs.length}`) : '',
+        el('span.seatsum', {}, `${n} · ${-stars}★${fails ? ` ${fails}✕` : ''}`)));
+  }), el('div.cheatuse', {}, el('b', {}, 'Cheat'), el('span.small', {}, 'the best push_swap the subject allows'),
+    el('button.btn.blue', { onclick: () => { S.build = Object.fromEntries(SEATS.map(k => [k, D[k] ? handOf(D[k].hand) : S.build[k]])); setCheat(null); replay(false, 'the best push_swap, copied in'); } }, 'Use this build')));
+}
 function setSeed(v) {
   if (v === S.seed) return;
   S.fill?.stop(); S.fill = null;
-  S.seed = v; $('gseed').value = v; S.routes = routesAt(v); meter();
+  S.seed = v; $('gseed').value = v; S.routes = routesAt(v); meter(); cheatData();
   // On a seeded stack, play the same stack at the new seed; elsewhere only the routes and stamps move.
   if (S.stack && seeded(S.stack)) pickStack(S.stack);
   else { stampStacks(); renderBuild(); writeHash(); }
@@ -221,11 +260,13 @@ function stackList() {
   for (const [level, title] of Object.entries(LEVELS)) {
     box.append(el('div.tierhead.l-' + level, {}, title));
     for (const b of STACKS.filter(x => x.level === level)) {
-      const st = S.stamps[b.id], d = st?.d;
+      const ch = cheatOn(b), mineSt = S.stamps[b.id], st = ch ? ch.rec : mineSt;
+      // Under a cheat the delta shows how far the build is from the cheat's line.
+      const d = ch ? (mineSt?.ops != null && st?.ops != null ? mineSt.ops - st.ops : null) : st?.d;
       const tip = `${b.name}: ${b.desc}` + (st?.ops != null ? `\n${b.seeds ? 'worst order: ' : ''}${st.ops} moves (${st.s})` + (d ? `, ${signed(d)} after the last change` : d === 0 ? ', unchanged by the last change' : '') : '');
-      box.append(el('button', { className: `brow l-${level}${S.stack?.id === b.id ? ' on' : ''}`, title: tip, onclick: () => pickStack(b), dataset: { id: b.id } },
-        el('span.disc', {}, b.icon), el('span.bname', {}, b.name), routeChip(b),
-        el('span', { className: 'bdelta' + (d < 0 ? ' good' : d > 0 ? ' bad' : '') }, d ? signed(d) : ''),
+      box.append(el('button', { className: `brow l-${level}${S.stack?.id === b.id ? ' on' : ''}${ch ? ' cheat' : ''}`, title: ch ? `${b.name} under the cheat: ${st?.ops ?? '—'} moves by ${byId[ch.algo].name}${d ? `; your build uses ${signed(d)}` : ''}` : tip, onclick: () => pickStack(b), dataset: { id: b.id } },
+        el('span.disc', {}, b.icon), el('span.bname', {}, b.name), routeChip(b, ch?.algo),
+        el('span', { className: 'bdelta' + (ch ? (d > 0 ? ' gap' : '') : d < 0 ? ' good' : d > 0 ? ' bad' : '') }, d ? signed(d) : ''),
         el('span.bops', {}, st?.ops != null ? f0(st.ops) : ''),
         el('span', { className: 'mark ' + (st ? stampClass(st.s) : 'none'), title: st ? (st.ops != null ? `${st.s}: ${st.ops} moves` : st.why || '') : '' }, st ? MARK[st.s] ?? '·' : '')));
     }
@@ -237,8 +278,8 @@ function stackList() {
 // A stack's route: its disorder, the flag that picks, and the card of that seat, which sorted it.
 function flag(route) { return route === 'tiny' ? 'tiny' : '--' + route; }   // a function: start-up code calls it before a const would exist
 function routeCard(b) { return seatHand(S.routes[b.id].route, b.n).algo; }
-function routeChip(b) {
-  const { d, route } = S.routes[b.id], a = byId[routeCard(b)];
+function routeChip(b, algo) {
+  const { d, route } = S.routes[b.id], a = byId[algo || routeCard(b)];
   const why = route === 'tiny' ? `${b.n} numbers or fewer: the tiny seat, whatever the disorder` : `Disorder ${d.toFixed(3)}: ${flag(route)} (${route === 'simple' ? 'below 0.2' : route === 'medium' ? '0.2 to 0.5' : '0.5 and above'})`;
   return el('span', { className: 'route f-' + route, title: `${flag(route)}\n${why}\nSorted by ${a.name}` },
     el('span.rd', {}, d == null || route === 'tiny' ? '' : d.toFixed(2)), el('span.rflag', {}, flag(route)),   // the tiny seat ignores disorder
@@ -325,7 +366,7 @@ function stampStacks() {
     }
   })();
 }
-function refreshStamps() { stackList(); renderBuild(); }
+function refreshStamps() { stackList(); renderBuild(); renderCheatBar(); }
 
 // ---- the build: one seat per flag, and the built-in tiny seat -------------------------------------
 function seatSummary(k) {

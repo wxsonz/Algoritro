@@ -38,6 +38,12 @@
       <p id="runError" class="error" role="alert"></p>
       <section class="stacklist" aria-label="Choose a stack">
         <div class="eyebrow listhead">Pick a stack to sort</div>
+        <!-- Two cheats: a "best possible on this table" line to compare your build against. -->
+        <div class="cheats" role="group" aria-label="Cheats">
+          <label class="cheat" title="Cheat: best card per stack&#10;Each stack sorted by whichever hand does it in the fewest moves, whatever its flag. It is the ceiling: no single push_swap reaches it."><input type="checkbox" id="cheatStack"> <span>Cheat: best card per stack</span></label>
+          <label class="cheat" title="Cheat: best push_swap&#10;For each flag's seat, the hand that does best on its stacks among those that meet its class target: the best build the subject allows."><input type="checkbox" id="cheatBuild"> <span>Cheat: best push_swap</span></label>
+        </div>
+        <p id="cheatNote" class="small cheatnote" hidden></p>
         <p id="stackSum" class="small stacksum"></p>
         <div id="stacks" class="stacks"></div>
       </section>
@@ -49,6 +55,7 @@
         <div id="pathPanel" class="quest" hidden></div>
         <!-- The build: one hand per flag, and the built-in tiny seat. Click a seat to put it on the mat. -->
         <div id="buildbar" class="buildbar" role="group" aria-label="Your push_swap build"></div>
+        <div id="cheatbar" class="buildbar cheatbar" role="group" aria-label="The best push_swap (cheat)" hidden></div>
       </div>
       <section class="slotbar" aria-label="Slots">
         <div class="slothead">
