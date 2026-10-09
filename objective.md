@@ -1,7 +1,8 @@
 # Objective: the Table plays a push_swap build
 
-Planned on 2026-10-10. Nothing below is built yet. Each step in [Build order](#build-order)
-ships on its own, with its tests, UI checks and spec updates.
+Planned on 2026-10-10, then extended the same day with a review of the study builds, the
+precompute and a reskin of the other pages. Nothing below is built yet. Each step in
+[Build order](#build-order) ships on its own, with its tests, UI checks and spec updates.
 
 ## Why
 
@@ -177,6 +178,98 @@ Beam Sorter about 40.
 - Every card is re-rated, with its concept list and function estimate written in the spec, so
   the numbers can be checked and argued with.
 
+## From the study: what to bring in
+
+Reviewed on 2026-10-10: `~/42cc/_work/rank01/push_swap/study/` (its `TECHNIQUE.md`, `README.md`
+and the eight builds' sources) and `visualizer/` (its `presets.md` and code).
+
+**Already here.** The explorer was built from this study (see `spec/sources.md`), so almost every
+technique in its cross-reference is already a card: min extraction, LIS-anchored insertion,
+chunks, rank-range retrieval, the butterfly window, `rb` sinking, second-max lookahead, √n
+buckets with cheapest insertion, LSD and MSD radix, Turk, the 3-way four-end quicksort, pivots
+by leaf count, BFS leaves, distance tables, no-op suppression, both peepholes, and Portfolio.
+Each of the visualizer's subject presets (insertion, selection, min/max, bubble, chunks, block
+pairs, buckets, range window, LSD and MSD radix, quicksort, two-stack merge) has a matching card
+or deck.
+
+**Worth bringing in**, most valuable first:
+
+| # | what | from | why |
+| --- | --- | --- | --- |
+| 1 | **Bucket Beam**, for `--medium` | `claude-opus-5.5-max`: `bucket.c`, `bucket_extract.c`, `ins_beam.c`, `ins_cost.c`, `ins_apply.c`, `lis.c` | √n buckets, each sorted by insertion around its longest increasing run, with a beam over insertion orders. It measures 488.2 / 3394.4 against Bucket Insertion's 576.0 / 4120.8 (ref), and stays O(n√n). About half of the graded random inputs go to `--medium`, so this is the biggest gain for a real build. Today Beam over Orders says "Not built on Bucket Insertion yet", and Bucket Insertion has no anchor role, so this needs new engine code, not a new deck. |
+| 2 | **Beam Leaf** (leaves up to 32) | `-max`: `beam*.c`, `tbl_*.c`, `dp_leaf.c` | A beam search over leaves of up to 32 values, guided by exact distance tables on groups of 4 ranks. It is the card marked "not built here yet", and the main gap between Four Corners (3825 at n=500, sim) and Oracle's Plan (3111, ref). |
+| 3 | **Full DP Splits** | `-max`: `dp.c`, `dp_cost.c`, `dp_search.c`, `dp_climb.c`, `dp_settle.c` | Adds expected `rr` merges and free reads of a chunk alone on its stack to the sim's simplified DP. It answers the open space "how much do they add alone?". |
+| 4 | **Python-exact seeds** | `visualizer/js/rng.js` | Reproduces `random.Random(seed).sample(range(lo, hi), n)` bit for bit. The study's seeds 1000–1004 and peers' Python testers would then name the same inputs here, so sim and reference numbers can be compared seed by seed instead of within ±5 %. It changes every random input, so it comes before the first precompute. |
+| 5 | **Local disorder** | `visualizer/js/input.js` | Exact disorder made of adjacent swaps (local), next to today's Lehmer shape (global). The same 25 % behaves very differently for chunk cards. New stack: A quarter messy, local. |
+| 6 | **Tiny seat up to 7** | both `claude-opus` builds solve n ≤ 7 optimally by BFS | The tiny seat stops at 5. Going to 7 costs little (about 40 000 states), and two stacks would test it: every order of 4 (24 orders) and 6 numbers. |
+| 7 | **`--bench` readout** | the `claude-opus` builds report the class of the method that actually ran | A subject-style readout on the route banner: disorder, the method and its class, total moves, and the count of each of the 11 moves. It brings back the per-move counts the Stats overlay used to show. |
+| 8 | **Growth ratio** | the visualizer's bench charts | The class check as one number peers can read: moves at n=2000 ÷ moves at n=500 (n² about 16×, n√n about 8×, n log n about 4.9×). For the Meta and Lab reskin. |
+
+**Not bringing in:**
+
+- **Portfolios inside a regime.** `-max` keeps the shortest of 4 LIS variants for `--simple` and
+  of 3 bucketings for `--medium`. A reviewer may not accept "the shortest of several streams" as
+  one method, and Portfolio leaves the Table. The LIS variants are already decks (LIS Insertion
+  with or without `rb` Sink and Beam over Orders).
+- **One merge sort for ranks, duplicates and inversions.** It changes no moves. It goes into the
+  Craft base kit instead: one function doing three jobs.
+- **`disorder-nychan/`.** The same merge-sort inversion count; the file also has a
+  use-after-free (noted in `TECHNIQUE.md`).
+- **Heap sort and BIT approaches.** They stay lessons (Cursed cards): both the explorer and the
+  visualizer concluded neither is a strategy on its own.
+
+## Proposed, waiting for your yes
+
+### Precompute ☢
+
+The idea: a **PRECOMPUTE** button with a nuke logo, top right, that computes the whole deck in
+every combination on the fixed seeds, so the Table never waits.
+
+What it costs, measured on 2026-10-10:
+
+- **"Every combination"** is 563 legal hands across the 23 cards (each open role empty or filled,
+  each Finisher; Turk alone has 200, Chunks 90), times 26 stacks. The four post cards are passes
+  over the finished move list, so their 16 subsets are applied to each run's output instead of
+  rerunning it. Knob values (beam width and the like) are continuous, so they stay at their
+  defaults.
+- **About 146 s on one core**, plus Beam Sorter's five 500-number stacks at about 26 s each. With
+  8 workers that is about 30–45 s, with Beam Sorter the long pole.
+- **The result is small:** about 15 000 entries of moves, stamp and worst order, a few hundred KB.
+
+Proposed shape:
+
+- **Ship it.** `tools/precompute.mjs` (like `tools/meta.mjs`) writes `data/stacks.json`, so every
+  visitor starts with every stamp, the cheats and Browse's previews already computed.
+- **The ☢ button stays**, top right, for what a file cannot hold: every hand on a custom stack,
+  changed knobs, or rebuilding the whole table locally after a code change. It runs in workers
+  with a progress bar, can be cancelled, and keeps its results in IndexedDB.
+- **Results are keyed by a version** of the cards and engines, so an update never serves stale
+  numbers.
+- **The seeds are already fixed** (seed 42, and the fixed orders of the every-order stacks), which
+  is what makes the cache valid. Python-exact seeds (import 4) come first.
+
+### Lesson and research ribbons
+
+Today:
+- **research** (Tape Merge, Beam Sorter, Annealer): no reference build exists. The explorer built
+  and measured them itself, and they are fully playable.
+- **lesson** (Lookahead Greedy, Natural Merge; Lookahead-k, `sb` Seed, Middle-Out Push): kept on
+  purpose to show why an idea loses.
+
+Proposal:
+- **Drop both ribbons from the card face.** They read like warnings and crowd the art.
+- **research** becomes a line in the push_swap badge's tooltip and in the Inspect scorecard:
+  "Measured here only: no reference build."
+- **lesson cards stay.** Browse groups them under "Lessons: why these lose", and Inspect leads
+  with the "Why it loses" note. The cheats never pick them anyway.
+
+### Reskin of Codex, Meta and Lab
+
+The three pages still use the plain theme. They take the Table's look: the felt, pixel headings,
+cream panels, card faces, tier colours, and the same rules for drawing light. It comes **last**:
+Portfolio's removal, the build model and the new Grasp and Craft all change what Meta and Lab
+show, so reskinning first would mean doing it twice.
+
 ## Build order
 
 1. **Layout.** Decks beside the hand, no Browse or Draw buttons, no Book of Codex, no right
@@ -192,14 +285,30 @@ Beam Sorter about 40.
    Done when: the stamps match `--adaptive` run outside the UI on every stack, and a build
    survives a reload through its link.
 4. **Browse.** The detail pane, picking mode from a seat, and the Put in and Play on buttons.
+   Its stamp previews read the precompute once step 6 lands, and run live until then.
    Done when: a seat can be filled from Browse alone, without the hand.
-5. **Cheats.** Best card per stack and Best push_swap, then Portfolio and the Meta overlay are
-   removed.
+5. **Python-exact seeds.** Port `visualizer/js/rng.js`; random stacks, `data/meta.json` and the
+   reference checks move to it.
+   Done when: seed 1000 at n=100 gives the same list as Python's
+   `random.Random(1000).sample(range(-100000, 100000), 100)`, and the reference tests pass.
+6. **Precompute ☢.** `tools/precompute.mjs` and `data/stacks.json`, the version key, the button
+   with its progress bar, and IndexedDB for custom stacks and knobs.
+   Done when: a fresh load shows all 26 stamps for any legal hand without running anything, and
+   the button rebuilds the same file byte for byte.
+7. **Cheats.** Best card per stack and Best push_swap, read from the precompute; then Portfolio
+   and the Meta overlay are removed.
    Done when: a unit test checks that no seat of Best push_swap breaks its class target, and
    that its total is never worse than the starting build's.
-6. **Grasp and Craft.** The concept list and function estimates for every card, the new totals,
+8. **Grasp and Craft.** The concept list and function estimates for every card, the new totals,
    and the fire thresholds.
    Done when: every card's numbers have their reasons in the spec.
+9. **Study imports**, in the table's order: Bucket Beam, Beam Leaf, full DP Splits, local
+   disorder, the tiny seat up to 7, the `--bench` readout. Each one regenerates the shipped data.
+   Done when: each import matches its source build's per-selector numbers (study `README.md`)
+   within 2 % on the study's seeds 1000–1004.
+10. **Reskin** of Codex, Meta and Lab, with the growth ratio view.
+    Done when: the three pages pass the same frame-rate probe and phone-width checks as the
+    Table.
 
 Each step also updates the spec (02 game design, 03 stats, 08 views, CHANGELOG) and the
 README where they describe what changed.
@@ -219,8 +328,11 @@ README where they describe what changed.
 ## Open questions
 
 - **The Grasp weights and Craft estimates** in section 8: do they match what peers find hard?
-  They are checked before step 6 starts.
+  They are checked before step 8 starts.
 - **Fire thresholds** for a build's Grasp and Craft.
+- **Python-exact seeds change every random input**, so links saved with a seed will open a
+  different stack afterwards. Acceptable while the explorer is this young?
+- **The ribbon proposal**: drop "research" and "lesson" from the card face as above?
 - **Random stacks straddle 0.5.** Uniform random input has disorder 0.500 ± 0.034, so across 400
   seeds about half go to `--medium` (210 at n=100, 189 at n=500) and half to `--complex`. Seed 42
   happens to go to `--complex` for both Random 100 and Random 500, so one seed hides how much the
