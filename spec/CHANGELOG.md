@@ -2,6 +2,8 @@
 
 ## 2026-10-09, fewer buttons
 
+- **New tier colours:** S fancy gold with a light sweep and a twinkle, A vibrant purple with a
+  light sweep, B pale blue, C pale green, D grey, on the cards, in Inspect and on the Meta page.
 - **Learn, Stats, Compare and Share are gone** from the Table's left panel, with what only
   they reached: the Challenges, the op-count and many-inputs Stats overlay, side-by-side
   Compare and the copy-link button. The URL still shares the hand, and Paths open from Codex

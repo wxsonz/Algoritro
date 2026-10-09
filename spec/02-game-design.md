@@ -57,7 +57,9 @@ a fanned hand. The anatomy borrows from card games peers already know:
   20 numbers is in Inspect.
 - **Three badges** sum the card up ([03-stats.md §3.5](03-stats.md#35-card-tiers)): its
   complexity class, its **slot tier** (how much it can be tuned) and its **push_swap tier**
-  (how it scores at 100 and 500). The measured numbers are in each badge's tooltip.
+  (how it scores at 100 and 500). The measured numbers are in each badge's tooltip. Tier colours
+  are the same everywhere: **S** fancy gold, with a sweep of light and a twinkling star; **A**
+  vibrant purple, with a sweep of light; **B** pale blue; **C** pale green; **D** grey.
 - **Technique cards** have a header band in their **role colour** (anchor green, pick orange,
   cost gold, sweep cyan, band pink, retrieval blue, ends lavender, split red, pivot brown,
   order slate, Finisher indigo, prep teal, post steel) and a trim in their **rarity metal**:

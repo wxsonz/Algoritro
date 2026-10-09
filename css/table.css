@@ -568,9 +568,12 @@
 }
 .sbadge.cls { background: var(--ac); font-size: 20px; }
 .sbadge sup { font-size: .6em; vertical-align: .5em; line-height: 0; }
-.sbadge.tier-S { background: linear-gradient(#ffe680, #d49500); color: #4a3200; }
-.sbadge.tier-A { background: linear-gradient(#5fd17a, #22843d); } .sbadge.tier-B { background: linear-gradient(#6fb2ff, #2a6cbd); }
-.sbadge.tier-C { background: linear-gradient(#ffb766, #d7701a); } .sbadge.tier-D { background: linear-gradient(#ff8a8a, #bf2e2e); }
+.sbadge { position: relative; overflow: hidden; }
+.sbadge.tier-S { background: linear-gradient(135deg, #fff6c4, #ffd23f 30%, #e8a400 62%, #fff0a0); color: #4a3000; box-shadow: inset 0 -4px 0 rgba(120, 70, 0, .3), 0 3px 0 rgba(0, 0, 0, .25), 0 0 14px rgba(255, 200, 40, .75); }
+.sbadge.tier-A { background: linear-gradient(135deg, #d8a8ff, #a24bff 45%, #6d1fd6); box-shadow: inset 0 -4px 0 rgba(40, 0, 90, .3), 0 3px 0 rgba(0, 0, 0, .25), 0 0 12px rgba(160, 80, 255, .6); }
+.sbadge.tier-B { background: linear-gradient(#e3efff, #a9c9ee); color: #1d3b63; } .sbadge.tier-C { background: linear-gradient(#e2f7e6, #a9dbb6); color: #1e4d2c; }
+.sbadge.tier-D { background: linear-gradient(#d3d6db, #969ca5); color: #2c3036; }
+.sbadge:is(.tier-S, .tier-A)::after { content: ''; position: absolute; inset: 0 auto 0 0; width: 300%; pointer-events: none; background: linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, .7) 50%, transparent 58%); animation: shimmer 2.8s ease-in-out infinite; }
 .sbadge.tier-small { background: linear-gradient(#a8b4c8, #5d6b84); font-size: 21px; }
 .ipanel.good { border-color: #a6dbb1; } .ipanel.good .iicon { background: #2f9e44; }
 .ipanel.bad { border-color: #f0b4ac; } .ipanel.bad .iicon { background: #c92a2a; }

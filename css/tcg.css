@@ -101,14 +101,29 @@
 .badge b .rt { font-family: system-ui, sans-serif; font-size: .8em; }
 .badge .sockets { display: flex; gap: .8cqw; }
 .badge .sockets i { width: 2.2cqw; height: 2.2cqw; border-radius: 50%; background: rgba(255, 255, 255, .85); box-shadow: 0 .3cqw 0 rgba(0, 0, 0, .3); }
-.badge.tier-S { --bc: linear-gradient(#ffe680, #d49500); color: #4a3200; } .badge.tier-S b { text-shadow: none; }
-.badge.tier-A { --bc: linear-gradient(#5fd17a, #22843d); }
-.badge.tier-B { --bc: linear-gradient(#6fb2ff, #2a6cbd); }
-.badge.tier-C { --bc: linear-gradient(#ffb766, #d7701a); }
-.badge.tier-D { --bc: linear-gradient(#ff8a8a, #bf2e2e); }
+/* tiers: S fancy gold and A vibrant purple, both with a sweep of light (S also twinkles);
+   B pale blue, C pale green, D grey. The pale ones take dark ink. */
+.badge { overflow: hidden; }
+.badge.tier-S { --bc: linear-gradient(135deg, #fff6c4, #ffd23f 30%, #e8a400 62%, #fff0a0 100%); color: #4a3000; box-shadow: inset 0 -.8cqw 0 rgba(120, 70, 0, .3), inset 0 0 0 .5cqw rgba(255, 255, 255, .6), 0 .7cqw 0 rgba(0, 0, 0, .25), 0 0 2.4cqw rgba(255, 200, 40, .75); }
+.badge.tier-A { --bc: linear-gradient(135deg, #d8a8ff, #a24bff 45%, #6d1fd6); box-shadow: inset 0 -.8cqw 0 rgba(40, 0, 90, .3), inset 0 0 0 .5cqw rgba(255, 255, 255, .35), 0 .7cqw 0 rgba(0, 0, 0, .25), 0 0 2cqw rgba(160, 80, 255, .6); }
+.badge.tier-B { --bc: linear-gradient(#e3efff, #a9c9ee); color: #1d3b63; }
+.badge.tier-C { --bc: linear-gradient(#e2f7e6, #a9dbb6); color: #1e4d2c; }
+.badge.tier-D { --bc: linear-gradient(#d3d6db, #969ca5); color: #2c3036; }
 .badge.tier-small { --bc: linear-gradient(#a8b4c8, #5d6b84); }
+.badge:is(.tier-S, .tier-B, .tier-C, .tier-D) b { text-shadow: 0 .4cqw 0 rgba(255, 255, 255, .55); }
+.badge:is(.tier-B, .tier-C, .tier-D) .sockets i, .badge.tier-S .sockets i { background: currentColor; opacity: .75; box-shadow: none; }
+.badge:is(.tier-S, .tier-A)::after {   /* a sweep of light, moved by transform */
+  content: ''; position: absolute; inset: 0 auto 0 0; width: 300%; pointer-events: none;
+  background: linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, .75) 50%, transparent 58%); transform: translateX(-60%); animation: shimmer 2.8s ease-in-out infinite;
+}
+.badge.tier-A::after { background: linear-gradient(110deg, transparent 42%, rgba(255, 230, 255, .55) 50%, transparent 58%); animation-duration: 3.4s; }
+.badge.tier-S::before {   /* and a star that twinkles in the corner */
+  content: ''; position: absolute; z-index: 1; right: 6%; top: 8%; width: 5.5cqw; height: 5.5cqw; pointer-events: none;
+  background: radial-gradient(circle, #fff 0 14%, rgba(255, 255, 255, .6) 20%, transparent 46%), conic-gradient(from 45deg, transparent 0 10%, #fff 12% 13%, transparent 15% 35%, #fff 37% 38%, transparent 40% 60%, #fff 62% 63%, transparent 65% 85%, #fff 87% 88%, transparent 90%);
+  border-radius: 50%; animation: twinkle 2.2s ease-in-out infinite -.6s;
+}
+@keyframes shimmer { 0%, 30% { transform: translateX(-60%); } 100% { transform: translateX(-6%); } }
 .badge.ps { clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); padding-bottom: 4.5cqw; border-radius: 2.4cqw 2.4cqw 0 0; }
-.badge.ps.tier-S::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .7) 45%, transparent 60%) -200% 0 / 300% 100%; animation: shimmer 2.6s ease-in-out infinite; }
 
 /* ---- technique, meta and plain cards: a metal trim (rarity) around a cream card ---- */
 .tcg.tech .front, .tcg.meta .front { padding: 2.2cqw; background: var(--metal); }
@@ -166,11 +181,10 @@
 .tcg .rim::before { content: ''; position: absolute; inset: -60%; background: conic-gradient(#ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); animation: rimspin 5s linear infinite; }
 @keyframes rimspin { to { transform: rotate(1turn); } }
 .tcg.tech .rim, .tcg.meta .rim { inset: 0; z-index: 0; }   /* on these the rim is the trim, under the cream face */
-@keyframes shimmer { to { background-position: 200% 0; } }
 /* who plays them */
-.shine, .foil, .sparkles i, .tcg .rim::before, .badge.ps.tier-S::after { animation-play-state: paused; }
+.shine, .foil, .sparkles i, .tcg .rim::before, .tcg .badge::after, .tcg .badge::before { animation-play-state: paused; }
 .tcg:is(.onmat, .focus, :hover) :is(.shine, .sparkles i), .tcg:is(.onmat, .focus) .foil,
-.tcg:is(.onmat, .focus, :hover) .rim::before, .tcg:is(.onmat, .focus, :hover) .badge.ps.tier-S::after { animation-play-state: running; }
+.tcg:is(.onmat, .focus, :hover) .rim::before, .tcg:is(.onmat, .focus, :hover) .badge::after, .tcg:is(.onmat, .focus, :hover) .badge::before { animation-play-state: running; }
 .tcg:hover .foil { opacity: .9; animation-play-state: paused; }   /* the pointer moves it instead */
 
 /* a card built into the played card: a lock seal on its corner, and a shake when it is asked to leave */

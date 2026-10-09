@@ -163,7 +163,8 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 table.data td.num, table.data th.num { text-align: right; }
 table.data tr.hl td { background: var(--soft); }
 .tier { font-weight: 800; font-size: 15px; display: inline-block; width: 22px; text-align: center; border-radius: 4px; color: #fff; }
-.tier-S { background: var(--gold); } .tier-A { background: var(--exc); } .tier-B { background: var(--good); } .tier-C { background: var(--pass); } .tier-D { background: var(--fail); }
+.tier-S { background: linear-gradient(135deg, #fff6c4, #ffd23f 30%, #e8a400 62%, #fff0a0); color: #4a3000; box-shadow: 0 0 8px rgba(255, 200, 40, .7); } .tier-A { background: linear-gradient(135deg, #d8a8ff, #a24bff 45%, #6d1fd6); color: #fff; box-shadow: 0 0 8px rgba(160, 80, 255, .55); }
+.tier-B { background: #c9defa; color: #1d3b63; } .tier-C { background: #c6ebcf; color: #1e4d2c; } .tier-D { background: #b9bdc4; color: #2c3036; }
 .chart { width: 100%; display: block; }
 .chart text { fill: var(--muted); font-size: 11px; }
 .chart .axis { stroke: var(--line); }
