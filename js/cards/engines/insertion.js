@@ -1,6 +1,6 @@
 // The Insertion family's engines, ported from spec/sim/engines.mjs and cards.mjs. With the same
 // options they emit the sim's streams op for op; the phases, reasons and overlays are additions.
-import { minIndex, maxIndex, slotA, targetB, slotDesc, price, exec, execNoShare, afterPa, afterPb, cheapest, lookahead, moveWords } from '../lib.js';
+import { lisKeep, minIndex, maxIndex, slotA, targetB, slotDesc, price, exec, execNoShare, afterPa, afterPb, cheapest, lookahead, moveWords } from '../lib.js';
 
 // Pass 1 of the bench: ra past kept values, pb the rest, sinking values below q·n when bands = 2.
 function passOne(m, r, keep, bands, q) {
@@ -129,4 +129,44 @@ export function intoB(m, { keep = new Set() } = {}) {
     m.focus({ mover: m.b[0], target: A[j] }).why(`return ${m.b[0]} to its slot among the kept values`).bring('a', j).op('pa');
   }
   m.focus(null).phase('align').why('rotate the minimum to the top').bring('a', m.a.indexOf(0));
+}
+
+// Beam Sorter: a whole-plan beam over insertion orders on the Insertion bench (LIS kept, rb Sink
+// in pass 1), scored by ops so far plus a heuristic for the rest: the cheapest insertion cost of
+// every value still in B, times a weight h. With h = 0 it is Beam over Orders with a wider beam.
+export function beamSorter(m, { W = 64, c = 4, h = 0.25, cost = 4, q = 0.5 } = {}) {
+  const r = m.a.slice(), n = r.length, keep = lisKeep(r);
+  let last = -1, sink = false;
+  for (let i = 0; i < n; i++) if (!keep.has(r[i])) last = i;
+  m.phase('push').overlay('keep', keep);
+  for (let j = 0; j <= last; j++) {
+    const x = m.a[0];
+    if (keep.has(x)) m.why(`${x} is kept`).op(sink ? 'rr' : 'ra'); else { if (sink) m.op('rb'); m.why(`push ${x}`).op('pb'); }
+    sink = !keep.has(x) && x < q * n;
+  }
+  if (sink) m.op('rb');
+  m.phase('plan').overlay(null);
+  const cands = (A, B) => { const ma = A.length, mb = B.length, p = ma ? minIndex(A) : 0, out = []; for (let i = 0; i < mb; i++) out.push(price(cost, slotA(A, p, B[i]), ma, i, mb)); return out; };
+  const est = (A, B) => { if (!h || !B.length) return 0; let s = 0; for (const mv of cands(A, B)) s += mv[0]; return h * s / B.length * Math.sqrt(B.length); };
+  let beam = [{ A: m.a.slice(), B: m.b.slice(), g: 0, f: 0, prev: null, mv: null }];
+  while (beam[0].B.length) {
+    const kids = [], seen = new Set();
+    for (const s of beam) {
+      const cs = cands(s.A, s.B).map((mv, i) => [mv, i]).sort((x, y) => x[0][0] - y[0][0] || x[1] - y[1]).slice(0, c);
+      for (const [mv] of cs) {
+        const [A2, B2] = afterPa(s.A, s.B, mv), key = A2.join(',') + '|' + B2.join(',');
+        if (seen.has(key)) continue; seen.add(key);
+        const g = s.g + mv[0] + 1;
+        kids.push({ A: A2, B: B2, g, f: g + est(A2, B2), prev: s, mv });
+      }
+    }
+    kids.sort((x, y) => x.f - y.f || x.g - y.g);
+    beam = kids.slice(0, W);
+  }
+  const align = A => { const i = A.indexOf(0); return Math.min(i, A.length - i); };
+  let bestEnd = beam[0]; for (const s of beam) if (s.g + align(s.A) < bestEnd.g + align(bestEnd.A)) bestEnd = s;
+  const plan = []; for (let s = bestEnd; s.prev; s = s.prev) plan.push(s.mv);
+  m.phase('insert');
+  for (let i = plan.length - 1; i >= 0; i--) { m.why(`beam plan: ${moveWords(plan[i])}`); exec(m, plan[i]); m.op('pa'); }
+  m.phase('align').why('rotate the minimum to the top').bring('a', m.a.indexOf(0));
 }

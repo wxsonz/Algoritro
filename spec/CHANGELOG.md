@@ -50,6 +50,15 @@
   every stack keeps its ★, in 17,988 moves against the strong build's 20,270. **Use this
   build** copies it in. Both search the cache (every legal hand × every subset of the post cards)
   in about 50 ms. Portfolio is gone from the cards, the Codex and the spec as well.
+- **Step 8, reference builds.** Tape Merge, the Annealer and Beam Sorter, the three cards only
+  the explorer had measured, have reference builds: C in the Norm's style, one card per binary,
+  kept beside the study's builds (`study/explorer-refs/`, outside this repo like the others). On
+  the study's seeds 1000–1004 every stream passes the study's independent replayer, and all 30
+  counts equal the cards' here: 1200 / 8400, 571.6 / 5094.0 and 479.2 / 4601.0. `norminette` is
+  clean, `nm -u` lists only `malloc`, `free` and `write`, and the address, undefined-behaviour
+  and leak sanitizers find nothing. The cards lose the research flask, a unit test holds them to
+  those counts, and `tools/count.mjs` prints the explorer's count for any deck on the study's
+  seeds. Their engines joined their families' (Tape Merge in divide, Beam Sorter in insertion).
 - **Class targets count every card in play.** Nearest-Member Sweep has no O(n√n) bound (it can
   pass the same value many times), so a hand that plays it, even as Chunks' default, misses
   `--medium`'s target; Chunks + One-Way Sweep meets it.

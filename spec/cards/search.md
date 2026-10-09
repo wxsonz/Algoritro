@@ -51,7 +51,7 @@ Three and Hardcoded Three.
 
 | class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| heuristic | 503 exp EXC | 4562 exp EXC | 10 | 10 | ~600 | ●○○○○ | Legendary |
+| heuristic | 479 ref EXC | 4601 ref EXC | 10 | 10 | ~600 | ●○○○○ | Legendary |
 
 **The idea.** Explore many move sequences at once, but keep only the most promising few at every step: smarter than one greedy choice, and far cheaper than trying everything.
 
@@ -68,12 +68,15 @@ database**: exact distances for small groups of ranks, summed. Applied to the wh
 the beam is too slow at 500, so the strongest reference build uses it **inside** other cards:
 for leaves of up to ~32 values and for choosing insertion orders.
 
-**As built (exp).** The explorer's Beam Sorter searches whole insertion plans on the Insertion
+**As built (ref).** The explorer's Beam Sorter searches whole insertion plans on the Insertion
 bench (LIS kept, `rb` Sink in pass 1): W = 64 plans, each expanded by its 4 cheapest next
 insertions, scored by ops so far plus h × (mean cheapest cost of the values left) × √(values
-left), with h = 0.25. It measures 503 at n=100, the best single card at that size, but 4562 at
-n=500, worse than Long Line's 4425, and it takes about 26 s per sort there in JS (exp). That keeps
-the verdict: a whole-problem beam pays at n=100 and is the wrong tool at n=500.
+left), with h = 0.25. On the study's seeds 1000–1004 it measures 479.2 at n=100, ahead of Long
+Line's 512.4 on the same inputs, but 4601.0 at n=500, behind Long Line's 4529.4 (ref). Its
+reference build is C in the Norm's style (`study/explorer-refs/beam_sorter`: 31 functions on a
+shared kit of 31) and gives the card's count on each of those seeds; it takes 1.3 s per sort at
+n=500 (5 s in the explorer's JavaScript). That keeps the verdict: a whole-problem beam pays at
+n=100 and is the wrong tool at n=500.
 
 **Lore.** Beam search comes from speech recognition: Bruce Lowerre's Harpy system (1976) kept
 only the best few hypotheses at each step to stay fast. Pattern databases come from puzzle
@@ -99,7 +102,7 @@ search plays as Beam Leaf (a Finisher) and Beam over Orders (order).
 
 | class | @100 | @500 | Grasp | Craft | Lines | Speed | rarity |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| heuristic | 575 exp EXC | 5060 exp EXC | 8 | 6 | ~200 | ●○○○○ | Legendary |
+| heuristic | 572 ref EXC | 5094 ref EXC | 8 | 6 | ~200 | ●○○○○ | Legendary |
 
 **The idea.** Take a working plan, such as where Chunks cuts its crates, and keep making small random changes, keeping the ones that help. Early on it also accepts some worse changes, so it does not get stuck.
 
@@ -124,10 +127,13 @@ early on, accept bad moves often, so the search can escape local optima; later, 
 **Cons**
 - Not deterministic unless seeded.
 - Each candidate needs a full re-simulation, which is slow.
-- **As built (exp):** annealing over the chunk boundaries of Crate Runner (Chunks with One-Way
-  Sweep and Second-Max), 400 trials: 575 / 5060 against Crate Runner's 607 / 5226. About
-  0.1 s per sort at n=100 and 3 s at n=500 in JS. The gain is real but small: plans are
-  cheap to perturb, and the boundaries barely matter once the sweep and retrieval are good.
+- **As built (ref):** annealing over the chunk boundaries of Crate Runner (Chunks with One-Way
+  Sweep and Second-Max), 400 trials: 571.6 / 5094.0 against Crate Runner's 608.8 / 5326.2 on
+  the study's seeds 1000–1004. Its reference build is C in the Norm's style
+  (`study/explorer-refs/annealer`: 15 functions on a shared kit of 31), gives the card's count on
+  each of those seeds, and takes 0.02 s per sort at n=100 and 0.5 s at n=500. The gain is real
+  but small: plans are cheap to perturb, and the boundaries barely matter once the sweep and
+  retrieval are good.
 
 **Slots:** none. Param: what to perturb. Inside another card, the same idea plays as the
 Annealed Plan technique (order).

@@ -133,7 +133,6 @@ canvas.board { aspect-ratio: 900 / 420; }
 .card.algo:hover { transform: translateY(-2px); }
 .card.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
 .card.off { opacity: .45; cursor: not-allowed; }
-.card.research::after { content: 'research'; position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: var(--gold); }
 .card.lesson::after { content: 'lesson'; position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: var(--pass); }
 .fam-small { border-color: var(--f-small); } .fam-selection { border-color: var(--f-selection); } .fam-insertion { border-color: var(--f-insertion); }
 .fam-bucket { border-color: var(--f-bucket); } .fam-digit { border-color: var(--f-digit); } .fam-divide { border-color: var(--f-divide); } .fam-search { border-color: var(--f-search); }

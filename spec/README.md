@@ -49,10 +49,13 @@ The specs tag every operation count with its origin:
 - **ref:** taken from the reference C builds studied in `push_swap/study/`, over 5 seeds
   (1000–1004). A single method is quoted from its own column of the study's per-selector table.
   The study's headline numbers are `--adaptive` means that mix two methods, and they are only
-  quoted for whole builds.
+  quoted for whole builds. Tape Merge, the Annealer and Beam Sorter, which the sim never built,
+  have reference builds of their own (`study/explorer-refs/`: C in the Norm's style, one card per
+  binary, measured on the study's inputs with its replayer). They were ported from the explorer,
+  so their counts equal the explorer's on each of the five seeds.
 - **web:** reported by other 42 students; see [sources.md](sources.md).
 - **exp:** measured by the explorer itself (`node tools/meta.mjs`, 50 seeds at n=100 and 20 at
-  n=500 from seed 1000, stored in `data/meta.json`). Used for the cards the sim never built: Tape
-  Merge, Beam Sorter and Annealer. The explorer re-measures every sim number too, and
-  `tests/reference.test.mjs` keeps them within ±5 %.
+  n=500 from seed 1000, stored in `data/meta.json`). No card rests on it alone any more. The
+  explorer re-measures every sim number too, and `tests/reference.test.mjs` keeps them within
+  ±5 %, and the reference builds' counts exactly.
 - **est.:** an estimate that has not been measured yet. None are left in the card rosters.

@@ -58,7 +58,7 @@ algoritro/  (the repository; the local folder may still be push_swap_explorer/)
 │   ├── cards/
 │   │   ├── algos/         one module per Algorithm card
 │   │   ├── techniques/    the Technique cards, one module per kind: prep, slots, leaf, post
-│   │   ├── engines/       the family engines the cards share (insertion, bucket, divide, simple, research)
+│   │   ├── engines/       the family engines the cards share (insertion, bucket, divide, simple)
 │   │   ├── lib.js, leaf.js  planning helpers and the BFS leaf solver
 │   │   ├── cursed.js      Cursed cards; the playable ones are naive ports through an array emulator
 │   │   ├── meta.js        Meta cards

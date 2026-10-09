@@ -2,7 +2,8 @@
 import { ALGOS } from '../js/cards/index.js';
 import { DECKS, BUILDS } from '../js/cards/decks.js';
 import { runAdaptive, buildCompliance } from '../js/core/meta-run.js';
-import { ok, meanOps, near, uniform } from './assert.mjs';
+import { ok, eq, meanOps, near, uniform } from './assert.mjs';
+import { runHand } from '../js/core/hand.js';
 
 // Bare cards, from spec/cards/README.md.
 const SIM = {
@@ -29,6 +30,15 @@ export const tests = [
     near(-delta(H('lis-insertion'), H('lis-insertion', ['rb-sink']), 500, 10), 616, 0.15, 'rb Sink on LIS Insertion @500');
     near(-delta(H('chunks'), H('chunks', ['second-max-lookahead'])), 26, 0.3, 'Second-Max on Chunks');
     near(-delta(H('four-end-quicksort'), H('four-end-quicksort', ['bfs-leaf'])), 142, 0.1, 'BFS Leaf ≤ 5 on Four-End Quicksort');
+  }],
+  ['the cards with a reference build give its counts on the study\'s seeds 1000–1004 (2 % allowed, equal in fact)', () => {
+    const cards = ALGOS.filter(a => a.ref), mean = xs => xs.reduce((s, x) => s + x, 0) / xs.length;
+    eq(cards.map(a => a.id).sort(), ['annealer', 'beam-sorter', 'tape-merge']);
+    for (const a of cards) for (const n of [100, 500]) {
+      const seeds = n === 500 && a.id === 'beam-sorter' ? [1000] : [1000, 1001, 1002, 1003, 1004];   // about 5 s a sort in JS
+      const got = seeds.map(s => runHand(bare(a.id), uniform(n, s), { keepSteps: false }).ops.length), want = seeds.map(s => a.ref[n][s - 1000]);
+      near(mean(got), mean(want), 0.02, `${a.id} @${n}`); eq(got, want, `${a.id} @${n}`);
+    }
   }],
   ['builds: the strong build is EXCELLENT on every run, compliance is judged per regime', () => {
     const strong = BUILDS.find(b => b.id === 'strong-build');

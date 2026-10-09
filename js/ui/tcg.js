@@ -35,10 +35,9 @@ function rarityFx(r) {
 // The legendary rim: a prismatic ring that turns. It is its own element so a transform can turn
 // it, which costs no repaint.
 const rim = r => r === 'legendary' ? el('span.rim') : '';
-// A lesson card is kept to show why an idea loses; a research card has no reference build yet.
-// Each says so with a small icon in the type line, beside the rarity gem.
+// A lesson card is kept to show why an idea loses: it says so with a small icon in the type line,
+// beside the rarity gem.
 function markIcon(c) {
-  if (c.research) return el('span.tmark.research', { html: icon('flask'), title: 'Research\nNo reference build yet: the explorer\'s own measurements are the only ones.' });
   if (c.lesson) return el('span.tmark.lesson', { html: icon('book'), title: 'Lesson\nKept to show why this idea loses. Inspect explains.' });
   return '';
 }
@@ -105,7 +104,7 @@ export function algoFace(a, { stats, cls = '' } = {}) {
     el('div.tcg-type', {}, px(a.family), el('span.tt', {}, `${fam.name} algorithm`), markIcon(a), rgem(a.rarity)),
     el('div.tcg-text.quote', {}, el('p.flavor', {}, `“${a.tagline}”`)),
     el('div.badges', {}, classBadge(a), slotBadge(a), psBadge(a, stats)));
-  const card = el('div', { className: `tcg algo fam-${a.family} r-${a.rarity}${a.research ? ' research' : ''}${a.lesson ? ' lesson' : ''}${cls ? ' ' + cls : ''}`, tabIndex: 0, dataset: { id: a.id, kind: 'algo' } },
+  const card = el('div', { className: `tcg algo fam-${a.family} r-${a.rarity}${a.lesson ? ' lesson' : ''}${cls ? ' ' + cls : ''}`, tabIndex: 0, dataset: { id: a.id, kind: 'algo' } },
     el('div.tcg-body', {}, rim(a.rarity), front),
     '');
   card.append(el('button.tcg-btn.peek', { title: 'Inspect', 'aria-label': `Inspect ${a.name}` }, '?'));

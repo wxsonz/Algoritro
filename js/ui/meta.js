@@ -132,12 +132,14 @@ const render = {
   open() {
     const open = [];
     for (const a of ALGOS) for (const t of TECHS) { const f = fits(a, t); if (f.open) open.push([a, t, f.reason]); }
-    const research = ALGOS.filter(a => a.research).map(a => [a, M.cards[a.id]]);
+    const refs = ALGOS.filter(a => a.ref), mean = xs => xs.reduce((s, x) => s + x, 0) / xs.length;
     return el('div', {}, el('p.lede', {}, 'Cells with no measured hand yet: invitations to explore. Each pair below is a role the card has open, with a technique nobody has built on it.'),
-      el('h3', {}, 'Research cards, now measured'), el('ul', {}, research.map(([a, c]) => el('li', {}, el('a', { href: `codex.html#${a.id}` }, a.name), `: ${c?.at[100] ? f0(c.at[100].mean) : '—'} @100, ${c?.at[500] ? f0(c.at[500].mean) : '—'} @500 (explorer). `, a.id === 'tape-merge' ? 'Balanced two-way merge on the stack ends; polyphase distribution is still open.' : a.id === 'beam-sorter' ? 'A whole-plan beam over insertion orders; at n=500 it is slower and worse than Long Line, which keeps the spec\'s verdict.' : 'Annealing over Crate Runner\'s chunk boundaries.'))),
+      el('h3', {}, 'Cards with a reference build of their own'), el('p.small', {}, 'C in the Norm\'s style, one card per binary, measured on the study\'s seeds 1000–1004 and checked by its independent replayer. Each gives the same count as the card here on every one of those inputs.'),
+      el('ul', {}, refs.map(a => el('li', {}, el('a', { href: `codex.html#${a.id}` }, a.name), `: ${f0(mean(a.ref[100]))} @100, ${f0(mean(a.ref[500]))} @500 (ref).`))),
       el('h3', {}, 'Unbuilt technique × host pairs'), table([['host'], ['technique'], ['role'], ['note']], open.map(([a, t, r]) => el('tr', {}, el('td', {}, a.name), el('td', {}, label(t.id)), el('td', {}, t.role), el('td.small.muted', {}, r)))),
       el('h3', {}, 'From the spec'), el('ul', {}, [
         'Ternary Radix: can a gather that avoids the rrb return trip make base 3 pay?',
+        'Tape Merge: does a polyphase distribution of the runs (Fibonacci counts) save a pass?',
         'LSD radix without the return trip: alternate the pass direction so the minority bucket never comes back.',
         'LIS Anchor + Four-End Quicksort: keep an increasing run in place while partitioning the rest?',
         'The full DP Splits, with rr merges and free reads.',

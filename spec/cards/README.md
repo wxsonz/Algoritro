@@ -56,11 +56,11 @@ marks the grade of the mean; the card files give the share of runs under each ba
 | MSD Radix | ♦ | O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 6 | 6 | Uncommon |
 | Quick 2-Way | ✦ | O(n log n) · ✓ | 718 sim GOOD | 5235 sim EXC | 6 | 6 | Uncommon |
 | Four-End Quicksort | ✦ | O(n log n) · ✓ | 735 sim GOOD | 5033 sim EXC | 8 | 8 | Rare |
-| Tape Merge | ✦ | O(n log n) · ✓ | 1200 exp GOOD | 8100 exp GOOD | 8 | 8 | Legendary |
+| Tape Merge | ✦ | O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 8 | 8 | Legendary |
 | Natural Merge | ✦ | O(n log n) · ✓ | 1495 sim GOOD | 10165 sim PASS | 4 | 6 | Rare |
 | Lookahead Greedy | ✺ | O(n² · bᵏ) CPU | 557 sim EXC | 5284 sim EXC | 6 | 6 | Rare |
-| Beam Sorter | ✺ | heuristic | 503 exp EXC | 4562 exp EXC (26 s per sort) | 10 | 10 | Legendary |
-| Annealer | ✺ | heuristic | 575 exp EXC | 5060 exp EXC | 8 | 6 | Legendary |
+| Beam Sorter | ✺ | heuristic | 479 ref EXC | 4601 ref EXC (1.3 s per sort in C) | 10 | 10 | Legendary |
+| Annealer | ✺ | heuristic | 572 ref EXC | 5094 ref EXC | 8 | 6 | Legendary |
 
 LIS Insertion's bare card uses its default Two-Way Cost. The Long Line deck adds Four-Way
 Cost and `rb` Sink and measures 530 / 4425 (sim). With a top-of-B pick instead (Simple

@@ -1,7 +1,7 @@
 # Objective: the Table plays a push_swap build
 
 Planned on 2026-10-10 and extended the same day: the study review, one global seed, the cache
-and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–7 of
+and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–8 of
 the build order are built (see `spec/CHANGELOG.md`); the rest is planned. Each step in
 [Build order](#build-order) ships on its own, with its tests, UI checks and spec updates.
 
@@ -234,8 +234,8 @@ affects a custom stack.
   note, and Browse groups the lesson cards under "Lessons: why these lose".
 - **Research** goes away altogether. Tape Merge, the Annealer and Beam Sorter get **reference
   builds**: written in C in the Norm's style and measured on the study's seeds 1000–1004 with an
-  independent replay, like the study's builds. Until a card's reference build lands, it shows a
-  flask icon in the same place.
+  independent replay, like the study's builds. Done: all three, in `study/explorer-refs/`; their
+  counts equal the explorer's on each of the study's seeds, and the flask is gone.
 - The reference builds pay off twice: they give those three cards real `ref` numbers, and their
   function counts feed the new Craft (section 8).
 

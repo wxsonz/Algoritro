@@ -1069,7 +1069,7 @@ function inspect(kind, id) {
         t ? `${f0(n1.mean)} moves on average at 100 (worst ${f0(n1.max)}) and ${f0(n5.mean)} at 500 (worst ${f0(n5.max)}). ${PS_TIER_TEXT[t]}`
           : small ? `Only for ${a.maxN} numbers or fewer: ${small[1].mean.toFixed(1)} moves on average at ${small[0]}, at most ${small[1].max}.` : 'Not measured yet.'))),
       el('p.dim.small', {}, `Grasp ${a.grasp} of 10, Craft ${a.craft} of 10: about ${a.lines} lines of C.`));
-    const extra = ['Why the class holds', 'Plays as', 'Variants', 'Teaching role', 'As built (exp)'].filter(k => sec[k]);
+    const extra = ['Why the class holds', 'Plays as', 'Variants', 'Teaching role', 'As built (ref)'].filter(k => sec[k]);
     body.append(
       el('aside.icard', {}, face, actions),
       el('div.ipanels', {},

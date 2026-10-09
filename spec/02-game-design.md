@@ -69,9 +69,9 @@ a fanned hand. The anatomy borrows from card games peers already know:
   colour says where it goes. The footer shows the card's measured effect on the played card,
   and in your hand the same change sits big in the top-left corner. A card that needs another
   shows a chain line ("needs Four Ends"), green when it is met and red when it is not.
-- **Lesson and research cards** wear a small icon in the type line, beside the rarity gem: a
-  book for a lesson (kept to show why an idea loses), a flask for research (no reference build
-  yet, so the explorer's own numbers are the only ones).
+- **Lesson cards** wear a small book in the type line, beside the rarity gem: kept to show why an
+  idea loses. There are no research cards any more: the three the sim never built (Tape Merge,
+  the Annealer and Beam Sorter) have reference builds in C of their own.
 - **Rarity shows:** uncommon cards shine now and then, rare cards are holo and sparkle, and
   legendary cards have a slowly turning prismatic rim. The effects play on the card in focus
   (on the mat, in Inspect, or under the pointer); elsewhere they hold still, so a full hand

@@ -145,3 +145,45 @@ export function naturalMerge(m) {
     if (R.length % 2) m.why('carry the odd run to the back').op('ra', R[R.length - 1]);
   }
 }
+
+// Tape Merge, balanced two-way, on the stack ends. Every pass starts with all runs ascending on
+// A's top. Distribute: runs alternately go to A's bottom (ra) and B's top (pb), so a run at A's
+// bottom has its largest value lowest and a run on B's top has its largest value on top. Merge:
+// take the larger of A's bottom (rra) and B's top (pa) onto A's top, so each pair becomes one
+// ascending run on A's top. A pass costs about 2n ops; there are ⌈log₂ runs⌉ passes.
+// leaf: with a Finisher, the first runs are blocks of `leaf` values sorted by BFS Leaf.
+export function tapeMerge(m, { leaf = 0 } = {}) {
+  const runsOnTop = () => { const out = []; let len = 1; for (let i = 1; i < m.a.length; i++) { if (m.a[i] > m.a[i - 1]) len++; else { out.push(len); len = 1; } } if (m.a.length) out.push(len); return out; };
+  let R = leaf > 1 ? blocks(m.a.length, leaf) : runsOnTop(), pass = 0;
+  if (leaf > 1 && R.length === 1 && m.a.length > 1) {
+    m.phase('leaf').why(`Finisher: the whole input is one block of ${m.a.length}`);
+    for (const o of bfsLeaf(TA, false, false, compress(m.a))) m.op(o);
+    return;
+  }
+  while (R.length > 1) {
+    pass++;
+    m.phase(`pass ${pass}: distribute ${R.length} runs`);
+    const xs = [], ys = [];
+    R.forEach((len, i) => {
+      if (pass === 1 && leaf > 1 && len > 1) {
+        const vals = m.a.slice(0, len);
+        m.why(`Finisher: sort this block of ${len} on A's top`);
+        for (const o of bfsLeaf(TA, m.a.length > len, m.b.length > 0, compress(vals))) m.op(o);
+      }
+      if (i % 2 === 0) { m.why(`run ${i + 1} (${len}) to A's bottom`).op('ra', len); xs.push(len); }
+      else { m.why(`run ${i + 1} (${len}) to B's top`).op('pb', len); ys.push(len); }
+    });
+    m.phase(`pass ${pass}: merge`);
+    // The lowest run of A pairs with the top run of B.
+    for (let p = 0; p < xs.length; p++) {
+      let lx = xs[xs.length - 1 - p], ly = ys.length - 1 - p >= 0 ? ys[ys.length - 1 - p] : 0;
+      while (lx || ly) {
+        const fromA = lx && (!ly || m.a[m.a.length - 1] > m.b[0]);
+        if (fromA) { m.why(`A's bottom (${m.a[m.a.length - 1]}) is the larger head`).op('rra'); lx--; }
+        else { m.why(`B's top (${m.b[0]}) is the larger head`).op('pa'); ly--; }
+      }
+    }
+    R = runsOnTop();
+  }
+}
+function blocks(n, k) { const out = []; for (let i = 0; i < n; i += k) out.push(Math.min(k, n - i)); return out; }

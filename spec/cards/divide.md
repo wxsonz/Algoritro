@@ -116,7 +116,7 @@ Finisher slot is empty by default; BFS Leaf is the one to play.
 
 | class | @100 | @500 | Grasp | Craft | Lines | rarity |
 | --- | --- | --- | --- | --- | --- | --- |
-| O(n log n) · ✓ | 1200 exp GOOD | 8100 exp GOOD | 8 | 8 | ~350 | Legendary |
+| O(n log n) · ✓ | 1200 ref GOOD | 8400 ref GOOD | 8 | 8 | ~350 | Legendary |
 
 **The idea.** Merge sort, the way old computers sorted on tape drives: make short sorted runs at the stack ends, then keep merging two runs into one longer run until only one is left.
 
@@ -132,14 +132,16 @@ spread across the ends. Then repeatedly merge pairs of runs: compare the heads a
 locations, move the smaller to the output location, and repeat. **Polyphase merge** (a
 Fibonacci distribution of runs) reduces the number of passes.
 
-**As built (exp).** A balanced two-way merge in which every value costs one op per merge step.
+**As built (ref).** A balanced two-way merge in which every value costs one op per merge step.
 Each pass starts with all runs ascending on A's top. Distribute: runs alternately go to A's bottom
 (`ra`) and to B's top (`pb`), so a run at A's bottom has its largest value lowest and a run on B's
 top has its largest value on top. Merge: take the larger head, A's bottom with `rra` or B's top
 with `pa`, onto A's top, so each pair becomes one ascending run there and the next pass starts
 the same way. A pass costs exactly 2n, and there are ⌈log₂ runs⌉ passes. Random input has
 about n/2 natural runs, so the count barely varies: exactly 1200 on every n=100 run, and 8000
-or 9000 at n=500 (exp). A Finisher sorts the first runs as blocks: Distance Tables (blocks of 4)
+or 9000 at n=500, 8400 on average over the study's seeds 1000–1004 (ref). Its reference build is
+C in the Norm's style (`study/explorer-refs/tape_merge`: 6 functions on a shared kit of 31), and
+it gives the card's count on each of those seeds. A Finisher sorts the first runs as blocks: Distance Tables (blocks of 4)
 saves 50 / 355, BFS Leaf (blocks of 5) 23 / 215. It beats Natural Merge (1495 / 10165) by not
 rotating past the runs it is not merging, but it stays far from Four-End Quicksort. Polyphase
 distribution is still open.
@@ -157,8 +159,8 @@ card exists.
 
 **Cons**
 - Every pass touches every value twice (distribute, then merge), so it pays 2n per pass where
-  Four-End Quicksort pays at most 3 per value per level of a shallower recursion: 1200 / 8100
-  against 735 / 5033 bare (exp).
+  Four-End Quicksort pays at most 3 per value per level of a shallower recursion: 1200 / 8400
+  (ref) against 735 / 5033 bare (sim).
 - It ignores existing order inside the distribution, so a nearly sorted input with a few long
   runs is cheap only when the runs are few.
 

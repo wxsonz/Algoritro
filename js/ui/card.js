@@ -67,7 +67,7 @@ export function algoCard(a, { stats, onPlay, compact = false, selected = false, 
     el('div.stat', { title: 'Grasp: how hard it is to understand. Craft: how hard it is to write.' }, el('span.k', {}, 'Grasp'), el('span.dots', { title: `${a.grasp} of 10` }, dots(a.grasp, 10)), ' ', el('span.k', {}, 'Craft'), el('span.dots', { title: `${a.craft} of 10` }, dots(a.craft, 10))),
     compact ? '' : el('div.stat.nerdy', {}, el('span.k', {}, 'Speed'), el('span.dots', { title: stats?.speedMs != null ? `${stats.speedMs} ms at n=${stats.speedN} (JS)` : '' }, speedDots(stats?.speedMs) || '—'), ' ', el('span.k', {}, 'Lines'), `~${a.lines}`),
     el('div.stat', {}, el('span.k', {}, 'Slots'), slots, a.maxN ? el('span.muted', {}, ` · n ≤ ${a.maxN}`) : ''));
-  const card = el('div.card.algo.fam-' + a.family, { tabIndex: 0, dataset: { id: a.id }, title: disabled || '', className: `card algo fam-${a.family}${selected ? ' on' : ''}${disabled ? ' off' : ''}${a.research ? ' research' : ''}${a.lesson ? ' lesson' : ''}` }, front);
+  const card = el('div.card.algo.fam-' + a.family, { tabIndex: 0, dataset: { id: a.id }, title: disabled || '', className: `card algo fam-${a.family}${selected ? ' on' : ''}${disabled ? ' off' : ''}${a.lesson ? ' lesson' : ''}` }, front);
   if (onPlay) { card.onclick = e => { if (e.target.closest('a')) return; if (!disabled) onPlay(a); }; card.onkeydown = e => { if (e.key === 'Enter' && !disabled) onPlay(a); }; }
   return card;
 }
