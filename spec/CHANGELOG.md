@@ -32,6 +32,13 @@
   their routes. At 1000, Random 100 goes to `--complex` (0.536) and Random 500 to `--medium`
   (0.472). The Meta data was regenerated on these inputs. Links saved before this open a
   different random stack.
+- **Step 6, the cache and ☢.** Nothing is measured twice. `tools/precompute.mjs` runs every legal
+  hand (563) on every stack at the default seed in about 50 s and ships it as `data/stacks.json`
+  (about 1 MB); one run per hand and stack serves all 16 subsets of the post cards. The browser
+  keeps every new result in IndexedDB under the code's version. A ☢ PRECOMPUTE button, top right,
+  is the fill meter for the current seed and fills the rest in the background on a click. A first
+  visit at the default seed reads 100 % and measures nothing; a second visit runs nothing it
+  already ran (both UI checks).
 - **Playback lays out only the board.** Every move was laying out the whole page, stack list and
   hand included: containment on the board plate did nothing, because Chrome never lets a grid
   item be a layout boundary. The board now sits in a plain block. Layout during playback went

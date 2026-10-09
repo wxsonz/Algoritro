@@ -155,3 +155,23 @@ share an id with its Algorithm card. The code keeps the name, tagline, scores an
 [04-compatibility.md](04-compatibility.md) matches the modules. `ui/markdown.js` renders
 the subset the cards use (headings, lists, emphasis, code and tables), so the Codex still needs
 no dependency.
+
+## 6.6 The stack cache
+
+Every result of one hand on one stack at one seed is kept (`core/stackcache.js`), so nothing is
+measured twice (objective.md §10).
+
+- **The precompute.** `tools/precompute.mjs` (`npm run precompute`, about 50 s on 30 cores) runs
+  every legal hand (`core/combos.js`: each open role empty or filled, each Finisher; 563 hands) on
+  every stack at the default seed, and writes `data/stacks.json` (about 1 MB). One worker job,
+  `cells`, runs a hand once per seed and applies each of the 16 subsets of the post cards to its
+  moves: they only rewrite the finished list, so one run serves all 16. A set of orders keeps only
+  its worst order. `--check N` recomputes N random cells against the file.
+- **The version.** The file carries a hash of the measuring code (`tools/version.mjs`: the engines,
+  cards, stacks, jobs and DP tables). `tests/cache.test.mjs` fails when the code changes without a
+  new precompute, and the browser keeps its own results under the same version, dropping others.
+- **Lookups.** A hand finds its precomputed cell whatever the order of its slot cards, with its post
+  cards in the cache's order; a hand with changed knobs, prep cards or another post order is
+  measured on its own and kept as a single result.
+- **The browser.** The Table loads the file and the IndexedDB records before its first stamps, and
+  keeps every new result; ☢ fills the rest of a seed with the same `cells` job.

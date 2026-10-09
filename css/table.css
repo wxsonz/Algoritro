@@ -699,3 +699,12 @@
 .table-page .gseed input { width: 8ch; padding: 3px 6px 2px; border: 0; border-radius: 6px; background: var(--plate); color: var(--ink); font: 400 17px/1 var(--pixel); }
 .table-page .gseed .roll { padding: 2px 6px; border: 0; border-radius: 6px; background: transparent; font-size: 16px; line-height: 1; cursor: pointer; }
 .table-page .gseed .roll:hover { background: rgba(255, 255, 255, .15); border: 0; }
+/* ☢: precompute, and the meter of what is kept at this seed */
+.table-page .nuke { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 3px 6px; border: 2px solid #ffd43b; border-radius: 10px; background: #2b2a12; color: #ffe066; font: 400 16px/1 var(--pixel); letter-spacing: .04em; cursor: pointer; box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+.table-page .nuke:hover { background: #3a3814; border: 2px solid #ffd43b; }
+.nuke .rad { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #ffd43b; color: #2b2a12; font: 700 17px/1 system-ui, sans-serif; }
+.nuke .npct { min-width: 4.2ch; padding: 2px 5px 1px; border-radius: 6px; background: rgba(255, 224, 102, .16); text-align: right; }
+.nuke.full { border-color: #69db7c; color: #b2f2bb; } .nuke.full .rad { background: #69db7c; }
+.nuke.running .rad { animation: nukespin 2s linear infinite; }
+@keyframes nukespin { to { transform: rotate(1turn); } }
+@media (max-width: 760px) { .nuke .ntext { display: none; } }

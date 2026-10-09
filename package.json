@@ -10,6 +10,8 @@
     "start": "node tools/serve.mjs",
     "test": "node tests/run.mjs",
     "test:ui": "node tools/ui-check.mjs",
+    "precompute": "node tools/precompute.mjs",
+    "meta": "node tools/meta.mjs",
     "sim": "node spec/sim/report.mjs"
   }
 }

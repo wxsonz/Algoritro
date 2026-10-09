@@ -62,6 +62,14 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   7★ 1✓"). The seat sorting the current stack is lit, with a "sorting: Random 100" tag; clicking
   another seat puts it on the mat and moves the board to one of its stacks. Stamps are kept
   per hand, so a change re-measures only the stacks of the seat it touched.
+- **Precompute ☢**, top right beside the seed, is also the fill meter: the share of every legal
+  hand × every stack the cache already holds at this seed. Nothing is measured twice: results come
+  from the shipped precompute (`data/stacks.json`, every legal hand at the default seed, with all
+  16 subsets of the post cards), then from what this browser kept in IndexedDB on earlier
+  visits, and every new result is kept. The meter creeps up as you play; a click fills the rest
+  in a pool of workers, resumes where it stopped, and a second click stops it. At the default
+  seed a first visit reads 100 % and measures nothing; a new seed starts at the share of stacks it
+  does not touch (65 %).
 - **The route banner** above the board names the stack, why it goes where it goes (its
   disorder, or its size for the tiny seat), the flag, and the card; clicking the card opens
   Inspect. On the tiny seat the slots say it is built in, and the hand is empty.

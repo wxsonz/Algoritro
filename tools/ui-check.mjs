@@ -92,6 +92,23 @@ await click('#techViewer .tcg.tech[data-id="second-max-lookahead"]'); await slee
 await ev(`[...document.querySelectorAll('#techPane button')].find(b => /Play on --medium/.test(b.textContent))?.click()`); await sleep(500);
 check('the technique pane plays a card on the seat on the mat', /Second-Max/.test(await ev(T('slots'))), (await ev(T('slots'))).slice(0, 120));
 await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`); await sleep(150);
+// The cache and ☢: the shipped precompute and the browser's kept results; nothing is measured twice
+const stampedAll = () => ev(`document.querySelectorAll('#stacks .mark.EXCELLENT, #stacks .mark.GOOD, #stacks .mark.PASS, #stacks .mark.FAIL').length`);
+const settle = async () => { for (let i = 0; i < 80 && (await ev(`[...document.querySelectorAll('#stacks .mark')].some(m => m.textContent === '…')`)); i++) await sleep(250); };
+await go('index.html', 3500);
+check('a fresh load reads 100 % and stamps every stack without measuring anything', /100 %/.test(await ev(T('nuke'))) && (await ev('window.__runs || 0')) === 0 && (await stampedAll()) === 26, `${await ev(T('nuke'))} · runs ${await ev('window.__runs || 0')}`);
+await ev(`${card('#techViewer .tcg.tech', 'Presorted Shortcut')}.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))`); await sleep(400); await settle();
+const ranOnce = await ev('window.__runs || 0'), keptHash = await ev('location.hash');
+await sleep(800);   // the kept results are written in batches
+await go('index.html' + keptHash, 3500); await settle();
+check('a hand the precompute lacks is measured once, then a second visit runs nothing it already ran', ranOnce > 0 && (await ev('window.__runs || 0')) === 0 && (await stampedAll()) === 26, `first ${ranOnce} runs, then ${await ev('window.__runs || 0')}`);
+const pct = async () => +(await ev(`document.querySelector('#nuke .npct').textContent`)).replace(/\D/g, '');
+await set('#gseed', 4242); await sleep(1500);
+const before4242 = await pct();
+await click('#nuke'); await sleep(4000);
+const during = await pct(), label = await ev(`document.querySelector('#nuke .ntext').textContent`);
+await click('#nuke'); await sleep(300);
+check('☢ fills another seed in the background and stops on a second click', before4242 < 100 && during > before4242 && label === 'STOP' && (await ev(`document.querySelector('#nuke .ntext').textContent`)) === 'PRECOMPUTE', `${before4242} % → ${during} %`);
 // Paths
 await go('index.html#deck=simple-insertion&n=100&gen=uniform&seed=1000&path=insertion-ladder&step=0');   // as a Codex link opens it
 check('Path: Insertion Ladder starts on Simple Insertion, in every seat', /Path: Insertion Ladder/.test(await ev(T('pathPanel'))) && (await ev('location.hash')).includes('s=simple-insertion&m=simple-insertion&c=simple-insertion&'), await ev('location.hash'));

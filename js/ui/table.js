@@ -20,6 +20,8 @@ import { algoFace, techFace, plainFace, needsEl, deckBox, pile, bindCardFx, ROLE
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
 import { run as runWorker } from './worker-client.js';
+import { StackCache, handKey, stackKey, everyHand, runnable, compact, baseKey, filled } from '../core/stackcache.js';
+import { loadAll, keepCell, keepHand } from './cachedb.js';
 import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack, stackRoute, stackById, seeded } from './stacks.js';
 import { PATHS } from './paths.js';
 
@@ -37,21 +39,20 @@ const S = {
   family: 'all', techFilter: 'all',
   path: null, step: 0,
   target: 'complex', pick: { algo: null, tech: null }, previewJob: null,   // Browse: the seat it places into, and the card it shows
-  stamps: {}, stampKey: '', stampJob: null, known: new Map(),   // stack results per hand: handKey → stack id → result
+  stamps: {}, stampKey: '', stampJob: null,
+  cache: new StackCache(), cacheReady: false, version: 'dev', fill: null,   // every result kept (objective.md §10), under the code's version
   shownAlgo: '', handEls: new Map(), handKey: '', opener: null,
   seed: SEED,   // the global seed: every seeded stack uses it
   routes: routesAt(SEED),   // each stack's disorder and flag, at the global seed
 };
 function routesAt(seed) { return Object.fromEntries(STACKS.map(b => [b.id, stackRoute(b, seed)])); }
-// The kept results are per hand and per stack, and a seeded stack also per global seed.
-function stackKey(b) { return seeded(b) ? `${b.id}@${S.seed}` : b.id; }
 // Hands are copied in, so editing a seat never touches a named deck or build.
 function handOf(h) { return { ...structuredClone(h), sharing: h.sharing ?? true, sandbox: true, params: { ...(h.params || {}) }, presets: { ...(h.presets || {}) } }; }
 function buildOf(b) { return Object.fromEntries(SEATS.map(k => [k, handOf(b[k])])); }
 function fillAll(h) { S.build = Object.fromEntries(SEATS.map(k => [k, handOf(h)])); }   // one hand in every seat
 function tinyHand(n) { return { algo: tinyCard(n), techs: [], sharing: true, sandbox: true, params: {}, presets: {} }; }
 function seatHand(route, n) { return route === 'tiny' ? tinyHand(n) : S.build[route]; }
-function handKey(h) { return JSON.stringify([deckString(h), h.params || {}, h.presets || {}]); }
+
 const QUICK = [3, 5, 7, 20, 100, 500];
 const ORDER = [...ROLES, 'leaf', 'prep', 'post'];
 const FAMILY_HINT = {
@@ -68,7 +69,8 @@ const bar = topBar('Table', () => board.render());
 const seedBox = el('input', { type: 'number', min: 0, step: 1, value: SEED, id: 'gseed', 'aria-label': 'Global seed', title: 'Global seed\nEvery seeded stack uses it: One swap, Nearly sorted, Random 100 and 500, Nearly reversed, the messy stacks and Nearly sorted 500. 1000 is the study\'s first.' });
 seedBox.onchange = () => setSeed(Math.max(0, Math.floor(+seedBox.value || 0)));
 bar.insertBefore(el('div.toptools', {}, el('label.gseed', {}, el('span', {}, 'seed'), seedBox,
-  el('button.roll', { type: 'button', title: 'Roll a new seed', 'aria-label': 'Roll a new seed', onclick: () => setSeed(Math.floor(Math.random() * 1e6)) }, '🎲'))), $('theme'));
+  el('button.roll', { type: 'button', title: 'Roll a new seed', 'aria-label': 'Roll a new seed', onclick: () => setSeed(Math.floor(Math.random() * 1e6)) }, '🎲')),
+  el('button', { id: 'nuke', className: 'nuke', type: 'button', onclick: () => nuke() }, el('span.rad', { 'aria-hidden': 'true' }, '☢'), el('span.ntext', {}, 'PRECOMPUTE'), el('span.npct', {}, '…'))), $('theme'));
 const board = new Board($('board'), { dock: $('console'), log: $('movelog') });
 bindCardFx();
 bindTips();
@@ -122,6 +124,15 @@ matchMedia('(max-width: 760px)').addEventListener?.('change', () => layoutHand()
 Promise.all([cardsData(), metaData(), loadData('dp-plans').then(useDpTables).catch(() => {})]).then(([c, m]) => {
   DOC = c; META = m; renderAlgoViewer(); renderPlayed(); S.handKey = ''; renderHand(); renderTechViewer();
 });
+// The cache: the shipped precompute (every legal hand at the default seed), then what this browser
+// kept from earlier visits under the same version. The stamps are redrawn from it.
+loadData('stacks').catch(() => null).then(async file => {
+  if (file) { S.version = file.version; S.cache.ingest(file); }
+  const kept = await loadAll(S.version);
+  for (const [[base, sk], cell] of kept.cells) S.cache.putCellRaw(base, sk, cell);
+  for (const [[hk, sk], [ops, s, worst]] of kept.hands) S.cache.putRaw(hk, sk, { ops, s, worst });
+  S.cacheReady = true; S.stampKey = ''; stampStacks(); meter();
+});
 readHash();
 // A link pasted into the address bar (or back and forward) changes only the hash: read it again.
 addEventListener('hashchange', () => { readHash(); draw(); });
@@ -129,9 +140,48 @@ addEventListener('hashchange', () => { readHash(); draw(); });
 renderAlgoViewer();
 draw();
 
+// ---- Precompute ☢: every legal hand on every stack at the global seed ----------------------------
+// The button is also the fill meter: the share of every legal hand × every stack already kept at
+// this seed. It creeps up as you play; a click fills the rest in a pool of workers (one run per
+// hand and stack serves all 16 subsets of the post cards), resumes where it stopped, and a
+// second click stops it.
+let meterTimer = 0;
+function meter() {
+  if (meterTimer) return;
+  meterTimer = setTimeout(() => {
+    meterTimer = 0;
+    const f = filled(S.cache, S.seed), pct = Math.floor(100 * f), b = $('nuke');
+    b.querySelector('.npct').textContent = `${pct} %`;
+    b.querySelector('.ntext').textContent = S.fill ? 'STOP' : 'PRECOMPUTE';
+    b.classList.toggle('running', !!S.fill); b.classList.toggle('full', pct >= 100);
+    b.title = `Precompute ☢\nEvery legal hand on every stack at seed ${S.seed}: ${pct} % kept.\n` + (S.fill ? 'Filling in the background: click to stop.' : pct >= 100 ? 'All of it is kept: nothing will be measured twice.' : 'Click to fill the rest in the background. It resumes where it stopped.');
+  }, 120);
+}
+function nuke() {
+  if (S.fill) { S.fill.stop(); S.fill = null; meter(); return; }
+  const seed = S.seed, todo = [];
+  for (const h of everyHand()) for (const b of STACKS) if (runnable(h, b) && !S.cache.hasBase(h, b, seed)) todo.push({ h, b });
+  if (!todo.length) { meter(); return; }
+  const SLOW = { 'beam-sorter': 400, annealer: 40, 'bubble-wheel': 30, 'lookahead-greedy': 12 };
+  todo.sort((x, y) => (SLOW[x.h.algo] || 1) * x.b.n * (x.b.seeds?.length || 1) - (SLOW[y.h.algo] || 1) * y.b.n * (y.b.seeds?.length || 1));   // the quick ones first: the meter moves at once
+  const lanes = Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 4) - 2)), jobs = [];
+  let i = 0, stopped = false;
+  const fill = S.fill = { stop() { stopped = true; jobs.forEach(j => j?.cancel()); } };
+  const lane = async k => {
+    while (!stopped && i < todo.length && S.seed === seed) {
+      const { h, b } = todo[i++];
+      jobs[k] = runWorker({ kind: 'cells', hand: h, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [seed] }, null, 'fill' + k);
+      let r; try { r = await jobs[k].promise; } catch { return; }
+      const cell = compact(b, r.moves); S.cache.putCell(baseKey(h), b, seed, cell); keepCell(S.version, baseKey(h), stackKey(b, seed), cell); meter();
+    }
+  };
+  meter();
+  Promise.all(Array.from({ length: lanes }, (_, k) => lane(k))).then(() => { if (S.fill === fill) S.fill = null; meter(); });
+}
 function setSeed(v) {
   if (v === S.seed) return;
-  S.seed = v; $('gseed').value = v; S.routes = routesAt(v);
+  S.fill?.stop(); S.fill = null;
+  S.seed = v; $('gseed').value = v; S.routes = routesAt(v); meter();
   // On a seeded stack, play the same stack at the new seed; elsewhere only the routes and stamps move.
   if (S.stack && seeded(S.stack)) pickStack(S.stack);
   else { stampStacks(); renderBuild(); writeHash(); }
@@ -210,7 +260,7 @@ function pickStack(b) {
   $('manual').value = ''; $('n').value = b.n; $('gen').value = b.gen; syncParam();
   if (b.param != null) $('param').value = b.param;
   // A set of inputs plays its worst one for its seat's hand, once known.
-  $('seed').value = b.seeds ? S.known.get(handKey(seatHand(S.routes[b.id].route, b.n)))?.[b.id]?.worst ?? b.seeds[0] : S.seed; draw();
+  $('seed').value = b.seeds ? S.cache.get(seatHand(S.routes[b.id].route, b.n), b, S.seed)?.worst ?? b.seeds[0] : S.seed; draw();
 }
 // Clicking a seat puts it on the mat: the board moves to one of its stacks, the last one played
 // there, else the first in the list.
@@ -228,32 +278,35 @@ function sidePlate() {
   $('target').textContent = b ? goal(b) : '';
   stackList();
 }
-// Measure one hand on one stack in a background lane. Results are kept per hand (S.known), so
-// the stamps and Browse's previews share them, and nothing is measured twice.
+// Measure one hand on one stack in a background lane. Every result is kept (S.cache, and the
+// browser's IndexedDB), so the stamps, Browse's previews and ☢ share them, and nothing is measured
+// twice, not even across visits.
 function measure(h, b, lane) {
-  const hk = handKey(h), sk = stackKey(b), hit = S.known.get(hk)?.[sk], a = byId[h.algo];
+  const hit = S.cache.get(h, b, S.seed), a = byId[h.algo];
   if (hit) return { promise: Promise.resolve(hit), cancel() {} };
   if (a.maxN != null && b.n > a.maxN) return { promise: Promise.resolve({ s: '—', why: `${a.name} handles at most ${a.maxN} numbers` }), cancel() {} };
-  const job = runWorker({ kind: 'hand', hand: h, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [S.seed] }, null, lane);
+  const seed = S.seed, job = runWorker({ kind: 'hand', hand: h, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [seed] }, null, lane);
+  window.__runs = (window.__runs || 0) + 1;   // for the UI check: a second visit runs nothing it already ran
   return { cancel: job.cancel, promise: job.promise.then(r => {
     // A set of inputs is stamped by its worst one, and remembers which it was.
     const w = r.ops.indexOf(Math.max(...r.ops)), ops = r.ops[w];
     const rec = { s: r.invalid ? 'FAIL' : stamp(b, ops), ops, worst: b.seeds ? b.seeds[w] : null };
-    if (!S.known.has(hk)) S.known.set(hk, {});
-    return (S.known.get(hk)[sk] = rec);
+    S.cache.put(h, b, seed, rec); keepHand(S.version, handKey(h), stackKey(b, seed), rec); meter();
+    return rec;
   }) };
 }
 // Stamp every stack with its seat's hand, in a background lane. A change re-measures only the
 // stacks of the seat it touched, and going back to a hand is instant. Every stack also shows what
 // the last change did to it.
 function stampStacks() {
+  if (!S.cacheReady) return;   // the shipped precompute and the kept results load first: nothing is measured twice
   const key = JSON.stringify([S.seed, ...SEATS.map(k => handKey(S.build[k]))]);
   if (key === S.stampKey) return;
   const prev = Object.fromEntries(Object.entries(S.stamps).filter(([, x]) => x.ops != null).map(([id, x]) => [id, x.ops]));
   S.stampKey = key; S.stampJob?.cancel(); S.stampJob = null; S.stamps = {};
   const todo = [], put = (b, r) => { const p = prev[b.id]; S.stamps[b.id] = r.ops == null ? r : { ...r, d: p != null ? r.ops - p : null }; };
   for (const b of STACKS) {
-    const h = seatHand(S.routes[b.id].route, b.n), R = resolve(h), hit = S.known.get(handKey(h))?.[stackKey(b)];
+    const h = seatHand(S.routes[b.id].route, b.n), R = resolve(h), hit = S.cache.get(h, b, S.seed);
     if (!R.ok) S.stamps[b.id] = { s: '—', why: R.errors.join(' ') };
     else if (hit) put(b, hit);
     else { S.stamps[b.id] = { s: '…', why: 'measuring' }; todo.push({ b, h }); }
@@ -876,7 +929,7 @@ function renderAlgoPane() {
       mineJob.inner = measure(next, b, 'preview');
       let r; try { r = await mineJob.inner.promise; } catch { return; }
       if (mineJob.dead) return;
-      const base = inSeat ? null : S.known.get(handKey(now))?.[stackKey(b)]?.ops, row = rows.get(b.id);
+      const base = inSeat ? null : S.cache.get(now, b, S.seed)?.ops, row = rows.get(b.id);
       row.querySelector('.pm').replaceChildren(r.ops == null ? el('span.dim', { title: r.why || '' }, '—') : el('span', {}, `${f0(r.ops)} `, el('span', { className: 'mark ' + stampClass(r.s) }, MARK[r.s] || '·')));
       if (base != null && r.ops != null) { const d = r.ops - base; row.querySelector('.pd').replaceChildren(el('span', { className: d < 0 ? 'good' : d > 0 ? 'bad' : 'dim', title: `against ${byId[now.algo].name}: ${base} moves` }, d ? signed(d) : '±0')); }
     }
