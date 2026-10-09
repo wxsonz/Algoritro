@@ -506,6 +506,8 @@ function refreshNeeds(c, t) {
 function renderHand() {
   const a = byId[S.hand.algo], box = $('hand'), cards = handCards(), big = (S.input?.n ?? 100) >= 300, key = `${a.id}|${!!DOC}|${!!META}|${big}`;
   if (key !== S.handKey) { S.handEls = new Map(); S.handKey = key; }
+  // Deal only a new hand: cards rebuilt because the card text or stats arrived stay where they are.
+  const dealKey = `${a.id}|${big}`, deal = dealKey !== S.dealKey; S.dealKey = dealKey;
   const fresh = [];
   const els = cards.map(t => {
     let c = S.handEls.get(t.id);
@@ -537,7 +539,7 @@ function renderHand() {
   void box.offsetWidth;   // apply the new places now, before any flight measures them
   // Deal the new ones from the technique deck.
   const deck = $('techPile')?.getBoundingClientRect();
-  if (deck && fresh.length && fresh.length === els.length) fresh.forEach((c, i) => fly(c, deck, { dur: 460, delay: 28 * i }));
+  if (deal && deck && fresh.length && fresh.length === els.length) fresh.forEach((c, i) => fly(c, deck, { dur: 460, delay: 28 * i }));
   requestAnimationFrame(() => fresh.forEach(c => c.classList.remove('fresh')));
 }
 function layoutHand() {
