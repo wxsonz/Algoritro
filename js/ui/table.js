@@ -540,6 +540,10 @@ function renderHand() {
   // Deal the new ones from the technique deck.
   const deck = $('techPile')?.getBoundingClientRect();
   if (deal && deck && fresh.length && fresh.length === els.length) fresh.forEach((c, i) => fly(c, deck, { dur: 460, delay: 28 * i }));
+  else for (const c of fresh) {   // rebuilt while its deal is still in the air: show it when the flight lands
+    const ghost = [...document.querySelectorAll('body > .flying')].find(g => g.dataset.id === c.dataset.id);
+    if (ghost) { c.style.visibility = 'hidden'; ghost.target = c; }
+  }
   requestAnimationFrame(() => fresh.forEach(c => c.classList.remove('fresh')));
 }
 function layoutHand() {
@@ -572,7 +576,8 @@ function fly(target, from, { dur = 440, delay = 0 } = {}) {
   const anim = ghost.animate([
     { transform: `translate(${dx}px, ${dy}px) scale(${(from.width / to.width).toFixed(3)}) rotate(0deg)` },
     { transform: `translate(0px, 0px) scale(1) rotate(${r}deg)` }], { duration: dur, delay, easing: 'cubic-bezier(.2, .9, .25, 1.08)', fill: 'both' });
-  const land = () => { ghost.remove(); target.style.visibility = ''; };
+  ghost.target = target;   // the card it lands on; renderHand swaps it when it rebuilds the card mid-flight
+  const land = () => { ghost.remove(); ghost.target.style.visibility = ''; };
   anim.onfinish = land; anim.oncancel = land;
 }
 // Scroll the slot row so a slot is in view before a card flies to it.
