@@ -1,0 +1,860 @@
+// The Table (spec/08 §8.1) as a card table. The left panel holds the stack you are sorting, the
+// score and every stack to choose from; the right panel holds the algorithm deck, the technique
+// deck and the Book of Codex; the mat in the middle has the slots, the played card, the board and
+// your hand.
+// The technical tools (custom input, stats, paths, the meta card) open as overlays.
+import { ALGOS, TECHS, byId, techById, FAMILIES, ROLES, label } from '../cards/index.js';
+import { DECKS, deckById, BUILDS } from '../cards/decks.js';
+import { GENERATORS, generate, parseManual, describe } from '../core/input.js';
+import { runHand, resolve, fits, parseDeck, deckString } from '../core/hand.js';
+import { runPortfolio, runAdaptive, METRICS, buildCompliance } from '../core/meta-run.js';
+import { counts, grade, stats, passRate, thresholds } from '../core/metrics.js';
+import { OPS } from '../core/machine.js';
+import { useDpTables } from '../cards/engines/divide.js';
+import { loadData } from '../core/data.js';
+import { $, el, css, topBar, cardsData, metaData, f0, pct, signed, gradeName, dots, store, RARITY } from './common.js';
+import { markdown, sections } from './markdown.js';
+import { mini } from './card.js';
+import { Board, link } from './board.js';
+import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, codexBook, bindCardFx, ROLE_NAMES, ROLE_HINT } from './tcg.js';
+import { icon } from './pixel.js';
+import { bindTips } from './tip.js';
+import { run as runJob, runAll } from './worker-client.js';
+import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack } from './stacks.js';
+import { PATHS, CHALLENGES } from './paths.js';
+
+let shown = null, countTimer = 0;   // the move counter's displayed value
+const S = {
+  hand: { algo: 'min-extract', techs: [], sharing: true, sandbox: true, params: {}, presets: {} },
+  input: null, result: null, resolved: null, delta: null, stack: null, lastChange: '',
+  family: 'all', techFilter: 'all',
+  meta: 'none', portfolio: [], adaptive: { simple: 'long-line', medium: 'careful-crates', complex: 'four-corners', low: 0.2, high: 0.5, metric: 'inversions' },
+  pinned: null, path: null, step: 0, seedJob: null,
+  stamps: {}, stampKey: '', stampJob: null, known: new Map(),   // stack results per hand
+  shownAlgo: '', handEls: new Map(), handKey: '', hist: null, opener: null,
+};
+const QUICK = [3, 5, 7, 20, 100, 500];
+const ORDER = [...ROLES, 'leaf', 'prep', 'post'];
+const FAMILY_HINT = {
+  small: 'tiny inputs, solved outright', selection: 'take the smallest, again and again', insertion: 'place each number where it belongs',
+  bucket: 'drop numbers into bands, then gather', digit: 'sort by bits or digits', divide: 'split, conquer, merge', search: 'look ahead and plan',
+};
+const SLOT_NAMES = { ...ROLE_NAMES, meta: 'Meta', extra: 'Extras' };
+const SLOT_ICON = r => r === 'extra' ? 'prep' : r;
+const MARK = { EXCELLENT: '★', PERFECT: '★', GOOD: '✓', PASS: '✓', FAIL: '✕', '…': '…', '—': '—' };
+let DOC = null, META = null;
+
+topBar('Table', () => { board.render(); board2?.render(); });
+const board = new Board($('board'), { dock: $('console'), log: $('movelog') });
+let board2 = null;
+bindCardFx();
+bindTips();
+
+// ---- setup ----------------------------------------------------------------------------------
+document.body.classList.toggle('nerd', store.get('table:nerd') === '1');
+$('nerd').checked = document.body.classList.contains('nerd');
+$('nerd').onchange = e => { document.body.classList.toggle('nerd', e.target.checked); store.set('table:nerd', e.target.checked ? '1' : ''); };
+for (const q of QUICK) $('quick').append(el('button', { onclick: () => { $('n').value = q; $('manual').value = ''; draw(); } }, q));
+for (const [k, g] of Object.entries(GENERATORS)) $('gen').append(new Option(g.label, k));
+$('countHead').innerHTML = OPS.map(o => `<th>${o}</th>`).join('');
+$('gen').onchange = () => { syncParam(); draw(); };
+for (const id of ['n', 'seed', 'param', 'manual']) $(id).onchange = draw;
+$('reroll').onclick = () => { $('seed').value = Math.floor(Math.random() * 2 ** 31); draw(); };
+$('runSeeds').onclick = runSeeds;
+$('pin').onclick = pin;
+$('copyDeck').onclick = () => { navigator.clipboard?.writeText(location.href).then(() => { $('copyDeck').textContent = 'Copied ✓'; setTimeout(() => { $('copyDeck').textContent = 'Share'; }, 1200); }, () => {}); };
+$('metaSel').onchange = e => { S.meta = e.target.value; metaPanel(); replay(false, S.meta === 'none' ? '−meta card' : `+${META_CARDS.find(m => m.id === S.meta).name}`); };
+$('pathSel').append(new Option('Paths…', ''), ...PATHS.map(p => new Option(p.name, p.id)));
+$('pathSel').onchange = e => { const p = PATHS.find(x => x.id === e.target.value); if (p) { closeOverlay(); startPath(p, 0); } e.target.value = ''; };
+$('challengeBtn').onclick = () => { const d = $('challenges'); d.hidden = !d.hidden; if (!d.hidden) challengesPanel(); };
+$('familyFilter').append(...[['all', 'All'], ...Object.entries(FAMILIES).map(([k, f]) => [k, f.name])].map(([k, t]) =>
+  el('button.chip', { dataset: { f: k }, onclick: () => { S.family = k; markAlgoViewer(); } }, k === 'all' ? '' : el('span.pxi', { html: icon(k) }), t)));
+$('techFilter').append(...[['all', 'Whole deck'], ['fits', 'Fits the played card']].map(([k, t]) =>
+  el('button.chip', { dataset: { f: k }, onclick: () => { S.techFilter = k; renderTechViewer(); } }, t)));
+syncParam();
+metaPanel();
+
+// Overlays: one at a time, except Inspect, which opens on top of a deck.
+for (const o of document.querySelectorAll('.overlay')) o.addEventListener('click', e => { if (e.target === o || e.target.closest('.close')) closeOverlay(o); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
+for (const b of document.querySelectorAll('[data-open]')) b.onclick = () => openOverlay(b.dataset.open);
+function openOverlay(name) {
+  const o = $('ov-' + name); if (!o) return;
+  if (name !== 'inspect') for (const x of document.querySelectorAll('.overlay:not([hidden])')) if (x !== o) x.hidden = true;
+  if (o.hidden) S.opener = document.activeElement;
+  o.hidden = false;
+  if (name === 'algo') markAlgoViewer();
+  if (name === 'stats' && S.hist) requestAnimationFrame(() => histogram(...S.hist));
+  o.querySelector('.sheet')?.focus({ preventScroll: true });
+}
+function closeOverlay(o = [...document.querySelectorAll('.overlay:not([hidden])')].pop()) {
+  if (!o || o.hidden) return;
+  o.hidden = true;
+  if (!document.querySelector('.overlay:not([hidden])')) S.opener?.focus?.({ preventScroll: true });
+}
+
+// The decks and the book.
+$('algoPileSpot').append(pile('algo', { id: 'algoPile', count: ALGOS.length, title: 'Algorithm deck: spread it out' }));
+$('techPileSpot').append(pile('tech', { id: 'techPile', count: TECHS.length, title: 'Technique deck: spread it out' }));
+$('bookSpot').append(codexBook());
+$('algoPile').onclick = $('algoBrowse').onclick = () => openOverlay('algo');
+$('techPile').onclick = $('techBrowse').onclick = () => openOverlay('tech');
+$('algoDraw').onclick = drawAlgo;
+$('techDraw').onclick = drawTech;
+
+// Inspect: right-click any card, or its ? button.
+document.addEventListener('contextmenu', e => { const c = e.target.closest('.tcg[data-kind]'); if (!c || c.closest('#inspectBody') || !['algo', 'tech'].includes(c.dataset.kind)) return; e.preventDefault(); inspect(c.dataset.kind, c.dataset.id); });
+document.addEventListener('click', e => { const b = e.target.closest('.tcg-btn.peek'); if (!b) return; e.stopPropagation(); e.preventDefault(); const c = b.closest('.tcg'); if (['algo', 'tech'].includes(c.dataset.kind)) inspect(c.dataset.kind, c.dataset.id); }, true);
+new ResizeObserver(() => layoutHand()).observe($('hand'));
+matchMedia('(max-width: 760px)').addEventListener?.('change', () => layoutHand());
+
+Promise.all([cardsData(), metaData(), loadData('dp-plans').then(useDpTables).catch(() => {})]).then(([c, m]) => {
+  DOC = c; META = m; renderAlgoViewer(); renderPlayed(); S.handKey = ''; renderHand(); renderTechViewer();
+});
+readHash();
+// A link pasted into the address bar (or back and forward) changes only the hash: read it again.
+addEventListener('hashchange', () => { readHash(); draw(); });
+{ const m = store.get('table:manual'); if (m) { $('manual').value = m; store.set('table:manual', ''); } }
+renderAlgoViewer();
+draw();
+
+function syncParam() { const g = GENERATORS[$('gen').value]; $('paramWrap').style.display = g.param ? '' : 'none'; if (g.param) { $('paramName').textContent = g.param.name; if ($('param').dataset.gen !== $('gen').value) { $('param').value = g.param.def; $('param').dataset.gen = $('gen').value; } } }
+
+// ---- input --------------------------------------------------------------------------------
+function draw() {
+  $('inputError').textContent = '';
+  let values;
+  if ($('manual').value.trim()) {
+    const p = parseManual($('manual').value);
+    if (p.error) { $('inputError').textContent = 'Error: ' + p.error + '. The explorer never runs on invalid input.'; S.input = null; S.result = null; board.load([], null); scoreboard(); return; }
+    values = p.values;
+  } else {
+    const n = Math.max(0, Math.min(1000, Math.floor(+$('n').value || 0))); $('n').value = n;
+    values = generate($('gen').value, n, (+$('seed').value) >>> 0, $('param').value === '' ? undefined : +$('param').value);
+  }
+  S.input = describe(values);
+  const d = S.input;
+  S.stack = matchStack(inputKey());
+  sidePlate();
+  $('inputInfo').innerHTML = `${d.n} numbers · ${messy(d.disorder)} <span class="nerdy">· disorder ${(100 * d.disorder).toFixed(2)} % (${d.regime}) · LIS ${d.lis} · ${d.runs} run${d.runs === 1 ? '' : 's'}</span>`;
+  $('rankView').textContent = d.n <= 40 ? `ranks: ${d.ranks.join(' ')}` : '';
+  const t = thresholds(Math.max(2, d.n)), ap = t.approx ? '~' : '';
+  $('legend').innerHTML = d.n >= 2 ? `Grade bars at n=${d.n}: <span class="g EXCELLENT">EXCELLENT &lt; ${ap}${f0(t.EXCELLENT)}</span> · <span class="g GOOD">GOOD &lt; ${ap}${f0(t.GOOD)}</span> · <span class="g PASS">PASS &lt; ${ap}${f0(t.PASS)}</span>` : '';
+  replay(true);
+}
+function inputKey() { return { n: S.input?.n ?? +$('n').value, gen: $('gen').value, param: $('param').value, seed: +$('seed').value, manual: !!$('manual').value.trim() }; }
+function messy(x) { return x === 0 ? 'already sorted' : x < 0.05 ? 'barely messy' : x < 0.2 ? 'a little messy' : x < 0.4 ? 'fairly messy' : 'very messy'; }
+
+// ---- stacks (left panel) ----------------------------------------------------------------------
+// Each stack shows the current hand's moves, its stamp, and how much the last change moved it.
+function stackList() {
+  const box = $('stacks'); box.replaceChildren();
+  for (const [level, title] of Object.entries(LEVELS)) {
+    box.append(el('div.tierhead.l-' + level, {}, title));
+    for (const b of STACKS.filter(x => x.level === level)) {
+      const st = S.stamps[b.id], d = st?.d;
+      const tip = `${b.name}: ${b.desc}` + (st?.ops != null ? `\n${st.ops} moves (${st.s})` + (d ? `, ${signed(d)} after the last change` : d === 0 ? ', unchanged by the last change' : '') : '');
+      box.append(el('button', { className: `brow l-${level}${S.stack?.id === b.id ? ' on' : ''}`, title: tip, onclick: () => pickStack(b), dataset: { id: b.id } },
+        el('span.disc', {}, b.icon), el('span.bname', {}, b.name),
+        el('span', { className: 'bdelta' + (d < 0 ? ' good' : d > 0 ? ' bad' : '') }, d ? signed(d) : ''),
+        el('span.bops', {}, st?.ops != null ? f0(st.ops) : ''),
+        el('span', { className: 'mark ' + (st ? stampClass(st.s) : 'none'), title: st ? (st.ops != null ? `${st.s}: ${st.ops} moves` : st.why || '') : '' }, st ? MARK[st.s] ?? '·' : '')));
+    }
+  }
+  box.append(el('button', { className: `brow custom${S.stack ? '' : ' on'}`, onclick: () => openOverlay('input'), title: 'Set the size and shape yourself, or type your own numbers' },
+    el('span.disc', {}, '✎'), el('span.bname', {}, 'Custom stack…'), el('span.bdelta'), el('span.bops'), el('span.mark.none')));
+  stackSummary();
+}
+// The last change, weighed over every stack: where it helped and where it hurt.
+function stackSummary() {
+  const box = $('stackSum'), all = Object.values(S.stamps), ds = all.filter(x => x.d != null);
+  const waiting = all.filter(x => x.s === '…').length;
+  if (!ds.length && !waiting || !S.lastChange) { box.replaceChildren(); return; }
+  const better = ds.filter(x => x.d < 0).length, worse = ds.filter(x => x.d > 0).length, same = ds.length - better - worse;
+  box.replaceChildren(el('span.dim', {}, 'On every stack: '),
+    better ? el('b.good', {}, `${better} better`) : '', better && (worse || same) ? ' · ' : '',
+    worse ? el('b.bad', {}, `${worse} worse`) : '', worse && same ? ' · ' : '',
+    same ? el('span', {}, `${same} same`) : '',
+    waiting ? el('span.dim', {}, `${ds.length ? ' · ' : ''}measuring ${waiting}…`) : '');
+}
+function pickStack(b) {
+  $('manual').value = ''; $('n').value = b.n; $('gen').value = b.gen; syncParam();
+  if (b.param != null) $('param').value = b.param;
+  $('seed').value = SEED; draw();
+}
+function sidePlate() {
+  const b = S.stack;
+  $('stackChip').className = 'chip-stack l-' + (b ? b.level : 'custom'); $('stackChip').textContent = b ? b.icon : '✎';
+  $('stackLevel').textContent = b ? `${LEVELS[b.level]} stack` : 'Custom stack';
+  $('stackName').textContent = b ? b.name : $('manual').value.trim() ? 'Your own numbers' : GENERATORS[$('gen').value].label;
+  $('stackDesc').textContent = b ? b.desc : `${S.input?.n ?? '?'} numbers · ${S.input ? messy(S.input.disorder) : ''}. Change it in Custom stack.`;
+  $('target').textContent = b ? goal(b) : '';
+  stackList();
+}
+// Stamp every stack for the current hand, in a background lane, and keep each hand's results:
+// going back to a hand seen before is instant, and every stack shows what the last change did.
+function stampStacks() {
+  const key = JSON.stringify([deckString(S.hand), S.hand.params, S.hand.presets, S.meta, S.adaptive, S.portfolio.length]);
+  if (key === S.stampKey) return;
+  const prev = S.known.get(S.stampKey) || {};
+  S.stampKey = key; S.stampJob?.cancel(); S.stampJob = null; S.stamps = {};
+  if (!S.resolved?.ok || S.meta === 'portfolio') { stackList(); return; }
+  const a = byId[S.hand.algo], todo = [], known = S.known.get(key) || {};
+  S.known.set(key, known);
+  const put = (b, r) => { const p = prev[b.id]?.ops; S.stamps[b.id] = { ...r, d: p != null ? r.ops - p : null }; };
+  for (const b of STACKS) {
+    if (S.meta === 'none' && a.maxN != null && b.n > a.maxN) S.stamps[b.id] = { s: '—', why: `${a.name} handles at most ${a.maxN} numbers` };
+    else if (known[b.id]) put(b, known[b.id]);
+    else { S.stamps[b.id] = { s: '…', why: 'measuring' }; todo.push(b); }
+  }
+  stackList();
+  if (!todo.length) return;
+  const job = b => S.meta === 'adaptive'
+    ? { kind: 'build', build: adaptiveBuild(), n: b.n, gen: b.gen, param: b.param, seeds: [SEED], thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric }
+    : { kind: 'hand', hand: S.hand, n: b.n, gen: b.gen, param: b.param, seeds: [SEED] };
+  todo.sort((x, y) => x.n - y.n);   // the long ones (n=500) can take seconds for the search cards
+  const mine = S.stampJob = { cancel() { this.dead = true; this.inner?.cancel(); } };
+  (async () => {
+    for (const b of todo) {
+      if (mine.dead) return;
+      mine.inner = runAll([job(b)], null, 'stacks');
+      try { const [r] = await mine.inner.promise; known[b.id] = { s: r.invalid ? 'FAIL' : stamp(b, r.ops[0]), ops: r.ops[0] }; put(b, known[b.id]); }
+      catch (e) { if (mine.dead) return; S.stamps[b.id] = { s: '—', why: e.message }; }
+      if (!mine.dead) stackList();
+    }
+  })();
+}
+
+// ---- play ---------------------------------------------------------------------------------
+// change: the card just added or removed, for the delta chip.
+function replay(fresh = false, change = null) {
+  const before = S.result && !fresh ? { ops: S.result.ops.length, grade: grade(S.input.n, S.result.ops.length), R: S.resolved } : null;
+  S.resolved = resolve(S.hand);
+  renderAll();
+  $('runError').textContent = '';
+  if (!S.input) return;
+  const a = byId[S.hand.algo];
+  if (!S.resolved.ok) return fail(S.resolved.errors.join(' '));
+  if (a.maxN != null && S.input.n > a.maxN && S.meta === 'none') return fail(`${a.name} handles at most ${a.maxN} numbers. Pick a smaller stack or another card.`);
+  try {
+    if (S.meta === 'portfolio') S.result = runPortfolio([S.hand, ...S.portfolio], S.input.ranks);
+    else if (S.meta === 'adaptive') S.result = runAdaptive(adaptiveBuild(), S.input.ranks, { thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric });
+    else S.result = runHand(S.hand, S.input.ranks);
+  } catch (e) { return fail(e.message); }
+  if (change) S.lastChange = change;
+  if (before && change) {
+    const n = S.input.n, now = S.result.ops.length;
+    S.delta = { fresh: true, text: change, d: now - before.ops, g0: before.grade, g1: grade(n, now), dg: S.resolved.grasp - before.R.grasp, dc: S.resolved.craft - before.R.craft };
+  } else if (fresh) S.delta = null;
+  board.load(S.input.ranks, S.result);
+  if (S.pinned) { S.pinned.result = runSafe(S.pinned.hand); board2.load(S.input.ranks, S.pinned.result); comparePanel(); }
+  scoreboard(); writeHash(); pathPanel(); stampStacks();
+}
+function fail(msg) { $('runError').textContent = msg; S.result = null; board.load(S.input.ranks, null); scoreboard(); stampStacks(); }
+function runSafe(hand) { try { return runHand(hand, S.input.ranks); } catch { return null; } }
+function adaptiveBuild() { const pick = id => id === 'current' ? S.hand : deckById[id].hand; return { simple: pick(S.adaptive.simple), medium: pick(S.adaptive.medium), complex: pick(S.adaptive.complex) }; }
+
+function renderAll() { renderPlayed(); renderSlots(); renderHand(); renderTechViewer(); markAlgoViewer(); mana(); notes(); pileInfo(); }
+
+function scoreboard() {
+  const r = S.result;
+  if (!r || !S.input) { $('total').textContent = '–'; $('totalShow').textContent = '–'; shown = null; $('gradeBadge').replaceChildren(); $('gradeBadge').dataset.s = ''; $('valid').textContent = ''; $('cpu').textContent = ''; $('countRow').innerHTML = ''; renderDelta(); $('metaNote').textContent = ''; return; }
+  const n = S.input.n, ops = r.ops.length;
+  const st = S.stack ? stamp(S.stack, ops) : n >= 2 ? grade(n, ops).replace('~', '') : null;
+  $('total').textContent = ops; countUp(ops);
+  const prevStamp = $('gradeBadge').dataset.s;
+  $('gradeBadge').replaceChildren(st ? el('span.stamp.' + stampClass(st), { title: S.stack ? goal(S.stack) : thresholds(n).approx ? 'Interpolated: the subject only grades 100 and 500 numbers' : '' }, st) : '');
+  $('gradeBadge').dataset.s = st || '';
+  if (st && st !== prevStamp) juice($('gradeBadge').firstChild, 'stampin');
+  $('valid').textContent = r.valid ? '✓ sorted, checked by an independent replay' : '✗ ' + r.error; $('valid').className = 'valid small ' + (r.valid ? 'yes' : 'no');
+  $('cpu').textContent = `planner ${r.ms.toFixed(1)} ms`;
+  const c = counts(r.ops); $('countRow').innerHTML = OPS.map(o => `<td>${c[o]}</td>`).join('');
+  const R = S.resolved;
+  $('handTotals').innerHTML = `Hand Grasp <b>${R.handGrasp}</b> of 10 <span class="dots">${dots(Math.min(10, R.handGrasp), 10)}</span> · Hand Craft <b>${R.handCraft}</b> of 10 <span class="dots">${dots(Math.min(10, R.handCraft), 10)}</span> · slots ${R.slotsUsed} / ${R.algo.slots}`;
+  renderDelta(r.removed?.filter(([, k]) => k).map(([id, k]) => `${label(id)} −${k}`).join(' · '));
+  $('metaNote').textContent = S.meta === 'portfolio' ? `Portfolio: member ${r.chosen + 1} of ${r.all.length} won (${r.all.join(' / ')} moves)` : S.meta === 'adaptive' ? `Adaptive: input ${(100 * r.disorder).toFixed(2)} % messy (${METRICS[S.adaptive.metric].name}) → ${r.regime} hand` : '';
+}
+function renderDelta(removed = '') {
+  const D = S.delta, box = $('delta'); box.replaceChildren();
+  if (D) {
+    const chip = el('div.deltachip.' + (D.d < 0 ? 'good' : D.d > 0 ? 'bad' : 'even'), {}, el('span.dtext', {}, `${D.text}: `), el('b', {}, `${D.d === 0 ? '±0' : signed(D.d)} moves`));
+    box.append(chip);
+    if (D.g0 !== D.g1) box.append(el('div.small', {}, `${gradeName(D.g0)} → `, el('b', {}, gradeName(D.g1))));
+    if (D.dg || D.dc) box.append(el('div.small.nerdy', {}, `Grasp ${signed(D.dg)}, Craft ${signed(D.dc)}`));
+    if (D.fresh) { juice(chip, 'pop'); D.fresh = false; }
+  } else box.append(el('div.small.dim', {}, 'Play or take back a card: what it changed pops up here.'));
+  if (removed) box.append(el('div.small.dim', {}, `post: ${removed}`));
+}
+// Juice: restart a CSS animation on an element.
+function calm() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+function juice(e, cls) { if (!e || calm()) return; e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); }
+function countUp(to) {
+  const e = $('totalShow'), from = shown;
+  shown = to; cancelAnimationFrame(countTimer);
+  if (from == null || calm() || from === to) { e.textContent = to; return; }
+  const t0 = performance.now(), dur = 450;
+  const step = now => { const k = Math.min(1, (now - t0) / dur), v = Math.round(from + (to - from) * (1 - (1 - k) ** 3)); e.textContent = v; if (k < 1) countTimer = requestAnimationFrame(step); };
+  countTimer = requestAnimationFrame(step);
+  juice(e, 'bump');
+}
+function mana() {
+  const R = S.resolved; if (!R) return;
+  const was = S.onFire || {};
+  const row = (k, name, v, over, hint) => {
+    const r = el('div', { className: 'manarow ' + k + (over ? ' onfire' : ''), title: `Hand ${name}: ${v} of 10${over ? '. Over the top: the hand is on fire!' : ''}\n${hint}` },
+      el('span.mlabel', { html: `${icon(k === 'grasp' ? 'bulb' : 'hammer')}<span>${name}</span>` }),
+      el('span.gems', {}, Array.from({ length: 10 }, (_, i) => el('i', { className: i < v ? 'full' : '' }))), el('b', { className: 'mval' + (over ? ' over' : '') }, v),
+      over ? el('span.flames', { 'aria-hidden': 'true' }, Array.from({ length: 9 }, (_, i) => el('i', { style: { '--i': i } })), Array.from({ length: 4 }, (_, i) => el('b', { style: { '--i': i } }))) : '');
+    if (over && !was[k]) requestAnimationFrame(() => juice(r, 'ignite'));   // it just caught fire
+    return r;
+  };
+  $('mana').replaceChildren(row('grasp', 'Grasp', R.handGrasp, R.over.grasp, 'How much your hand asks you to understand.'), row('craft', 'Craft', R.handCraft, R.over.craft, 'How much your hand asks you to build.'));
+  S.onFire = { grasp: R.over.grasp, craft: R.over.craft };
+}
+function notes() {
+  const R = S.resolved;
+  $('notes').textContent = [R.caveats?.length ? '~ ' + R.caveats.join(' ') : '', R.stepAside?.length ? `Default stepping aside: ${R.stepAside.map(label).join(', ')} (it conflicts with a played card).` : ''].filter(Boolean).join(' ');
+}
+function pileInfo() {
+  const a = byId[S.hand.algo], k = handCards().length;
+  $('algoPileInfo').textContent = `${ALGOS.length} cards · ${Object.keys(FAMILIES).length} families`;
+  $('techPileInfo').textContent = `${k} in your hand for ${a.name}`;
+}
+
+// ---- the played card, the slots and the knobs -------------------------------------------------
+function renderPlayed() {
+  const a = byId[S.hand.algo], key = `${a.id}|${!!DOC}|${!!META}`;
+  if (key === S.shownAlgo) return;
+  const first = !S.shownAlgo;
+  S.shownAlgo = key;
+  const card = algoFace(a, { stats: META?.cards?.[a.id], doc: DOC?.algorithms?.[a.id], flip: true, cls: 'onmat' });
+  $('played').replaceChildren(card);
+  if (!first) juice(card, 'slam');
+}
+function emptyFace(role, text = 'empty') {
+  return el('div', { className: `tcg socketcard role-${role}`, 'aria-hidden': 'true' },
+    el('div.tcg-body', {}, el('div.face.front', {}, el('span.pxi', { html: icon(SLOT_ICON(role)) }), el('b', {}, SLOT_NAMES[role] || role), el('small', {}, text))));
+}
+function slotBox(role, card, kind, title, onClick) {
+  const s = el('div', { className: `slot ${kind} role-${role}`, dataset: { role }, title: title || '' }, el('span.slotname', { html: `${icon(SLOT_ICON(role))}<span>${SLOT_NAMES[role] || role}</span>` }), card);
+  if (onClick) s.onclick = e => { if (e.target.closest('.tcg-btn')) return; onClick(e); };
+  s.ondragover = e => { e.preventDefault(); s.classList.add('target'); };
+  s.ondragleave = () => s.classList.remove('target');
+  s.ondrop = e => { e.preventDefault(); s.classList.remove('target'); const id = e.dataTransfer.getData('text/plain'); if (techById[id]) playTech(id); };
+  return s;
+}
+function plain(s) { return String(s).replace(/`/g, ''); }
+// What a technique needs on the played card, and what it clashes with there.
+function needsOf(t) {
+  const a = byId[S.hand.algo], use = S.resolved?.use || {}, out = [];
+  for (const r of t.requires || []) {
+    if (typeof r === 'string') { const u = use[r]; out.push({ role: r, ok: !!u, text: u ? `needs a ${ROLE_NAMES[r]}: ${plain(label(u.id))}` : `needs a ${ROLE_NAMES[r]} card first` }); }
+    else if (r.hostDefault) out.push({ role: r.role, ok: a.defaults[r.role] === r.hostDefault, text: `builds on ${plain(label(r.hostDefault))}` });
+    else if (r.card) { const ok = use[r.role]?.id === r.card; out.push({ role: r.role, ok, text: `needs ${plain(label(r.card))}${ok ? '' : ' first'}` }); }
+  }
+  for (const c of t.conflicts || []) {
+    const ct = techById[c]; if (!ct) continue;
+    const isDefault = a.defaults[ct.role] === c, played = S.hand.techs.includes(c);
+    if (!played && !isDefault && !fits(a, ct).ok) continue;   // a clash that cannot happen on this card
+    out.push({ role: ct.role, clash: true, ok: !played, text: played ? `clashes with ${plain(label(c))}` : isDefault ? `pushes out ${plain(label(c))}` : `not with ${plain(label(c))}` });
+  }
+  return out;
+}
+// Which roles the cards in play depend on, so their slots can say "needed by …".
+function neededBy() {
+  const m = {};
+  for (const id of activeIds()) for (const r of techById[id]?.requires || []) { if (r.hostDefault) continue; const role = typeof r === 'string' ? r : r.role; (m[role] ??= []).push(plain(label(id))); }
+  return m;
+}
+// A chain on a slot's tab: green when another card in play relies on it, red when its own card
+// is missing something.
+function linkMarks(slot, t, by) {
+  const needs = t ? needsOf(t).filter(x => !x.clash) : [], missing = needs.filter(x => !x.ok);
+  if (!by && !needs.length) return;
+  const tip = missing.length ? missing.map(x => x.text).join('; ') : [by ? `needed by ${by.join(', ')}` : '', ...needs.map(x => x.text)].filter(Boolean).join('; ');
+  slot.querySelector('.slotname').append(el('span', { className: 'chain ' + (missing.length ? 'miss' : 'ok'), html: icon('link'), title: tip }));
+  if (missing.length) slot.classList.add('broken');
+}
+function renderSlots() {
+  const a = byId[S.hand.algo], R = S.resolved, box = $('slots'), nb = neededBy(); box.replaceChildren();
+  // The meta socket wraps the whole hand.
+  const m = META_CARDS.find(x => x.id === S.meta);
+  box.append(slotBox('meta', m ? metaFace(m, { on: true }) : emptyFace('meta', 'none'), m ? 'played' : 'empty',
+    m ? `${m.name}: click to set it up` : 'Meta card: wraps your whole hand (Portfolio, Adaptive Selector)', () => openOverlay('meta')));
+  const roles = [...Object.keys(a.natives), ...a.open.filter(r => !a.natives[r])];
+  for (const role of roles) {
+    const u = R.use?.[role], native = a.natives[role], t = u && techById[u.id];
+    const src = native ? 'built in' : u?.source === 'played' ? 'played' : u ? 'default' : '';
+    const card = t ? techFace(t, { doc: DOC?.techniques?.[u.id], src, needs: needsOf(t) }) : u ? plainFace(role, label(u.id), src) : emptyFace(role);
+    const kind = native ? 'native' : u?.source === 'played' ? 'played' : u ? 'default' : 'empty';
+    const title = (native ? `${ROLE_NAMES[role]}: built into ${a.name}` : u?.source === 'played' ? 'Click to take it back into your hand' : `${ROLE_NAMES[role]}: ${ROLE_HINT[role]}. Play a ${ROLE_NAMES[role]} card from your hand.`) + (nb[role] ? `\nNeeded by ${nb[role].join(', ')}` : '');
+    const s = slotBox(role, card, kind, title, native ? null : u?.source === 'played' ? () => returnTech(u.id, card) : () => wantRole(role));
+    linkMarks(s, t, nb[role]);
+    box.append(s);
+  }
+  if (a.finishers || a.finisher !== undefined || a.finisherNote) {
+    const f = R.finisher, fixed = !a.finishers?.length, mine = f && S.hand.techs.includes(f.id);
+    const card = f ? techFace(f, { doc: DOC?.techniques?.[f.id], src: fixed ? 'fixed' : mine ? 'played' : 'default' }) : a.finisherNote ? plainFace('leaf', a.finisherNote, 'built in') : emptyFace('leaf');
+    let click = () => wantRole('leaf'), title = 'Finisher: solves the last few numbers. Play a Finisher card from your hand.';
+    if (mine) { click = () => returnTech(f.id, card); title = 'Click to take it back into your hand'; }
+    else if (f && a.finisher === f.id && !String(a.finisher).startsWith('built')) { click = () => { S.hand.finisher = null; replay(false, `−${label(f.id)}`); }; title = 'Click to empty the Finisher slot'; }
+    else if (f) { click = null; title = 'Fixed: this card always finishes this way'; }
+    box.append(slotBox('leaf', card, mine ? 'played' : f ? 'default' : 'empty', title, click));
+  }
+  // Prep and post cards take no slot: they stack in Extras.
+  const extras = [...S.hand.techs.filter(x => ['prep', 'post'].includes(techById[x].role)), ...(S.hand.sharing ? ['double-op-sharing'] : [])];
+  const stack = el('div.extrastack', { style: { '--k': Math.max(1, extras.length) } }, extras.length ? extras.map((id, i) => {
+    const c = techFace(techById[id], { doc: DOC?.techniques?.[id], src: id === 'double-op-sharing' ? 'on' : 'played', needs: needsOf(techById[id]) });
+    c.style.setProperty('--i', i);
+    c.onclick = e => { if (e.target.closest('.tcg-btn')) return; e.stopPropagation(); returnTech(id, c); };
+    c.title = 'Click to take it back into your hand';
+    return c;
+  }) : emptyFace('post', 'prep · post'));
+  box.append(slotBox('extra', stack, extras.length ? 'played' : 'empty', 'Extras: prep and post cards stack here; they take no slot', extras.length ? null : () => wantRole('extra')));
+  $('slotInfo').textContent = a.slots ? `${a.name} has ${a.slots} slot${a.slots === 1 ? '' : 's'} · ${R.slotsUsed} played · this is a sandbox, so play as many as you like` : `${a.name} has no open slots: try its knobs and the extras`;
+  renderKnobs(a, R);
+}
+function renderKnobs(a, R) {
+  const box = $('knobs'); box.replaceChildren(el('div.eyebrow', {}, 'Knobs'));
+  const ps = Object.entries(a.params || {});
+  if (!ps.length) { box.append(el('p.small.dim', {}, `${a.name} has no knobs.`)); return; }
+  const n = S.input?.n ?? 100;
+  for (const [k, p] of ps) {
+    const cur = R.params ? R.params(n)[k] : p.def(n);
+    let input;
+    if (p.type === 'bool') input = el('input', { type: 'checkbox', checked: !!cur, onchange: e => { S.hand.params[k] = e.target.checked; replay(false, `${p.label}: ${e.target.checked ? 'on' : 'off'}`); } });
+    else if (p.type === 'enum') input = el('select', { onchange: e => { S.hand.params[k] = e.target.value; replay(false, `${p.label}: ${p.options[e.target.value]}`); } }, Object.entries(p.options).map(([v, t]) => el('option', { value: v, selected: v === cur }, t)));
+    else input = el('input', { type: 'number', value: cur, min: p.min, max: p.max, step: p.step || 1, onchange: e => { S.hand.params[k] = e.target.value === '' ? undefined : +e.target.value; delete S.hand.presets[k]; replay(false, `${p.label} = ${e.target.value}`); } });
+    const row = el('label.param', {}, el('span', {}, p.label), input);
+    if (p.presets) row.append(el('select', { title: 'As a function of n', onchange: e => { delete S.hand.params[k]; if (e.target.value) S.hand.presets[k] = e.target.value; else delete S.hand.presets[k]; replay(false, `${p.label}: ${e.target.value || p.formula}`); } },
+      el('option', { value: '' }, `default: ${p.formula}`), Object.keys(p.presets).map(name => el('option', { value: name, selected: S.hand.presets?.[k] === name }, name))));
+    if (p.grows === false && !S.hand.presets?.[k] && S.hand.params?.[k] == null && a.claimedClass === 'n√n') row.append(el('span.flag', { title: 'A constant param breaks the O(n√n) claim' }, '⚑ constant'));
+    if (S.hand.params?.[k] != null && p.grows !== undefined && a.claimedClass === 'n√n') row.append(el('span.flag', { title: 'A fixed number does not grow with n' }, '⚑ fixed'));
+    box.append(row);
+  }
+}
+// Point at the hand cards that fit a slot.
+function wantRole(role) {
+  const cards = [...$('hand').children].filter(c => role === 'extra' ? ['prep', 'post'].includes(c.dataset.role) : c.dataset.role === role);
+  if (!cards.length) { $('handInfo').textContent = role === 'extra' ? 'No prep or post card left in your hand.' : `No ${ROLE_NAMES[role]} card in your hand fits ${byId[S.hand.algo].name}.`; return; }
+  for (const c of cards) juice(c, 'want');
+}
+// While a hand card is hovered or dragged: light its own slot, and the slots it needs (green when
+// they are filled, red when they are not) or clashes with.
+function targetSlots(t, on) {
+  const slot = r => $('slots').querySelector(`.slot[data-role="${r}"]`);
+  slot(['prep', 'post'].includes(t.role) ? 'extra' : t.role)?.classList.toggle('target', on);
+  for (const x of needsOf(t)) {
+    const s = slot(x.role); if (!s) continue;
+    s.classList.remove('need-ok', 'need-miss', 'need-clash');
+    if (on) s.classList.add(x.clash ? (x.ok ? 'need-ok' : 'need-clash') : x.ok ? 'need-ok' : 'need-miss');
+  }
+}
+
+// ---- your hand: the technique cards that fit, fanned ---------------------------------------
+function activeIds() {
+  const R = S.resolved, s = new Set(S.hand.techs);
+  for (const u of Object.values(R?.use || {})) s.add(u.id);
+  if (R?.finisher) s.add(R.finisher.id);
+  if (S.hand.sharing) s.add('double-op-sharing');
+  return s;
+}
+function handCards() {
+  const a = byId[S.hand.algo], active = activeIds();
+  return TECHS.filter(t => !active.has(t.id) && !t.unbuildable && (t.id === 'double-op-sharing' || (!t.always && fits(a, t).ok)))
+    .sort((x, y) => ORDER.indexOf(x.role) - ORDER.indexOf(y.role));
+}
+function effectOn(t, a) {
+  const e = META?.techniques?.[t.id]?.effects?.find(x => x.host === a.id), d1 = e?.at?.[100]?.delta, d5 = e?.at?.[500]?.delta;
+  if (d1 == null) return null;
+  return { text: `on ${a.name}: ${signed(d1)} moves at 100${d5 != null ? `, ${signed(d5)} at 500` : ''}`, sign: d1 };
+}
+// The measured change in moves on this card, at the size closest to the current stack.
+function badgeOf(t, a) {
+  const e = META?.techniques?.[t.id]?.effects?.find(x => x.host === a.id); if (!e) return null;
+  const n = (S.input?.n ?? 100) >= 300 && e.at[500] ? 500 : 100, d = e.at[n]?.delta; if (d == null) return null;
+  const v = Math.round(d);
+  return { text: v ? signed(v) : '±0', sub: `@${n}`, sign: v, title: `Measured on ${a.name}: ${signed(d)} moves on average at ${n} random numbers` };
+}
+function refreshNeeds(c, t) {
+  const old = c.querySelector('.needs'), nx = needsOf(t);
+  if (!old && !nx.length) return;
+  const now = nx.length ? needsEl(nx) : null;
+  if (old && now) old.replaceWith(now); else if (old) old.remove();
+  else { const inner = c.querySelector('.tcg-inner'); inner.insertBefore(now, inner.querySelector('.tcg-effect, .tcg-src')); }
+}
+function renderHand() {
+  const a = byId[S.hand.algo], box = $('hand'), cards = handCards(), big = (S.input?.n ?? 100) >= 300, key = `${a.id}|${!!DOC}|${!!META}|${big}`;
+  if (key !== S.handKey) { S.handEls = new Map(); S.handKey = key; }
+  const fresh = [];
+  const els = cards.map(t => {
+    let c = S.handEls.get(t.id);
+    if (!c) {
+      const eff = effectOn(t, a);
+      c = techFace(t, { doc: DOC?.techniques?.[t.id], effect: eff?.text, sign: eff?.sign, needs: needsOf(t), badge: badgeOf(t, a) });
+      c.removeAttribute('title');   // a hovered hand card zooms in to be read: no tooltip over it
+      c.draggable = true;
+      c.ondragstart = e => { e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = 'move'; targetSlots(t, true); };
+      c.ondragend = () => targetSlots(t, false);
+      c.onmouseenter = () => targetSlots(t, true);
+      c.onmouseleave = () => targetSlots(t, false);
+      c.onfocus = () => targetSlots(t, true);
+      c.onblur = () => targetSlots(t, false);
+      c.onclick = e => { if (e.target.closest('.tcg-btn')) return; targetSlots(t, false); playTech(t.id, c.getBoundingClientRect()); };
+      c.onkeydown = e => { if (e.key === 'Enter') { targetSlots(t, false); playTech(t.id, c.getBoundingClientRect()); } };
+      c.classList.add('fresh');   // placed without the slide, so its first position is its real one
+      S.handEls.set(t.id, c); fresh.push(c);
+    } else refreshNeeds(c, t);
+    return c;
+  });
+  for (const id of [...S.handEls.keys()]) if (!cards.some(t => t.id === id)) S.handEls.delete(id);
+  // Keyed update: cards that stay are never detached, so they slide to their new place.
+  const keep = new Set(els);
+  for (const c of [...box.children]) if (!keep.has(c)) c.remove();
+  els.forEach((c, i) => { if (box.children[i] !== c) box.insertBefore(c, box.children[i] || null); });
+  $('handInfo').textContent = cards.length ? `${cards.length} card${cards.length === 1 ? '' : 's'} fit ${a.name} · the corner shows what each one does to the moves · click one, or drag it onto a slot` : `nothing left in your hand that fits ${a.name}`;
+  layoutHand();
+  void box.offsetWidth;   // apply the new places now, before any flight measures them
+  // Deal the new ones from the technique deck.
+  const deck = $('techPile')?.getBoundingClientRect();
+  if (deck && fresh.length && fresh.length === els.length) fresh.forEach((c, i) => fly(c, deck, { dur: 460, delay: 28 * i }));
+  requestAnimationFrame(() => fresh.forEach(c => c.classList.remove('fresh')));
+}
+function layoutHand() {
+  const box = $('hand'), cards = [...box.children], k = cards.length;
+  if (!k || matchMedia('(max-width: 760px)').matches) return;
+  const pad = 18, W = box.clientWidth - 2 * pad, cw = cards[0].offsetWidth || 150, gap = 12;
+  const step = k * cw + (k - 1) * gap <= W ? cw + gap : Math.max(16, (W - cw) / Math.max(1, k - 1));
+  const x0 = pad + Math.max(0, (W - (step * (k - 1) + cw)) / 2), mid = (k - 1) / 2, spread = Math.min(1.2, 12 / k);
+  cards.forEach((c, i) => {
+    const t = k === 1 ? 0 : (i - mid) / mid;
+    c.style.setProperty('--x', `${(x0 + i * step).toFixed(1)}px`);
+    c.style.setProperty('--r', `${((i - mid) * spread).toFixed(2)}deg`);
+    c.style.setProperty('--y', `${(t * t * 6).toFixed(1)}px`);
+    c.style.setProperty('--z', i + 1);
+  });
+}
+// A card flies from where it was to where it is now, as a copy in a layer above everything, so
+// no panel hides it and no scrolling row clips it. The real card shows when the copy lands.
+function fly(target, from, { dur = 440, delay = 0 } = {}) {
+  if (!target || !from?.width || calm()) return;
+  const to = target.getBoundingClientRect(); if (!to.width) return;
+  const w = target.offsetWidth, h = target.offsetHeight, r = parseFloat(target.style.getPropertyValue('--r')) || 0;
+  const ghost = target.cloneNode(true);
+  ghost.classList.add('flying');
+  Object.assign(ghost.style, { position: 'fixed', left: `${to.left + to.width / 2 - w / 2}px`, top: `${to.top + to.height / 2 - h / 2}px`, margin: '0', zIndex: '900', pointerEvents: 'none', transform: 'none', translate: 'none', scale: 'none', rotate: 'none', visibility: 'visible' });
+  ghost.style.setProperty('--cw', `${w}px`);
+  document.body.append(ghost);
+  target.style.visibility = 'hidden';
+  const dx = from.left + from.width / 2 - (to.left + to.width / 2), dy = from.top + from.height / 2 - (to.top + to.height / 2);
+  const anim = ghost.animate([
+    { transform: `translate(${dx}px, ${dy}px) scale(${(from.width / to.width).toFixed(3)}) rotate(0deg)` },
+    { transform: `translate(0px, 0px) scale(1) rotate(${r}deg)` }], { duration: dur, delay, easing: 'cubic-bezier(.2, .9, .25, 1.08)', fill: 'both' });
+  const land = () => { ghost.remove(); target.style.visibility = ''; };
+  anim.onfinish = land; anim.oncancel = land;
+}
+// Scroll the slot row so a slot is in view before a card flies to it.
+function reveal(card) {
+  const row = $('slots'), slot = card.closest('.slot') || card, r = slot.getBoundingClientRect(), rr = row.getBoundingClientRect();
+  if (r.left < rr.left || r.right > rr.right) row.scrollLeft += r.left - rr.left - (rr.width - r.width) / 2;
+}
+function playTech(id, from = null) {
+  addTech(id);
+  const to = $('slots').querySelector(`.tcg[data-id="${id}"]`); if (!to) return;
+  reveal(to);
+  if (from) fly(to, from); else juice(to, 'slam');
+}
+function returnTech(id, fromEl) {
+  const from = fromEl?.getBoundingClientRect();
+  removeTech(id);
+  fly($('hand').querySelector(`.tcg[data-id="${id}"]`), from);
+}
+function addTech(id) {
+  const t = techById[id]; if (!t) return;
+  const a = byId[S.hand.algo];
+  if (id === 'double-op-sharing') { if (!S.hand.sharing) { S.hand.sharing = true; replay(false, '+Double-Op Sharing'); } return; }
+  if (t.role === 'leaf') { S.hand.techs = S.hand.techs.filter(x => techById[x].role !== 'leaf'); delete S.hand.finisher; }
+  else if (t.role !== 'prep' && t.role !== 'post') {
+    const prev = S.hand.techs.find(x => techById[x].role === t.role);
+    S.hand.techs = S.hand.techs.filter(x => techById[x].role !== t.role);
+    const was = prev || (techById[a.defaults[t.role]] ? a.defaults[t.role] : null);
+    if (a.defaults[t.role] === id) { replay(false, prev ? `${label(prev)} → ${label(id)}` : `+${label(id)}`); return; }
+    if (was) { S.hand.techs.push(id); replay(false, `${label(was)} → ${label(id)}`); return; }
+  }
+  if (!S.hand.techs.includes(id)) S.hand.techs.push(id);
+  replay(false, `+${label(id)}`);
+}
+function removeTech(id) {
+  if (id === 'double-op-sharing') { S.hand.sharing = false; replay(false, '−Double-Op Sharing'); return; }
+  S.hand.techs = S.hand.techs.filter(x => x !== id); replay(false, `−${label(id)}`);
+}
+// Planning time for a card at n, from the measured Meta (a power law through 100 and 500).
+function planMs(id, n) {
+  const at = META?.cards?.[id]?.at, a = at?.[100]?.ms; if (!a) return 0;
+  const b = at[500]?.ms ?? a * 25, p = Math.log(b / a) / Math.log(5);
+  return a * Math.pow(Math.max(1, n) / 100, p);
+}
+function busy(text) { $('busy').textContent = text; $('busy').hidden = !text; }
+function play(id, from = null, drew = false) {
+  if (id === S.hand.algo) return;
+  const n = S.input?.n ?? 100, ms = planMs(id, n);
+  // A slow card freezes the page while it plans: say so first, then let the browser paint.
+  if (ms > 1500) { busy(`${byId[id].name} is thinking: about ${Math.round(ms / 1000)} s at ${n} numbers…`); setTimeout(() => { playNow(id, from, drew); busy(''); }, 60); return; }
+  playNow(id, from, drew);
+}
+function playNow(id, from, drew) {
+  const old = S.hand;
+  // Keep the cards that still fit; the rest go back with a note.
+  const keep = old.techs.filter(t => { const c = techById[t]; return c.role === 'prep' || c.role === 'post' || fits(byId[id], c).ok; });
+  const dropped = old.techs.filter(t => !keep.includes(t));
+  S.hand = { ...old, algo: id, techs: keep, params: {}, presets: {}, finisher: undefined };
+  replay(false, `${drew ? 'Drew ' : ''}${byId[id].name}${drew ? '' : ' played'}${dropped.length ? ` (${dropped.map(label).join(', ')} did not fit)` : ''}`);
+  if (from) fly($('played').querySelector('.tcg'), from, { dur: 520 });
+}
+function drawAlgo() {
+  const n = S.input?.n ?? 100, pool = ALGOS.filter(a => a.id !== S.hand.algo && (a.maxN == null || n <= a.maxN) && planMs(a.id, n) < 1500);
+  if (!pool.length) return;
+  juice($('algoPile'), 'shake');
+  play(pool[Math.floor(Math.random() * pool.length)].id, $('algoPile').getBoundingClientRect(), true);
+}
+function drawTech() {
+  const pool = handCards();
+  if (!pool.length) { $('handInfo').textContent = `Your hand is empty: nothing else fits ${byId[S.hand.algo].name}.`; return; }
+  juice($('techPile'), 'shake');
+  playTech(pool[Math.floor(Math.random() * pool.length)].id, $('techPile').getBoundingClientRect());
+}
+
+// ---- the decks spread out (overlays) -------------------------------------------------------
+function renderAlgoViewer() {
+  const box = $('algoViewer'); box.replaceChildren();
+  for (const [fid, fam] of Object.entries(FAMILIES)) {
+    const list = ALGOS.filter(a => a.family === fid);
+    box.append(el('section.vsec.fam-' + fid, { dataset: { fam: fid } },
+      el('h3.vhead', { html: `${icon(fid)}<span>${fam.name}</span><span class="dim small">${FAMILY_HINT[fid] || ''}</span>` }),
+      el('div.vgrid', {}, list.map(a => {
+        const c = algoFace(a, { stats: META?.cards?.[a.id] });
+        c.onclick = e => { if (e.target.closest('.tcg-btn') || c.classList.contains('off')) return; const r = c.getBoundingClientRect(); closeOverlay($('ov-algo')); play(a.id, r); };
+        c.onkeydown = e => { if (e.key === 'Enter') c.onclick(e); };
+        return c;
+      }))));
+  }
+  $('decksView').replaceChildren(...DECKS.map(d => {
+    const b = deckBox(d);
+    b.onclick = () => { S.hand = { ...structuredClone({ ...d.hand, params: {}, presets: d.hand.presets || {} }), sandbox: S.hand.sandbox }; closeOverlay($('ov-algo')); replay(false, `${d.name} dealt`); };
+    return b;
+  }));
+  $('metaView').replaceChildren(...META_CARDS.map(m => {
+    const c = metaFace(m, { on: S.meta === m.id });
+    c.onclick = () => { S.meta = S.meta === m.id ? 'none' : m.id; $('metaSel').value = S.meta; metaPanel(); replay(false, S.meta === 'none' ? `−${m.name}` : `+${m.name}`); renderAlgoViewer(); if (S.meta !== 'none') openOverlay('meta'); };
+    return c;
+  }));
+  markAlgoViewer();
+}
+function markAlgoViewer() {
+  const n = S.input?.n;
+  for (const c of $('algoViewer').querySelectorAll('.tcg.algo')) {
+    const a = byId[c.dataset.id], big = a.maxN != null && n > a.maxN;
+    c.classList.toggle('on', a.id === S.hand.algo); c.classList.toggle('off', big);
+    c.querySelector(':scope > .tcg-banner')?.remove();
+    if (big) c.append(el('div.tcg-banner', {}, `n ≤ ${a.maxN} only`));
+    c.title = big ? `${a.name} handles at most ${a.maxN} numbers: pick a smaller stack first` : a.id === S.hand.algo ? 'In play' : `Play ${a.name}`;
+  }
+  for (const s of $('algoViewer').querySelectorAll('.vsec')) s.hidden = S.family !== 'all' && s.dataset.fam !== S.family;
+  for (const b of $('familyFilter').children) b.classList.toggle('on', b.dataset.f === S.family);
+  const hs = deckString(S.hand);
+  for (const b of $('decksView').children) b.classList.toggle('on', deckString(deckById[b.dataset.id].hand) === hs);
+}
+function renderTechViewer() {
+  const a = byId[S.hand.algo], R = S.resolved, box = $('techViewer'); box.replaceChildren();
+  const groups = [...ROLES.map(r => [r, TECHS.filter(t => t.role === r)]), ['leaf', TECHS.filter(t => t.role === 'leaf')], ['prep', TECHS.filter(t => t.role === 'prep')], ['post', TECHS.filter(t => t.role === 'post')]];
+  let fitting = 0;
+  for (const [role, list] of groups) {
+    const items = list.map(t => {
+      const f = fits(a, t), played = S.hand.techs.includes(t.id) || (t.id === 'double-op-sharing' && S.hand.sharing);
+      const isDefault = !played && (a.defaults[t.role] === t.id || (t.role === 'leaf' && R?.finisher?.id === t.id));
+      const native = a.natives[t.role] === t.id;
+      const state = t.id === 'double-op-sharing' ? { ok: true, played } : t.always ? { ok: true, always: true } : native ? { ok: false, reason: 'Built into this card.', native: true, played: true } : { ...f, played, isDefault };
+      const onClick = t.id === 'double-op-sharing' ? () => { S.hand.sharing = !S.hand.sharing; replay(false, `${S.hand.sharing ? '+' : '−'}Double-Op Sharing`); }
+        : t.always ? null : played ? () => removeTech(t.id) : f.ok ? () => addTech(t.id) : null;
+      const ok = state.ok || state.played;
+      if (ok) fitting++;
+      return { t, state, onClick, ok };
+    }).filter(i => S.techFilter === 'all' || i.ok);
+    if (!items.length) continue;
+    box.append(el('section.vsec.role-' + role, {},
+      el('h3.vhead', { html: `${icon(role)}<span>${role === 'leaf' ? 'Finishers' : ROLE_NAMES[role]}</span><span class="dim small">${ROLE_HINT[role]}</span>` }),
+      el('div.vgrid', {}, items.map(({ t, state, onClick }) => {
+        const eff = effectOn(t, a);
+        const c = techFace(t, { doc: DOC?.techniques?.[t.id], state, effect: !state.ok && !state.played ? state.reason : eff?.text, sign: eff?.sign, needs: state.ok || state.played ? needsOf(t) : [] });
+        if (onClick) { c.onclick = e => { if (e.target.closest('.tcg-btn')) return; onClick(); }; c.onkeydown = e => { if (e.key === 'Enter') onClick(); }; }
+        return c;
+      }))));
+  }
+  $('techTitle').textContent = `Technique deck · ${TECHS.length} cards · ${fitting} fit ${a.name}`;
+  for (const b of $('techFilter').children) b.classList.toggle('on', b.dataset.f === S.techFilter);
+}
+
+// ---- inspect: a card up close, with its full text ----------------------------------------------
+function inspect(kind, id) {
+  const body = $('inspectBody'); body.replaceChildren();
+  if (kind === 'algo') {
+    const a = byId[id], doc = DOC?.algorithms?.[id], st = META?.cards?.[id], sec = sections(doc?.doc || '');
+    const face = algoFace(a, { stats: st, doc, flip: true }); face.style.setProperty('--cw', '300px');
+    $('inspectTitle').textContent = a.name;
+    const nums = st ? Object.entries(st.at).map(([n, s]) => `${n} numbers → ${f0(s.mean)} moves on average (worst ${f0(s.max)}, ${s.grade.replace('~', '')})`) : [];
+    body.append(el('div.inspectcard', {}, face), el('div.inspecttext', {},
+      el('p.lede', {}, `${FAMILIES[a.family].name} algorithm · ${RARITY[a.rarity]} · Grasp ${a.grasp} · Craft ${a.craft} · ${a.slots ? `${a.slots} slot${a.slots === 1 ? '' : 's'}` : 'no slots'}${a.maxN ? ` · n ≤ ${a.maxN}` : ''}`),
+      el('p.flavor', {}, `“${a.tagline}”`),
+      nums.length ? el('ul.nums', {}, nums.map(t => el('li', {}, t))) : '',
+      el('div.inspectmini', {}, el('h4', {}, 'Watch it sort 20 numbers'), mini(a)),
+      el('div.doc', { html: (sec['How it plays'] ? '<h4>How it plays</h4>' + markdown(sec['How it plays'], doc.source) : '') + (sec.Lore ? '<h4>Lore</h4>' + markdown(sec.Lore, doc.source) : '') + (sec.Pros ? '<h4>Pros</h4>' + markdown(sec.Pros, doc.source) : '') + (sec.Cons ? '<h4>Cons</h4>' + markdown(sec.Cons, doc.source) : '') }),
+      el('div.row.actions', {},
+        a.id === S.hand.algo ? el('span.dim', {}, 'In play') : el('button.btn.blue', { disabled: a.maxN != null && S.input?.n > a.maxN, onclick: () => { closeOverlay($('ov-inspect')); closeOverlay($('ov-algo')); play(id); } }, 'Play this card'),
+        el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'))));
+  } else {
+    const t = techById[id], doc = DOC?.techniques?.[id], a = byId[S.hand.algo], f = fits(a, t), active = activeIds().has(id), mine = S.hand.techs.includes(id) || (id === 'double-op-sharing' && S.hand.sharing);
+    const face = techFace(t, { doc, state: { ...f, played: active }, effect: effectOn(t, a)?.text, sign: effectOn(t, a)?.sign, needs: f.ok ? needsOf(t) : [] }); face.style.setProperty('--cw', '260px');
+    $('inspectTitle').textContent = label(id).replace(/`/g, '');
+    const effects = (META?.techniques?.[id]?.effects || []).map(e => `on ${byId[e.host]?.name || e.host}: ${signed(e.at[100]?.delta)} moves at 100${e.at[500] ? `, ${signed(e.at[500].delta)} at 500` : ''}`);
+    body.append(el('div.inspectcard', {}, face), el('div.inspecttext', {},
+      el('p.lede', {}, `${ROLE_NAMES[t.role]} card · ${RARITY[t.rarity]} · +${t.grasp ?? 0} Grasp · +${t.craft ?? 0} Craft · ${ROLE_HINT[t.role]}`),
+      doc?.tagline ? el('p.flavor', {}, `“${doc.tagline}”`) : '',
+      effects.length ? [el('h4', {}, 'Measured'), el('ul.nums', {}, effects.map(x => el('li', {}, x)))] : t.effect ? el('p', {}, 'Measured: ' + t.effect) : '',
+      el('div.doc', { html: doc?.doc ? markdown(doc.doc, doc.source) : '' }),
+      el('div.row.actions', {},
+        mine ? el('button.btn.grey', { onclick: () => { closeOverlay($('ov-inspect')); removeTech(id); } }, 'Take it back')
+          : active ? el('span.dim', {}, 'In play') : f.ok || id === 'double-op-sharing' ? el('button.btn.blue', { onclick: () => { closeOverlay($('ov-inspect')); addTech(id); } }, `Play it on ${a.name}`) : el('span.dim', {}, f.reason || ''),
+        el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'))));
+  }
+  openOverlay('inspect');
+}
+
+// ---- Meta card -----------------------------------------------------------------------------
+function metaPanel() {
+  const box = $('metaPanel'); box.innerHTML = '';
+  if (S.meta === 'portfolio') {
+    box.append(el('p.small', {}, 'Runs the current hand and every member below on each input, and keeps the shortest move list.'),
+      el('ul.members', {}, S.portfolio.map((h, i) => el('li', {}, deckString(h), ' ', el('button.ghost', { onclick: () => { S.portfolio.splice(i, 1); metaPanel(); replay(false, '−member'); } }, '✕')))),
+      el('button', { onclick: () => { S.portfolio.push(structuredClone(S.hand)); metaPanel(); replay(false, '+member'); } }, '＋ add this hand as a member'));
+  } else if (S.meta === 'adaptive') {
+    const opts = sel => [el('option', { value: 'current', selected: sel === 'current' }, 'the current hand'), ...DECKS.map(d => el('option', { value: d.id, selected: d.id === sel }, d.name))];
+    const row = (regime, title) => el('label.param', {}, title + ' ', el('select', { onchange: e => { S.adaptive[regime] = e.target.value; metaPanel(); replay(false, `${regime} hand`); } }, opts(S.adaptive[regime])));
+    const num = (k, t) => el('label.param', {}, t + ' ', el('input', { type: 'number', step: 0.01, min: 0, max: 1, value: S.adaptive[k], onchange: e => { S.adaptive[k] = +e.target.value; replay(false, `threshold ${t}`); } }));
+    const comp = buildCompliance(adaptiveBuild());
+    box.append(row('simple', 'below low → simple'), row('medium', 'below high → medium'), row('complex', 'otherwise → complex'), num('low', 'low'), num('high', 'high'),
+      el('label.param', {}, 'metric ', el('select', { onchange: e => { S.adaptive.metric = e.target.value; replay(false, 'metric'); } }, Object.entries(METRICS).map(([k, m]) => el('option', { value: k, selected: k === S.adaptive.metric }, m.name)))),
+      el('p', { className: comp.ok ? 'good' : 'bad' }, comp.ok ? '✓ every regime meets its class target' : '✕ ' + comp.problems.join('; ')),
+      el('p.small', {}, 'Builds: ', BUILDS.map(b => el('button.ghost', { onclick: () => { const id = h => DECKS.find(d => deckString(d.hand) === deckString(h) && JSON.stringify(d.hand.presets || {}) === JSON.stringify(h.presets || {}))?.id; const s = id(b.simple), m = id(b.medium), c = id(b.complex); if (s && m && c) { Object.assign(S.adaptive, { simple: s, medium: m, complex: c }); metaPanel(); replay(false, b.name); } else $('runError').textContent = `${b.name} uses a hand that is not a named deck.`; } }, b.name))));
+  } else box.append(el('p.small.dim', {}, 'No meta card in play. Pick Portfolio or Adaptive Selector above.'));
+}
+
+// ---- over many inputs (Web Worker) ------------------------------------------------------------
+function runSeeds() {
+  const label0 = 'Run the hand on these inputs';
+  if (S.seedJob) { S.seedJob.cancel(); S.seedJob = null; $('runSeeds').textContent = label0; $('seedStats').textContent = 'Cancelled.'; return; }
+  const k = Math.max(1, Math.min(500, +$('seeds').value || 50));
+  if ($('manual').value.trim()) { $('seedStats').textContent = 'Clear your own numbers to run over generated inputs.'; return; }
+  if (!S.input || !S.resolved?.ok) return;
+  const n = S.input.n, gen = $('gen').value, param = $('param').value === '' ? undefined : +$('param').value, seeds = Array.from({ length: k }, (_, i) => i + 1);
+  const job = S.meta === 'adaptive' ? { kind: 'build', build: adaptiveBuild(), n, gen, param, seeds, thresholds: { low: S.adaptive.low, high: S.adaptive.high }, metric: S.adaptive.metric } : { kind: 'hand', hand: S.hand, n, gen, param, seeds };
+  $('runSeeds').textContent = 'Cancel';
+  S.seedJob = runJob(job, p => { $('seedStats').textContent = `Running… ${Math.round(100 * p)} %`; });
+  S.seedJob.promise.then(res => {
+    S.seedJob = null; $('runSeeds').textContent = label0;
+    if (res.invalid) { $('seedStats').textContent = `${res.invalid} invalid streams`; return; }
+    const xs = res.ops, st = stats(xs), pr = passRate(n, xs), name = S.meta === 'adaptive' ? 'Adaptive build' : deckString(S.hand);
+    const reg = res.regimes?.length ? ` · regimes: ${['simple', 'medium', 'complex'].map(r => `${r} ${pct(res.regimes.filter(x => x === r).length / res.regimes.length)}`).join(', ')}` : '';
+    $('seedStats').innerHTML = `<b>${name}</b>, n = ${n}, ${k} seeds of “${GENERATORS[gen].label}”: mean <b>${st.mean.toFixed(1)}</b> (${grade(n, st.mean)}) · min ${st.min} · max ${st.max} · sd ${st.sd.toFixed(1)} · spread ${st.spread.toFixed(3)}<br>runs under the bars: EXCELLENT ${pct(pr.EXCELLENT)} · GOOD ${pct(pr.GOOD)} · PASS ${pct(pr.PASS)}${thresholds(n).approx ? ' (interpolated bars)' : ''}${reg}`;
+    S.hist = [xs, n]; histogram(xs, n);
+  }).catch(e => { S.seedJob = null; $('runSeeds').textContent = label0; if (e.message !== 'cancelled') $('seedStats').textContent = e.message; });
+}
+function histogram(xs, n) {
+  const cv = $('hist'), dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const lo = Math.min(...xs), hi = Math.max(...xs), bins = 30, cnt = new Array(bins).fill(0);
+  for (const x of xs) cnt[Math.min(bins - 1, Math.floor((x - lo) / ((hi - lo) || 1) * bins))]++;
+  const mx = Math.max(...cnt), bw = w / bins; g.fillStyle = css('--accent');
+  cnt.forEach((c, i) => { const bh = (h - 18) * c / mx; g.fillRect(i * bw + 1, h - 14 - bh, bw - 2, bh); });
+  g.fillStyle = css('--muted'); g.font = '11px system-ui'; g.fillText(lo, 2, h - 2); const t = String(hi); g.fillText(t, w - g.measureText(t).width - 2, h - 2);
+  const t2 = thresholds(n);
+  for (const [k, v] of [['EXCELLENT', '--exc'], ['GOOD', '--good']]) { const ex = t2[k]; if (ex > lo && ex < hi) { const x = (ex - lo) / (hi - lo) * w; g.strokeStyle = css(v); g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h - 14); g.stroke(); g.fillStyle = css(v); g.fillText(k, x + 3, 10); } }
+}
+
+// ---- Compare --------------------------------------------------------------------------------
+function pin() {
+  if (S.pinned) { S.pinned = null; $('compare').hidden = true; $('pin').textContent = 'Compare'; $('pin').classList.remove('on'); board.peers = []; $('boardWrap').classList.remove('two'); return; }
+  S.pinned = { hand: structuredClone(S.hand) };
+  $('compare').hidden = false; $('pin').textContent = 'Unpin'; $('pin').classList.add('on'); $('boardWrap').classList.add('two');
+  if (!board2) board2 = new Board($('board2'), { follower: true });
+  link(board, board2);
+  S.pinned.result = runSafe(S.pinned.hand); board2.load(S.input.ranks, S.pinned.result); comparePanel(); board.goAll(board.step);
+}
+function comparePanel() {
+  const p = S.pinned; if (!p) return;
+  const a = p.result?.ops.length, b = S.result?.ops.length;
+  $('compareInfo').innerHTML = `pinned: <b>${deckString(p.hand)}</b> → ${a ?? '—'} ops · current: <b>${deckString(S.hand)}</b> → ${b ?? '—'} ops${a != null && b != null ? ` · difference ${signed(b - a)}` : ''}`;
+}
+
+// ---- Paths and Challenges --------------------------------------------------------------------
+function startPath(p, i) { S.path = p; S.step = i; applyStep(); }
+function applyStep() {
+  const st = S.path.steps[S.step];
+  S.hand = { ...parseDeck(st.deck), sandbox: true, params: {}, presets: {} };
+  if (st.n != null) { $('n').value = st.n; $('manual').value = ''; }
+  if (st.gen) { $('gen').value = st.gen; syncParam(); }
+  S.meta = st.meta || 'none'; $('metaSel').value = S.meta; metaPanel();
+  draw();
+  if (st.compare) { if (S.pinned) pin(); const cur = S.hand; S.hand = { ...parseDeck(st.compare), sandbox: true, params: {}, presets: {} }; replay(); pin(); S.hand = cur; replay(); }
+}
+function pathPanel() {
+  const box = $('pathPanel');
+  if (!S.path) { box.hidden = true; return; }
+  const p = S.path, st = p.steps[S.step]; box.hidden = false; box.innerHTML = '';
+  box.append(el('div.pathhead', {}, el('span.questicon', { html: icon('book') }), el('b', {}, `Path: ${p.name}`), el('span.dim', {}, ` · step ${S.step + 1} of ${p.steps.length}`),
+    el('button.ghost', { onclick: () => { S.step--; applyStep(); }, disabled: S.step === 0 }, '◀ previous'),
+    el('button.ghost', { onclick: () => { S.step++; applyStep(); }, disabled: S.step >= p.steps.length - 1 }, 'next step ▶'),
+    el('button.ghost', { onclick: () => { S.path = null; pathPanel(); }, title: 'Leave the path' }, '✕')),
+    el('p', {}, st.q), st.link ? el('p', {}, el('a', { href: st.link }, 'Open it →')) : '', st.next ? el('p.small.dim', {}, 'Next: ' + st.next) : el('p.small.dim', {}, 'End of the path.'));
+}
+function challengesPanel() {
+  const box = $('challenges'); box.innerHTML = '';
+  const ctx = () => ({ hand: S.hand, resolved: S.resolved, n: S.input?.n,
+    runs: async (n, k) => (await runJob({ kind: 'hand', hand: S.hand, n, gen: 'uniform', seeds: Array.from({ length: k }, (_, i) => 1000 + i) }).promise).ops,
+    mean: async (n, k) => stats((await runJob({ kind: 'hand', hand: S.hand, n, gen: 'uniform', seeds: Array.from({ length: k }, (_, i) => 1000 + i) }).promise).ops).mean,
+    runOn: id => { try { return runHand({ algo: id, techs: [], sandbox: true }, S.input.ranks, { keepSteps: false }).ops.length; } catch { return NaN; } } });
+  box.append(el('p.small.dim', {}, 'Teaching prompts with no leaderboard. Set up the hand and the input, then check.'));
+  for (const c of CHALLENGES) {
+    const out = el('span.result');
+    box.append(el('div.challenge', {}, el('b', {}, c.name), el('p.small.dim', {}, c.hint), el('button', { onclick: async e => {
+      if (!S.resolved?.ok || !S.input) { out.textContent = 'Play a valid hand first.'; return; }
+      e.target.disabled = true; out.textContent = 'checking…';
+      try { const [ok, why] = await c.check(ctx()); out.className = 'result ' + (ok ? 'good' : 'bad'); out.textContent = (ok ? '✓ done: ' : '✕ not yet: ') + why; store.set('challenge:' + c.id, ok ? '1' : ''); }
+      catch (err) { out.textContent = err.message; }
+      e.target.disabled = false;
+    } }, 'check'), ' ', out, store.get('challenge:' + c.id) ? el('span.good', {}, ' ✓') : ''));
+  }
+}
+
+// ---- share link: #deck=card+tech…&n=…&gen=…&seed=…&p=…&P.k=…&preset.k=… -------------------------
+function writeHash() {
+  if ($('manual').value.trim()) return;
+  const q = new URLSearchParams();
+  q.set('deck', deckString(S.hand)); q.set('n', $('n').value); q.set('gen', $('gen').value); q.set('seed', $('seed').value);
+  if (GENERATORS[$('gen').value].param) q.set('p', $('param').value);
+  for (const [k, v] of Object.entries(S.hand.params || {})) if (v != null) q.set('P.' + k, v);
+  for (const [k, v] of Object.entries(S.hand.presets || {})) q.set('preset.' + k, v);
+  if (S.meta !== 'none') q.set('meta', S.meta);
+  history.replaceState(null, '', '#' + q.toString().replace(/%2B/g, '+'));
+}
+function readHash() {
+  const raw = location.hash.slice(1); if (!raw) return;
+  const h = new URLSearchParams(raw.replace(/\+/g, '%2B'));
+  const deck = h.get('deck');
+  if (deck) { const p = parseDeck(deck); if (byId[p.algo]) S.hand = { ...S.hand, ...p, params: {}, presets: {} }; }
+  for (const [k, v] of h) { if (k.startsWith('P.')) S.hand.params[k.slice(2)] = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; if (k.startsWith('preset.')) S.hand.presets[k.slice(7)] = v; }
+  if (h.get('n')) $('n').value = h.get('n'); if (h.get('seed')) $('seed').value = h.get('seed');
+  if (h.get('gen') && GENERATORS[h.get('gen')]) { $('gen').value = h.get('gen'); syncParam(); if (h.get('p') !== null) $('param').value = h.get('p'); }
+  if (h.get('meta')) { S.meta = h.get('meta'); $('metaSel').value = S.meta; metaPanel(); }
+  const path = PATHS.find(p => p.id === h.get('path')); if (path) { S.path = path; S.step = Math.min(path.steps.length - 1, +h.get('step') || 0); }
+}

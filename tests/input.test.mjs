@@ -1,0 +1,18 @@
+import { parseManual, ranks, disorder, generate, describe, regime } from '../js/core/input.js';
+import { eq, ok } from './assert.mjs';
+export const tests = [
+  ['manual input follows push_swap rules', () => {
+    eq(parseManual('3 -1 +7').values, [3, -1, 7]);
+    ok(/not an integer/.test(parseManual('0 one 2').error)); ok(/twice/.test(parseManual('3 2 3').error));
+    ok(/32-bit/.test(parseManual('2147483648').error)); eq(parseManual('-2147483648 2147483647').values, [-2147483648, 2147483647]);
+    ok(/not an integer/.test(parseManual('1.5').error)); eq(parseManual('').values, []);
+  }],
+  ['ranks', () => eq(ranks([40, -3, 7]), [2, 0, 1])],
+  ['disorder is the subject\'s: inversions ÷ pairs, 0 below 2 values', () => {
+    eq(disorder([]), 0); eq(disorder([5]), 0); eq(disorder([0, 1, 2]), 0); eq(disorder([2, 1, 0]), 1);
+    eq(disorder(ranks([4, 67, 3, 87, 23])), 0.4);      // the subject's --bench example: 40.00 %
+  }],
+  ['exact-disorder generator hits its target', () => { for (const d of [0, 0.1, 0.5, 1]) eq(disorder(generate('disorder', 100, 3, d)).toFixed(4), d.toFixed(4)); }],
+  ['generators are deterministic per seed', () => { eq(generate('uniform', 50, 9), generate('uniform', 50, 9)); ok(generate('uniform', 50, 9).join() !== generate('uniform', 50, 10).join()); }],
+  ['describe and regimes', () => { const d = describe([3, 1, 2]); eq([d.n, d.lis], [3, 2]); eq(regime(0.1), 'simple (O(n²))'); eq(regime(0.5), 'complex (O(n log n))'); }],
+];

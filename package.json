@@ -1,0 +1,15 @@
+{
+  "name": "push-swap-explorer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Explore push_swap algorithms as a card game. Static, no dependencies.",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "start": "node tools/serve.mjs",
+    "test": "node tests/run.mjs",
+    "test:ui": "node tools/ui-check.mjs",
+    "sim": "node spec/sim/report.mjs"
+  }
+}

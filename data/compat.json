@@ -1,0 +1,785 @@
+{
+ "roles": [
+  "anchor",
+  "pick",
+  "cost",
+  "sweep",
+  "band",
+  "retrieval",
+  "ends",
+  "split",
+  "pivot",
+  "order"
+ ],
+ "algorithms": {
+  "hardcoded-three": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "five-hand": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": "hardcoded-three",
+   "finishers": [
+    "hardcoded-three",
+    "bfs-leaf",
+    "distance-tables"
+   ],
+   "caveats": {}
+  },
+  "oracle": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "bubble-wheel": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "min-extract": {
+   "slots": 0,
+   "natives": {
+    "anchor": "keep-three"
+   },
+   "open": [],
+   "defaults": {},
+   "finisher": "hardcoded-three",
+   "finishers": [
+    "hardcoded-three",
+    "five-hand",
+    "bfs-leaf",
+    "distance-tables"
+   ],
+   "caveats": {}
+  },
+  "twin-extract": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": "hardcoded-three",
+   "finishers": [
+    "hardcoded-three",
+    "five-hand",
+    "bfs-leaf",
+    "distance-tables"
+   ],
+   "caveats": {}
+  },
+  "insert-into-b": {
+   "slots": 2,
+   "natives": {},
+   "open": [
+    "anchor",
+    "pick",
+    "cost"
+   ],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {
+    "anchor": "The anchor stays in A, but this card inserts into B. Use the mirrored form: kept values are rotated past and never pushed."
+   }
+  },
+  "simple-insertion": {
+   "slots": 4,
+   "natives": {},
+   "open": [
+    "anchor",
+    "pick",
+    "cost",
+    "band",
+    "order"
+   ],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "lis-insertion": {
+   "slots": 3,
+   "natives": {
+    "anchor": "lis-anchor",
+    "pick": "cheapest-pick"
+   },
+   "open": [
+    "cost",
+    "band",
+    "order"
+   ],
+   "defaults": {
+    "cost": "two-way-cost"
+   },
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "turk": {
+   "slots": 3,
+   "natives": {
+    "pick": "cheapest-pick"
+   },
+   "open": [
+    "anchor",
+    "cost",
+    "band",
+    "order"
+   ],
+   "defaults": {
+    "anchor": "keep-three",
+    "cost": "four-way-cost"
+   },
+   "finisher": "hardcoded-three",
+   "finishers": [
+    "hardcoded-three",
+    "five-hand",
+    "bfs-leaf",
+    "distance-tables"
+   ],
+   "caveats": {}
+  },
+  "chunks": {
+   "slots": 3,
+   "natives": {},
+   "open": [
+    "anchor",
+    "sweep",
+    "band",
+    "retrieval",
+    "order"
+   ],
+   "defaults": {
+    "sweep": "nearest-member-sweep",
+    "band": "rb-sink",
+    "retrieval": "max-retrieval"
+   },
+   "finisher": null,
+   "finishers": [],
+   "caveats": {
+    "anchor": "Possible (skip LIS values while sweeping), but kept values sit between chunk members and add rotations. Expect a small effect."
+   }
+  },
+  "butterfly": {
+   "slots": 2,
+   "natives": {
+    "sweep": "the window rule"
+   },
+   "open": [
+    "band",
+    "retrieval"
+   ],
+   "defaults": {
+    "band": "rb-sink",
+    "retrieval": "max-retrieval"
+   },
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "bucket-insertion": {
+   "slots": 3,
+   "natives": {
+    "pick": "cheapest, within the current bucket",
+    "retrieval": "cheapest, within the current bucket"
+   },
+   "open": [
+    "sweep",
+    "band",
+    "cost",
+    "order"
+   ],
+   "defaults": {
+    "sweep": "one-way-sweep",
+    "band": "rb-sink",
+    "cost": "two-way-cost"
+   },
+   "finisher": null,
+   "finishers": [],
+   "caveats": {
+    "sweep": "Playable, but a nearest-member sweep can pass the same value many times. That breaks the O(n√n) proof that One-Way Sweep gives."
+   }
+  },
+  "lsd-radix": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "ternary-radix": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "msd-radix": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "quick-2way": {
+   "slots": 4,
+   "natives": {},
+   "open": [
+    "ends",
+    "split",
+    "pivot",
+    "order"
+   ],
+   "defaults": {
+    "ends": "two ends, rotations restored",
+    "split": "halves",
+    "pivot": "median-pivot"
+   },
+   "finisher": "built-in",
+   "finishers": [
+    "bfs-leaf",
+    "distance-tables"
+   ],
+   "caveats": {}
+  },
+  "four-end-quicksort": {
+   "slots": 3,
+   "natives": {
+    "ends": "four-ends"
+   },
+   "open": [
+    "split",
+    "pivot",
+    "order"
+   ],
+   "defaults": {
+    "split": "thirds-split",
+    "pivot": "equal thirds"
+   },
+   "finisher": null,
+   "finishers": [
+    "bfs-leaf",
+    "distance-tables",
+    "beam-leaf"
+   ],
+   "caveats": {}
+  },
+  "tape-merge": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [
+    "bfs-leaf",
+    "distance-tables"
+   ],
+   "caveats": {}
+  },
+  "natural-merge": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "lookahead-greedy": {
+   "slots": 2,
+   "natives": {
+    "pick": "cheapest pick, priced with lookahead",
+    "cost": "lookahead (k = 2)"
+   },
+   "open": [
+    "anchor",
+    "band"
+   ],
+   "defaults": {
+    "anchor": "keep-three"
+   },
+   "finisher": "hardcoded-three",
+   "finishers": [
+    "hardcoded-three",
+    "five-hand",
+    "bfs-leaf",
+    "distance-tables"
+   ],
+   "caveats": {}
+  },
+  "beam-sorter": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
+  "annealer": {
+   "slots": 0,
+   "natives": {},
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  }
+ },
+ "techniques": {
+  "rank-compression": {
+   "role": "prep",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": true,
+   "unbuildable": null
+  },
+  "presorted-shortcut": {
+   "role": "prep",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "disorder-meter": {
+   "role": "prep",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "lis-anchor": {
+   "role": "anchor",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "turk",
+    "insert-into-b",
+    "lookahead-greedy"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "circular-lis-anchor": {
+   "role": "anchor",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "turk",
+    "insert-into-b",
+    "lookahead-greedy"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "longest-run-anchor": {
+   "role": "anchor",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "turk",
+    "insert-into-b",
+    "lookahead-greedy"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "keep-three": {
+   "role": "anchor",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "turk",
+    "lookahead-greedy",
+    "min-extract"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "cheapest-pick": {
+   "role": "pick",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "insert-into-b"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "two-way-cost": {
+   "role": "cost",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "lis-insertion",
+    "turk",
+    "insert-into-b",
+    "bucket-insertion"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "four-way-cost": {
+   "role": "cost",
+   "requires": [
+    "pick"
+   ],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "lis-insertion",
+    "turk",
+    "insert-into-b",
+    "bucket-insertion"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "lookahead-k": {
+   "role": "cost",
+   "requires": [
+    "pick"
+   ],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "lis-insertion",
+    "turk",
+    "insert-into-b"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "rb-sink": {
+   "role": "band",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "lis-insertion",
+    "chunks",
+    "bucket-insertion",
+    "butterfly"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "multi-band": {
+   "role": "band",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [],
+   "always": false,
+   "unbuildable": "B has only two cheap ends, so a third band has nowhere to go. Its measurable part is rb Sink's split point."
+  },
+  "sb-seed": {
+   "role": "band",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "turk",
+    "lookahead-greedy"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "middle-out-push": {
+   "role": "band",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "chunks",
+    "bucket-insertion"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "nearest-member-sweep": {
+   "role": "sweep",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "chunks",
+    "bucket-insertion"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "one-way-sweep": {
+   "role": "sweep",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "chunks",
+    "bucket-insertion"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "max-retrieval": {
+   "role": "retrieval",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "chunks",
+    "butterfly"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "second-max-lookahead": {
+   "role": "retrieval",
+   "requires": [
+    {
+     "role": "retrieval",
+     "hostDefault": "max-retrieval"
+    }
+   ],
+   "conflicts": [],
+   "hosts": [
+    "chunks",
+    "butterfly"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "rank-range-max": {
+   "role": "retrieval",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "chunks",
+    "butterfly"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "cheapest-return": {
+   "role": "retrieval",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "chunks",
+    "butterfly"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "four-ends": {
+   "role": "ends",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "quick-2way"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "restore-skip": {
+   "role": "ends",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "quick-2way"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "thirds-split": {
+   "role": "split",
+   "requires": [
+    {
+     "role": "ends",
+     "card": "four-ends"
+    }
+   ],
+   "conflicts": [
+    "median-pivot"
+   ],
+   "hosts": [
+    "quick-2way",
+    "four-end-quicksort"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "dp-splits": {
+   "role": "split",
+   "requires": [
+    {
+     "role": "ends",
+     "card": "four-ends"
+    }
+   ],
+   "conflicts": [
+    "median-pivot",
+    "pivot-by-leaf-count"
+   ],
+   "hosts": [
+    "quick-2way",
+    "four-end-quicksort"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "median-pivot": {
+   "role": "pivot",
+   "requires": [],
+   "conflicts": [
+    "thirds-split",
+    "dp-splits"
+   ],
+   "hosts": [
+    "quick-2way",
+    "four-end-quicksort"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "pivot-by-leaf-count": {
+   "role": "pivot",
+   "requires": [],
+   "conflicts": [
+    "dp-splits"
+   ],
+   "hosts": [
+    "quick-2way",
+    "four-end-quicksort"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "beam-over-orders": {
+   "role": "order",
+   "requires": [
+    "pick"
+   ],
+   "conflicts": [],
+   "hosts": [
+    "simple-insertion",
+    "lis-insertion"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "annealed-plan": {
+   "role": "order",
+   "requires": [],
+   "conflicts": [],
+   "hosts": [
+    "chunks"
+   ],
+   "always": false,
+   "unbuildable": null
+  },
+  "hardcoded-three": {
+   "role": "leaf",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "five-hand": {
+   "role": "leaf",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "bfs-leaf": {
+   "role": "leaf",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "distance-tables": {
+   "role": "leaf",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "beam-leaf": {
+   "role": "leaf",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": "Reference builds only: not built here yet. It is the main open space between Four Corners and Oracle's Plan."
+  },
+  "double-op-sharing": {
+   "role": "post",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": true,
+   "unbuildable": null
+  },
+  "noop-suppression": {
+   "role": "post",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "peephole-cancel": {
+   "role": "post",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "peephole-fuse": {
+   "role": "post",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  },
+  "commutation-peephole": {
+   "role": "post",
+   "requires": [],
+   "conflicts": [],
+   "hosts": null,
+   "always": false,
+   "unbuildable": null
+  }
+ }
+}

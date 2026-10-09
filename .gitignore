@@ -1,0 +1,15 @@
+# No dependencies: nothing to install, so no modules or lockfiles.
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+bun.lockb
+bun.lock
+
+# The 42 subject is 42's document, not part of this project.
+en.subject.pdf
+
+# Editors and systems
+.DS_Store
+*.swp
+.vscode/
+.idea/

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" class="tablepage">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>push_swap explorer</title>
+  <meta name="description" content="Explore push_swap algorithms and techniques as a card game. Every number is measured.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/tcg.css">
+</head>
+<body class="table-page">
+  <div class="game" id="game">
+    <!-- Left: the stack you are sorting, the score, and every stack to choose from. -->
+    <aside class="leftpanel" aria-label="Stack and score">
+      <section class="plate stackplate">
+        <div id="stackChip" class="chip-stack"></div>
+        <div class="stacktext">
+          <div class="eyebrow" id="stackLevel">Medium stack</div>
+          <b class="stackname" id="stackName">Random 100</b>
+          <p class="small" id="stackDesc"></p>
+        </div>
+      </section>
+      <section class="plate score" aria-label="Score">
+        <div class="scorerow">
+          <div class="moves"><div class="eyebrow">Moves</div><span id="totalShow" aria-hidden="true">–</span><span id="total" class="sr">–</span></div>
+          <div id="gradeBadge" class="stampwrap"></div>
+        </div>
+        <p id="target" class="small dim"></p>
+        <div id="mana" class="mana"></div>
+        <div id="valid" class="valid small"></div>
+      </section>
+      <div id="delta" class="delta" aria-live="polite"></div>
+      <p id="metaNote" class="small note"></p>
+      <p id="notes" class="small note"></p>
+      <p id="runError" class="error" role="alert"></p>
+      <section class="stacklist" aria-label="Choose a stack">
+        <div class="eyebrow listhead">Pick a stack to sort</div>
+        <p id="stackSum" class="small stacksum"></p>
+        <div id="stacks" class="stacks"></div>
+      </section>
+      <nav class="sidebtns" aria-label="Tools">
+        <button class="btn orange" data-open="learn">Learn</button>
+        <button class="btn grey" data-open="stats">Stats</button>
+        <button id="pin" class="btn grey" title="Pin this hand, then change a card: both boards step together">Compare</button>
+        <button id="copyDeck" class="btn grey" title="Copy a link to this hand and input">Share</button>
+      </nav>
+    </aside>
+
+    <!-- Centre: the play mat. Slots on top, the played card and the board, your hand below. -->
+    <main class="mat" aria-label="Play mat">
+      <div id="pathPanel" class="quest" hidden></div>
+      <section class="slotbar" aria-label="Slots">
+        <div class="slothead">
+          <span class="eyebrow">Slots</span>
+          <span id="slotInfo" class="small dim"></span>
+        </div>
+        <div id="slots" class="slotrow"></div>
+        <div id="knobs" class="knobs"></div>
+      </section>
+      <section class="mid" aria-label="Played card and board">
+        <div id="played" class="playedwrap"></div>
+        <div class="boardplate">
+          <div id="busy" class="busy" role="status" hidden></div>
+          <div id="compare" hidden><p id="compareInfo" class="small"></p></div>
+          <div id="boardWrap" class="boardwrap">
+            <div id="board" class="boardbox"></div>
+            <div id="board2" class="boardbox"></div>
+          </div>
+          <div id="movelog" class="movelog" aria-label="Move log"></div>
+          <div id="console" class="consoledock"></div>
+        </div>
+      </section>
+      <section class="handzone" aria-label="Your hand">
+        <div class="handhead"><span class="eyebrow">Your hand</span> <span id="handInfo" class="small dim"></span></div>
+        <div id="hand" class="hand"></div>
+      </section>
+    </main>
+
+    <!-- Right: the decks and the book. -->
+    <aside class="rightpanel" aria-label="Decks">
+      <div class="deckspot">
+        <div id="algoPileSpot" class="pilespot"></div>
+        <div class="pilelabel"><b>Algorithms</b><span id="algoPileInfo" class="small dim"></span></div>
+        <div class="pilebtns"><button id="algoBrowse" class="btn blue mini">Browse</button><button id="algoDraw" class="btn red mini" title="Draw a random algorithm card and play it">Draw</button></div>
+      </div>
+      <div class="deckspot">
+        <div id="techPileSpot" class="pilespot"></div>
+        <div class="pilelabel"><b>Techniques</b><span id="techPileInfo" class="small dim"></span></div>
+        <div class="pilebtns"><button id="techBrowse" class="btn blue mini">Browse</button><button id="techDraw" class="btn red mini" title="Draw a random card that fits and play it">Draw</button></div>
+      </div>
+      <div class="deckspot">
+        <div id="bookSpot" class="pilespot"></div>
+        <div class="pilelabel"><b>Book of Codex</b><span class="small dim">every card, explained</span></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Overlays: decks spread out, and the tools. One at a time. -->
+  <div class="overlay" id="ov-algo" hidden>
+    <section class="sheet wide" role="dialog" aria-modal="true" aria-labelledby="algoTitle" tabindex="-1">
+      <header class="sheethead">
+        <h2 id="algoTitle">Algorithm deck</h2>
+        <span id="familyFilter" class="chips"></span>
+        <button class="close" aria-label="Close">✕</button>
+      </header>
+      <div class="sheetbody">
+        <div id="algoViewer" class="viewer"></div>
+        <h3 class="vhead">Prebuilt hands</h3>
+        <p class="small dim">Named decks from the spec, ready to play.</p>
+        <div id="decksView" class="deckboxes"></div>
+        <h3 class="vhead">Meta cards</h3>
+        <p class="small dim">A meta card wraps your whole hand. Pick one, then set it up.</p>
+        <div id="metaView" class="vgrid"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="ov-tech" hidden>
+    <section class="sheet wide" role="dialog" aria-modal="true" aria-labelledby="techTitle" tabindex="-1">
+      <header class="sheethead">
+        <h2 id="techTitle">Technique deck</h2>
+        <span id="techFilter" class="chips"></span>
+        <button class="close" aria-label="Close">✕</button>
+      </header>
+      <div class="sheetbody"><div id="techViewer" class="viewer"></div></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="ov-input" hidden>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="inputTitle" tabindex="-1">
+      <header class="sheethead"><h2 id="inputTitle">Custom input</h2><button class="close" aria-label="Close">✕</button></header>
+      <div class="sheetbody">
+        <div class="row">
+          <label>how many <input id="n" type="number" min="0" max="1000" value="100"></label>
+          <span class="quick" id="quick"></span>
+        </div>
+        <div class="row">
+          <label>shape <select id="gen"></select></label>
+          <label id="paramWrap"><span id="paramName">k</span> <input id="param" type="number" step="any"></label>
+          <label>seed <input id="seed" type="number" value="42"></label>
+          <button id="reroll" class="ghost" title="New random seed" aria-label="New random seed">⟳ reshuffle</button>
+        </div>
+        <div class="row">
+          <label class="grow">your own numbers <input id="manual" type="text" placeholder="e.g. 2 1 3 6 5 8 (overrides the shape)"></label>
+        </div>
+        <p id="inputError" class="error" role="alert"></p>
+        <p id="inputInfo" class="small"></p>
+        <p id="rankView" class="dim mono small"></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="ov-learn" hidden>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="learnTitle" tabindex="-1">
+      <header class="sheethead"><h2 id="learnTitle">Learn</h2><button class="close" aria-label="Close">✕</button></header>
+      <div class="sheetbody">
+        <p class="small dim">A path walks you through a few hands, one question at a time. Challenges are small puzzles about the table in front of you.</p>
+        <div class="row">
+          <select id="pathSel" aria-label="Paths"></select>
+          <button id="challengeBtn" class="ghost">Challenges</button>
+        </div>
+        <div id="challenges" class="challenges" hidden></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="ov-stats" hidden>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="statsTitle" tabindex="-1">
+      <header class="sheethead"><h2 id="statsTitle">Stats</h2><button class="close" aria-label="Close">✕</button></header>
+      <div class="sheetbody">
+        <label class="toggle"><input id="nerd" type="checkbox"> Show technical details on cards</label>
+        <p id="legend" class="small"></p>
+        <p id="handTotals" class="small"></p>
+        <div class="tablewrap"><table class="counts"><thead><tr id="countHead"></tr></thead><tbody><tr id="countRow"></tr></tbody></table></div>
+        <p class="small dim" id="cpu"></p>
+        <h3>Over many inputs</h3>
+        <div class="row">
+          <label>inputs <input id="seeds" type="number" min="1" max="500" value="50"></label>
+          <button id="runSeeds">Run the hand on these inputs</button>
+        </div>
+        <div id="seedStats" class="small">Same size and shape, seeds 1…S, run in the background.</div>
+        <canvas id="hist" width="900" height="120" aria-label="Histogram of move counts"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="ov-meta" hidden>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="metaTitle" tabindex="-1">
+      <header class="sheethead"><h2 id="metaTitle">Meta card</h2><button class="close" aria-label="Close">✕</button></header>
+      <div class="sheetbody">
+        <div class="row">
+          <select id="metaSel" aria-label="Meta card">
+            <option value="none">none</option>
+            <option value="portfolio">Portfolio: run them all, keep the shortest</option>
+            <option value="adaptive">Adaptive Selector: pick the deck by how messy the input is</option>
+          </select>
+        </div>
+        <div id="metaPanel" class="metapanel"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="ov-inspect" hidden>
+    <section class="sheet inspect" role="dialog" aria-modal="true" aria-labelledby="inspectTitle" tabindex="-1">
+      <header class="sheethead"><h2 id="inspectTitle">Card</h2><button class="close" aria-label="Close">✕</button></header>
+      <div class="sheetbody"><div id="inspectBody" class="inspectbody"></div></div>
+    </section>
+  </div>
+
+  <script type="module" src="js/ui/table.js"></script>
+</body>
+</html>

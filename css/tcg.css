@@ -1,0 +1,328 @@
+/* Trading-card faces (js/ui/tcg.js). Sizes are in container units of the card itself, so a face
+   reads the same at any --cw. Cards are physical objects: cream faces in light and dark. Type is
+   big on purpose: a card has to read in a fanned hand and in a slot. */
+
+/* ---- palette: family = faction colour, role = header colour, rarity = metal ---- */
+.fam-small     { --fa: #7486ab; --fb: #39435f; }
+.fam-selection { --fa: #ee7a44; --fb: #9c3517; }
+.fam-insertion { --fa: #4596e6; --fb: #1a4a8e; }
+.fam-bucket    { --fa: #4cb56a; --fb: #1d6133; }
+.fam-digit     { --fa: #df4f90; --fb: #861a4b; }
+.fam-divide    { --fa: #27b0b0; --fb: #0b5a5c; }
+.fam-search    { --fa: #9a6cea; --fb: #46278c; }
+.role-anchor { --rc: #2c9f5b; } .role-pick { --rc: #ec7c25; } .role-cost { --rc: #c99a0e; } .role-sweep { --rc: #12a2b6; }
+.role-band { --rc: #cf4fa6; } .role-retrieval { --rc: #2f7fd1; } .role-ends { --rc: #8460cf; } .role-split { --rc: #d23b3b; }
+.role-pivot { --rc: #9a6a3c; } .role-order { --rc: #5f7690; } .role-leaf { --rc: #5a3fc8; } .role-prep { --rc: #138f8a; } .role-post { --rc: #4c6074; }
+.r-common    { --metal: linear-gradient(145deg, #d3cbbb, #8e8576 55%, #675f53); }
+.r-uncommon  { --metal: linear-gradient(145deg, #ffffff, #bcc8d4 45%, #7c8b99); }
+.r-rare      { --metal: linear-gradient(145deg, #fff4bd, #e7b53b 45%, #a3700a); }
+.r-legendary { --metal: conic-gradient(from var(--spin, 200deg), #ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); }
+@property --spin { syntax: '<angle>'; inherits: true; initial-value: 200deg; }
+
+/* ---- the card object ---- */
+.tcg {
+  --cw: 160px;
+  position: relative; flex: none; width: var(--cw); aspect-ratio: 5 / 7;
+  container: card / inline-size;
+  border-radius: 6.5% / 4.6%;
+  color: #2a2520; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: left; line-height: 1.2;
+  user-select: none; -webkit-user-select: none; outline: none; cursor: pointer;
+}
+.tcg-body {
+  position: absolute; inset: 0; border-radius: inherit; transform-style: preserve-3d;
+  transform: perspective(900px) rotateY(var(--flip, 0deg));
+  transition: transform .45s cubic-bezier(.3, .7, .3, 1), box-shadow .2s, filter .2s;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .32), 0 8px 18px rgba(0, 0, 0, .22);
+}
+.tcg.flipped { --flip: 180deg; }
+.tcg .face { position: absolute; inset: 0; border-radius: inherit; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
+.tcg .face.back { transform: rotateY(180deg); }
+.tcg:focus-visible .tcg-body { box-shadow: 0 0 0 3px #ffd45a, 0 8px 18px rgba(0, 0, 0, .3); }
+.tcg.on .tcg-body { box-shadow: 0 0 0 3px #ffd45a, 0 0 24px rgba(255, 212, 90, .6), 0 8px 18px rgba(0, 0, 0, .3); }
+.tcg.on:not(.flying) .tcg-body { animation: inplay 2.4s ease-in-out infinite; }
+@keyframes inplay { 50% { box-shadow: 0 0 0 3px #ffe58a, 0 0 34px rgba(255, 212, 90, .85), 0 8px 18px rgba(0, 0, 0, .3); } }
+.tcg .pxi { display: inline-block; width: 1em; height: 1em; flex: none; }
+.tcg .pxi svg, .tcg .socket svg, .tcg .medallion svg { width: 100%; height: 100%; display: block; }
+.tcg .name { font-family: var(--pixel); font-weight: 400; letter-spacing: .01em; overflow-wrap: anywhere; }
+
+/* ---- algorithm cards ---- */
+.tcg.algo .front {
+  display: grid; grid-template-rows: 14cqw 44cqw 8cqw minmax(0, 1fr) 21cqw; gap: 1.6cqw; padding: 3cqw;
+  background: radial-gradient(130% 75% at 25% 0%, color-mix(in srgb, var(--fa) 75%, white) 0%, var(--fa) 38%, var(--fb) 100%);
+  box-shadow: inset 0 0 0 .8cqw rgba(255, 255, 255, .3), inset 0 0 0 1.9cqw rgba(0, 0, 0, .16);
+}
+.tcg-top { display: grid; grid-template-columns: 14cqw minmax(0, 1fr) 14cqw; align-items: center; gap: 1cqw; }
+.nameplate {
+  min-height: 11.5cqw; display: grid; place-items: center; padding: .4cqw 2cqw; border-radius: 2.4cqw; overflow: hidden;
+  background: linear-gradient(#fffaf0, #eddfbf); box-shadow: inset 0 -.6cqw 0 rgba(0, 0, 0, .12), 0 .6cqw 0 rgba(0, 0, 0, .28);
+}
+.tcg.algo .name { font-size: 9cqw; line-height: .95; color: #231f1b; text-align: center; }
+.tcg.algo .name.long { font-size: 7.4cqw; }
+/* Grasp (a bulb) and Craft (a hammer): icon on top, number below */
+.gem { display: grid; justify-items: center; align-content: center; gap: .2cqw; width: 14cqw; height: 14cqw; flex: none; color: #fff; text-shadow: 0 .45cqw 0 rgba(0, 0, 0, .35); }
+.gem .pxi { width: 5.2cqw; height: 5.2cqw; filter: drop-shadow(0 .4cqw 0 rgba(0, 0, 0, .3)); }
+.gem b { font: 400 7.2cqw/.8 var(--pixel); }
+.gem.grasp { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #b5ddff, #3a8ae0 55%, #184a8f); box-shadow: inset 0 -.8cqw 0 rgba(0, 0, 0, .25), 0 0 0 .7cqw rgba(255, 255, 255, .75), 0 .9cqw 0 .7cqw rgba(0, 0, 0, .25); }
+.gem.craft { background: radial-gradient(circle at 35% 30%, #ffe2b0, #e8962f 55%, #9b540c); clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); }
+.tcg-art { position: relative; overflow: hidden; border-radius: 2.4cqw; background: #101823; box-shadow: inset 0 0 0 .8cqw rgba(0, 0, 0, .45), 0 0 0 .7cqw rgba(255, 255, 255, .4); }
+.tcg-art svg.cover { position: absolute; inset: 2.4cqw 2cqw; width: calc(100% - 4cqw); height: calc(100% - 4.8cqw); display: block; }
+.tcg-type {
+  display: flex; align-items: center; gap: 1.6cqw; padding: 0 2.2cqw; min-width: 0; border-radius: 1.6cqw;
+  background: linear-gradient(#f8efda, #e6d5ae); box-shadow: 0 .5cqw 0 rgba(0, 0, 0, .22);
+  font: 400 5.6cqw/1 var(--pixel); color: #3b3127; text-transform: uppercase; letter-spacing: .05em;
+}
+.tcg-type .pxi { width: 5cqw; height: 5cqw; color: var(--fb); }
+.tcg-type .tt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rgem { width: 4.8cqw; height: 4.8cqw; flex: none; transform: rotate(45deg); border-radius: .8cqw; box-shadow: inset 0 0 0 .5cqw rgba(0, 0, 0, .28); }
+.rgem.r-common { background: linear-gradient(135deg, #e2ddd3, #6f6a62); }
+.rgem.r-uncommon { background: linear-gradient(135deg, #ffffff, #8ea2b4); }
+.rgem.r-rare { background: linear-gradient(135deg, #fff3b0, #d29b12); }
+.rgem.r-legendary { background: conic-gradient(from 45deg, #ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); }
+.tcg-text {
+  min-height: 0; overflow: hidden; padding: 2.2cqw 2.8cqw; border-radius: 2cqw;
+  background: linear-gradient(#fffaf0, #f2e5c8); box-shadow: inset 0 0 0 .4cqw rgba(0, 0, 0, .08);
+  font-size: 6.4cqw; color: #2d2620;
+}
+.tcg-text p { margin: 0 0 1.2cqw; }
+.tcg-text .flavor { font-style: italic; color: #3f352b; }
+.tcg-text .plainhint { color: #5d5246; }
+.tcg.algo .quote { display: grid; place-items: center; text-align: center; font-size: 6.6cqw; line-height: 1.22; }
+.tcg.algo .quote p { margin: 0; }
+/* the badge row: class, slot tier, push_swap tier */
+.badges { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.6cqw; }
+.badge {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: .6cqw; min-width: 0; padding: 1cqw .6cqw 1.4cqw; border-radius: 2.4cqw;
+  background: var(--bc, #6b7a90); color: #fff; box-shadow: inset 0 -.8cqw 0 rgba(0, 0, 0, .22), inset 0 0 0 .5cqw rgba(255, 255, 255, .28), 0 .7cqw 0 rgba(0, 0, 0, .25);
+}
+.badge small { font: 400 3.8cqw/1 var(--pixel); text-transform: uppercase; letter-spacing: .06em; opacity: .9; }
+.badge b { font: 400 9.4cqw/.85 var(--pixel); text-shadow: 0 .5cqw 0 rgba(0, 0, 0, .3); }
+.badge b.long { font-size: 6.2cqw; line-height: 1; }
+.badge b sup { font-size: .6em; vertical-align: .55em; line-height: 0; }
+.badge b .rt { font-family: system-ui, sans-serif; font-size: .8em; }
+.badge .sockets { display: flex; gap: .8cqw; }
+.badge .sockets i { width: 2.2cqw; height: 2.2cqw; border-radius: 50%; background: rgba(255, 255, 255, .85); box-shadow: 0 .3cqw 0 rgba(0, 0, 0, .3); }
+.badge.tier-S { --bc: linear-gradient(#ffe680, #d49500); color: #4a3200; } .badge.tier-S b { text-shadow: none; }
+.badge.tier-A { --bc: linear-gradient(#5fd17a, #22843d); }
+.badge.tier-B { --bc: linear-gradient(#6fb2ff, #2a6cbd); }
+.badge.tier-C { --bc: linear-gradient(#ffb766, #d7701a); }
+.badge.tier-D { --bc: linear-gradient(#ff8a8a, #bf2e2e); }
+.badge.tier-small { --bc: linear-gradient(#a8b4c8, #5d6b84); }
+.badge.ps { clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); padding-bottom: 4.5cqw; border-radius: 2.4cqw 2.4cqw 0 0; }
+.badge.ps.tier-S::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .7) 45%, transparent 60%) -200% 0 / 300% 100%; animation: shimmer 2.6s ease-in-out infinite; }
+
+/* the back of an algorithm card: how it plays, lore */
+.tcg .face.back {
+  padding: 4cqw 5cqw; overflow: auto; overscroll-behavior: contain; font-size: 5cqw; line-height: 1.35; color: #2a2520;
+  background: linear-gradient(#fffaf0, #efe2c3); box-shadow: inset 0 0 0 1.8cqw var(--fa, #8a7a62), inset 0 0 0 2.6cqw rgba(255, 255, 255, .5);
+}
+.tcg .face.back .backhead { text-align: center; margin-bottom: 1cqw; }
+.tcg .face.back .name { font-size: 8.6cqw; }
+.tcg .face.back h4 { margin: 3cqw 0 1cqw; font: 400 6.6cqw/1 var(--pixel); color: var(--fb, #3a3026); }
+.tcg .face.back p, .tcg .face.back ul { margin: 1cqw 0; }
+.tcg .face.back ul { padding-left: 5cqw; }
+.tcg .face.back a { color: #1d5fa8; }
+
+/* ---- technique, meta and plain cards: a metal trim (rarity) around a cream card ---- */
+.tcg.tech .front, .tcg.meta .front { padding: 2.2cqw; background: var(--metal); }
+.tcg-inner {
+  height: 100%; display: grid; grid-template-rows: 18cqw 30cqw 9cqw minmax(0, 1fr) auto auto auto; overflow: hidden; border-radius: 4.2cqw;
+  background: linear-gradient(#fffaf0, #f1e4c8); box-shadow: inset 0 0 0 .5cqw rgba(0, 0, 0, .12);
+}
+.tcg-head { display: flex; align-items: center; gap: 2cqw; min-width: 0; padding: 0 2.6cqw; background: linear-gradient(var(--rc), color-mix(in srgb, var(--rc) 68%, black)); color: #fff; }
+.tcg-head .socket { width: 11cqw; height: 11cqw; flex: none; padding: 2cqw; border-radius: 50%; background: rgba(0, 0, 0, .25); box-shadow: inset 0 0 0 .6cqw rgba(255, 255, 255, .55); }
+.tcg-head .name { min-width: 0; font-size: 10cqw; line-height: .92; color: #fff; text-shadow: 0 .5cqw 0 rgba(0, 0, 0, .35); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tcg-head .name.long { font-size: 8.4cqw; }
+.tcg.tech .tcg-art, .tcg.meta .tcg-art {
+  margin: 2cqw 2.6cqw 0; display: grid; place-items: center; box-shadow: inset 0 0 0 .6cqw rgba(0, 0, 0, .25);
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, .09) 0 2cqw, transparent 2cqw 4cqw),
+    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc, #888) 50%, white), var(--rc, #888) 68%, color-mix(in srgb, var(--rc, #888) 60%, black));
+}
+.tcg-art .big { width: 19cqw; height: 19cqw; color: #fff; filter: drop-shadow(0 1cqw 0 rgba(0, 0, 0, .3)); }
+.tcg.tech .tcg-type, .tcg.meta .tcg-type { margin: 1.8cqw 2.6cqw 0; font-size: 6cqw; }
+.tcg-type .costs { display: flex; gap: .8cqw; }
+.cost { display: inline-flex; align-items: center; gap: .5cqw; padding: .7cqw 1.4cqw .5cqw 1cqw; border-radius: 99px; font: 400 5.4cqw/1 var(--pixel); color: #fff; letter-spacing: 0; }
+.cost .pxi { width: 4cqw; height: 4cqw; }
+.cost.grasp { background: #3a8ae0; } .cost.craft { background: #d9861c; }
+.tcg.tech .tcg-text, .tcg.meta .tcg-text { background: none; box-shadow: none; padding: 2cqw 3.4cqw 0; font-size: 7cqw; line-height: 1.2; }
+.tcg-effect { margin: 1cqw 2.6cqw 2.6cqw; padding: 1.6cqw 2.2cqw; border-radius: 1.8cqw; background: #eadcbb; font-size: 5.8cqw; line-height: 1.2; color: #3b3127; font-weight: 600; }
+.tcg-effect.good { background: #d3efd8; color: #1b5a29; }
+.tcg-effect.bad { background: #f7d9d6; color: #87201b; }
+.tcg-effect.why { background: #e4ddd0; color: #4a4239; font-style: italic; font-weight: 400; }
+.tcg-effect.hint { background: none; color: #776b5d; font-style: italic; font-weight: 400; padding-top: 0; }
+.tcg-src { padding: 0 2cqw 2.4cqw; text-align: center; font: 400 6cqw/1 var(--pixel); color: #6f6458; letter-spacing: .03em; }
+.tcg.meta { --rc: #5b3fa8; }
+.tcg.plain .tcg-art { background: repeating-linear-gradient(45deg, rgba(0, 0, 0, .05) 0 2cqw, transparent 2cqw 4cqw), linear-gradient(#d8ccb2, #b9aa8b); }
+
+/* ---- rarity you can see: shine (uncommon), holo and sparkles (rare), a living rim (legendary) ---- */
+.shine, .foil, .sparkles { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+.shine { background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .55) 50%, transparent 62%) -150% 0 / 250% 100% no-repeat; animation: sweep 5.5s ease-in-out infinite; }
+@keyframes sweep { 0%, 62% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
+.foil {
+  mix-blend-mode: color-dodge; opacity: .42;
+  background: linear-gradient(115deg, transparent 15%, rgba(255, 255, 255, .5) 34%, rgba(255, 80, 220, .45) 44%, rgba(80, 220, 255, .45) 54%, rgba(120, 255, 140, .4) 62%, transparent 82%);
+  background-size: 300% 300%; background-position: var(--mx, 30%) var(--my, 30%); animation: holo 7s ease-in-out infinite alternate; transition: opacity .25s;
+}
+@keyframes holo { to { background-position: 85% 70%; } }
+.tcg:hover .foil { opacity: .9; animation-play-state: paused; }
+.tcg.r-legendary .foil { opacity: .6; }
+.sparkles i { position: absolute; width: 5cqw; height: 5cqw; opacity: 0; animation: twinkle 2.8s ease-in-out infinite;
+  background: radial-gradient(circle, #fff 0 18%, transparent 20%), conic-gradient(from 45deg, transparent 0 10%, #fff 12% 13%, transparent 15% 35%, #fff 37% 38%, transparent 40% 60%, #fff 62% 63%, transparent 65% 85%, #fff 87% 88%, transparent 90%);
+  border-radius: 50%; filter: drop-shadow(0 0 1cqw rgba(255, 240, 180, .9)); }
+.sparkles i:nth-child(1) { left: 10%; top: 18%; } .sparkles i:nth-child(2) { left: 78%; top: 12%; animation-delay: .7s; }
+.sparkles i:nth-child(3) { left: 62%; top: 66%; animation-delay: 1.4s; } .sparkles i:nth-child(4) { left: 24%; top: 70%; animation-delay: 2.1s; }
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0deg); } 30% { opacity: 1; transform: scale(1) rotate(45deg); } 55% { opacity: 0; transform: scale(.4) rotate(90deg); } }
+.tcg.algo.r-legendary .front { box-shadow: inset 0 0 0 .8cqw rgba(255, 255, 255, .3), inset 0 0 0 1.9cqw rgba(0, 0, 0, .16); }
+.tcg.algo.r-legendary .tcg-body::before { content: ''; position: absolute; inset: -.9cqw; z-index: -1; border-radius: inherit; background: conic-gradient(from var(--spin), #ff6b6b, #ffd93d, #6bff95, #5ad1ff, #c77dff, #ff6b6b); animation: spin 5s linear infinite; }
+.tcg.r-legendary .front { animation: spin 5s linear infinite; }
+@keyframes spin { to { --spin: 560deg; } }
+@keyframes shimmer { to { background-position: 200% 0; } }
+
+/* ---- ribbons, banners and states ---- */
+.tcg .ribbon {
+  position: absolute; left: 50%; top: -2.6cqw; transform: translateX(-50%); z-index: 2; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 1cqw; padding: .6cqw 3cqw; border-radius: 99px;
+  font: 400 5.6cqw/1.1 var(--pixel); letter-spacing: .05em; color: #fff; background: #2f3640; box-shadow: 0 .7cqw 0 rgba(0, 0, 0, .3);
+}
+.tcg .ribbon svg { width: 4cqw; height: 4cqw; }
+.tcg .ribbon.inplay { background: #e0a400; color: #3a2a00; }
+.tcg .ribbon.default { background: #5e6e74; }
+.tcg .ribbon.native { background: #8a6d1d; }
+.tcg .ribbon.exp, .tcg .ribbon.lesson { left: -1.5cqw; top: 19cqw; transform: rotate(-7deg); }
+.tcg .ribbon.exp { background: #b8860b; } .tcg .ribbon.lesson { background: #d9480f; }
+.tcg.off .tcg-body { filter: grayscale(.9) brightness(.82); }
+.tcg.off { cursor: help; }
+.tcg-banner {
+  position: absolute; left: -3%; right: -3%; top: 44%; z-index: 2; transform: rotate(-9deg); text-align: center;
+  padding: 1.4cqw 0; background: #2b2b2b; color: #fff; font: 400 7.4cqw/1 var(--pixel); letter-spacing: .08em; box-shadow: 0 .8cqw 0 rgba(0, 0, 0, .3);
+}
+.tcg.open .tcg-banner { background: #b8860b; color: #fff8dc; }
+.tcg.default .tcg-body { opacity: .92; }
+.tcg-btn {
+  position: absolute; top: -2.4cqw; z-index: 3; display: grid; place-items: center; padding: 0; cursor: pointer;
+  width: max(22px, 11cqw); height: max(22px, 11cqw); border-radius: 50%; border: 2px solid #fff; background: #2b2f36; color: #fff;
+  font: 400 max(13px, 6.5cqw)/1 var(--pixel); opacity: 0; transition: opacity .15s, transform .15s; box-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+}
+.tcg-btn:hover { transform: scale(1.12); }
+.tcg-btn.peek { right: -2.4cqw; }
+.tcg-btn.flip { right: max(26px, 12cqw); }
+.tcg:hover .tcg-btn, .tcg:focus-within .tcg-btn { opacity: 1; }
+
+/* ---- small cards (slots, tight hands): a big name, the art and the type ---- */
+@container card (max-width: 132px) {
+  .tcg-text, .tcg-effect, .tcg-type .costs, .tcg .ribbon.exp, .tcg .ribbon.lesson, .needs { display: none; }
+  .tcg.algo .front { grid-template-rows: 18cqw minmax(0, 1fr) 10cqw 24cqw; }
+  .tcg.algo .name, .tcg.algo .name.long { font-size: 11cqw; }
+  .badge small { display: none; }
+  .badge b { font-size: 12cqw; } .badge b.long { font-size: 8cqw; }
+  .tcg-inner { grid-template-rows: 26cqw minmax(0, 1fr) 11cqw auto; }
+  .tcg-head .name, .tcg-head .name.long { font-size: 12.5cqw; }
+  .tcg-head .socket { width: 14cqw; height: 14cqw; }
+  .tcg-type, .tcg.tech .tcg-type { font-size: 8.2cqw; }
+  .tcg .ribbon { font-size: 8.5cqw; top: auto; bottom: -3cqw; }
+  .tcg-banner { font-size: 10cqw; }
+  .tcg-src { font-size: 9cqw; padding-top: 1.6cqw; }
+}
+
+/* ---- backs ---- */
+.tcg.back { cursor: inherit; }
+.tcg.back .backart { position: absolute; inset: 0; border-radius: inherit; }
+.back-algo .backart {
+  background:
+    repeating-linear-gradient(45deg, rgba(232, 193, 90, .2) 0 .7cqw, transparent .7cqw 6cqw),
+    repeating-linear-gradient(-45deg, rgba(232, 193, 90, .2) 0 .7cqw, transparent .7cqw 6cqw),
+    linear-gradient(160deg, #2a3d78, #131b3a);
+  box-shadow: inset 0 0 0 2.6cqw #131b3a, inset 0 0 0 3.4cqw #e8c15a, inset 0 0 0 5cqw #1b2752;
+}
+.back-tech .backart {
+  background:
+    radial-gradient(circle, rgba(255, 228, 196, .2) .9cqw, transparent 1.2cqw) 0 0 / 6cqw 6cqw,
+    linear-gradient(160deg, #a8263c, #5a0f1e);
+  box-shadow: inset 0 0 0 2.6cqw #5a0f1e, inset 0 0 0 3.4cqw #f3d9b0, inset 0 0 0 5cqw #7c1a2b;
+}
+.medallion {
+  position: absolute; left: 50%; top: 46%; width: 36cqw; height: 36cqw; padding: 8cqw; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff0b8, #d9a52a 70%); color: #3a2a0e;
+  box-shadow: 0 0 0 1.4cqw rgba(0, 0, 0, .35), 0 0 0 2.4cqw #e8c15a, 0 1.6cqw 0 2.4cqw rgba(0, 0, 0, .3);
+}
+.back-tech .medallion { background: radial-gradient(circle at 40% 35%, #fff4e4, #e9c79a 70%); color: #5a0f1e; box-shadow: 0 0 0 1.4cqw rgba(0, 0, 0, .35), 0 0 0 2.4cqw #f3d9b0, 0 1.6cqw 0 2.4cqw rgba(0, 0, 0, .3); }
+.backlabel { position: absolute; left: 0; right: 0; bottom: 10cqw; text-align: center; font: 400 6.4cqw/1 var(--pixel); letter-spacing: .14em; color: #f3e3b5; }
+
+/* ---- piles: a deck you can browse or draw from ---- */
+.pile { position: relative; display: block; width: var(--pw, 140px); aspect-ratio: 5 / 7; padding: 0; border: 0; background: none; cursor: pointer; }
+.pile .layer { position: absolute; inset: 0; transform: translate(calc(var(--i) * -2px), calc(var(--i) * 3px)); transition: transform .2s cubic-bezier(.2, .9, .3, 1.3); }
+.pile .layer .tcg { --cw: var(--pw, 140px); }
+.pile .layer:not(:last-of-type) .tcg-body { box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+.pile:hover .layer:last-of-type, .pile:focus-visible .layer:last-of-type { transform: translateY(-10px) rotate(-3deg); }
+.pile:focus-visible { outline: 3px solid #ffd45a; outline-offset: 6px; border-radius: 8px; }
+.pile.shake { animation: shake .45s; }
+@keyframes shake { 20% { transform: rotate(-4deg); } 40% { transform: rotate(4deg); } 60% { transform: rotate(-3deg); } 80% { transform: rotate(2deg); } }
+.pilecount {
+  position: absolute; right: -10px; top: -10px; z-index: 2; min-width: 30px; height: 30px; padding: 0 7px; display: grid; place-items: center;
+  border-radius: 99px; background: #ffd45a; color: #3a2a00; font: 400 19px/1 var(--pixel); box-shadow: 0 3px 0 rgba(0, 0, 0, .35);
+}
+
+/* ---- the book of codex ---- */
+.book { position: relative; display: block; width: var(--bw, 140px); aspect-ratio: 4 / 5; perspective: 900px; text-decoration: none; }
+.book-pages {
+  position: absolute; inset: 3% 1% 2% 8%; border-radius: 2px 8px 8px 2px;
+  background: repeating-linear-gradient(0deg, #f6eedb 0 2px, #e3d5b3 2px 3px); box-shadow: 0 5px 0 rgba(0, 0, 0, .35), 0 10px 18px rgba(0, 0, 0, .25);
+}
+.book-cover {
+  position: absolute; inset: 0 5% 0 0; display: grid; align-content: center; justify-items: center; gap: 6px; padding: 10%;
+  border-radius: 3px 10px 10px 3px; transform-origin: 8% 50%; transition: transform .35s cubic-bezier(.2, .8, .3, 1);
+  background: radial-gradient(120% 90% at 30% 20%, #8a4b2a, #5b2a14 60%, #3c1a0b);
+  box-shadow: inset 0 0 0 5px #3c1a0b, inset 0 0 0 7px #d9b45a, inset 0 0 0 9px #4a210f, 0 4px 0 rgba(0, 0, 0, .35);
+  color: #f3d58a; text-align: center;
+}
+.book-emblem { width: 34%; aspect-ratio: 1; color: #f3d58a; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .4)); }
+.book-emblem svg { width: 100%; height: 100%; display: block; }
+.book-title { font: 400 clamp(18px, 1.6vw, 28px)/1 var(--pixel); letter-spacing: .16em; text-shadow: 0 2px 0 rgba(0, 0, 0, .45); }
+.book-sub { font-size: 11px; color: #e8cfa0; opacity: .85; }
+.book-spine { position: absolute; left: 0; top: 0; bottom: 0; width: 9%; border-radius: 3px 0 0 3px; background: linear-gradient(90deg, #2c1207, #5b2a14); }
+.book:hover .book-cover, .book:focus-visible .book-cover { transform: rotateY(-26deg); }
+.book:focus-visible { outline: 3px solid #ffd45a; outline-offset: 6px; border-radius: 6px; }
+
+/* ---- named decks as deck boxes ---- */
+.deckbox {
+  position: relative; display: grid; gap: 4px; align-content: start; width: 100%; min-height: 128px; padding: 30px 12px 12px; text-align: left; cursor: pointer;
+  border: 0; border-radius: 12px; color: #f7efd9; font-size: 12px; line-height: 1.3;
+  background: linear-gradient(160deg, #3b4a7a, #1b2346); box-shadow: inset 0 0 0 3px #e8c15a, 0 4px 0 rgba(0, 0, 0, .35); transition: transform .15s;
+}
+.deckbox:hover { transform: translateY(-4px) rotate(-1deg); }
+.deckbox.on { box-shadow: inset 0 0 0 3px #ffd45a, 0 0 0 3px #ffd45a, 0 4px 0 rgba(0, 0, 0, .35); }
+.deckbox .lid { position: absolute; top: 8px; left: 12px; width: 16px; height: 16px; color: #e8c15a; }
+.deckbox .lid svg { width: 100%; height: 100%; display: block; }
+.deckbox .name { font: 400 20px/1 var(--pixel); color: #fff; }
+.deckbox .dk-algo { font: 400 15px/1.1 var(--pixel); color: #ffd45a; }
+.deckbox .dk-techs { opacity: .85; }
+.deckbox .dk-num { margin-top: 2px; font: 400 15px/1 var(--pixel); color: #b9f0c4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tcg-body, .pile .layer, .book-cover, .deckbox { transition: none; }
+  .shine, .foil, .sparkles i, .tcg .front, .tcg-body, .tcg-body::before, .badge::after { animation: none !important; }
+}
+
+.tcg-effect.why { background: #e4ddd0; color: #4a4239; font-style: italic; }
+
+/* ---- what a card needs: a chain for a required card, a cross for a clash ---- */
+.needs { display: grid; gap: .8cqw; margin: 0 2.4cqw 1.2cqw; }
+.need { display: flex; align-items: center; gap: 1.4cqw; padding: .9cqw 2cqw; border-radius: 1.8cqw; font-size: 4.6cqw; line-height: 1.15; font-weight: 600; }
+.need .pxi { width: 4.6cqw; height: 4.6cqw; }
+.need .ntext { flex: 1; min-width: 0; }
+.need .nmark { font: 400 6cqw/1 var(--pixel); }
+.need.ok { background: #d3efd8; color: #1b5a29; }
+.need.miss { background: #f9d4cf; color: #8a1d14; box-shadow: inset 0 0 0 .5cqw #d64545; }
+.need.clash { background: #f9d4cf; color: #8a1d14; }
+.need.calm { background: #ece3cf; color: #5d5246; }
+
+/* ---- the measured change in moves, in the corner a fanned hand leaves visible ---- */
+.fxbadge {
+  position: absolute; z-index: 3; left: -2.5cqw; top: 17cqw; display: grid; justify-items: center; gap: .4cqw;
+  min-width: 21cqw; padding: 1.8cqw 2.6cqw 1.4cqw; border-radius: 3cqw; color: #fff; box-shadow: 0 1cqw 0 rgba(0, 0, 0, .3), inset 0 0 0 .6cqw rgba(255, 255, 255, .35);
+  background: #5e6e74; pointer-events: none;
+}
+.fxbadge b { font: 400 10.5cqw/.9 var(--pixel); }
+.fxbadge small { font: 400 4.6cqw/1 var(--pixel); opacity: .9; }
+.fxbadge.good { background: #2f9e44; } .fxbadge.bad { background: #c92a2a; }
+.tcg.flying { transition: none; }
+@container card (max-width: 132px) { .needs { display: none; } }
