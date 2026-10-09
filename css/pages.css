@@ -1,0 +1,106 @@
+/* The Codex, Meta and the Lab on the felt (objective §12): cream plates for the panels, pixel
+   headings, chips for tabs, tables and controls on the plate, tier and grade badges in the
+   Table's colours, the Table's card faces in the Codex. Loaded after style.css, felt.css and
+   tcg.css on <body class="felt felt-page">. */
+
+.felt-page main { max-width: 1500px; padding: 16px 16px 56px; gap: 16px; }
+.felt-page .panel {
+  background: var(--plate); color: var(--ink); border: 2px solid var(--plate-line); border-radius: 14px;
+  box-shadow: 0 5px 0 var(--shadow); padding: 16px 18px;
+}
+.felt-page .panel + .panel { margin-top: 0 !important; }
+.felt-page h1 { font: 400 44px/1 var(--pixel); letter-spacing: .03em; margin: 0 0 8px; color: var(--ink); }
+.felt-page .panel h2 { font-size: 27px; margin: 2px 0 8px; color: var(--ink); }
+.felt-page .panel h3 { font-size: 21px; margin: 18px 0 6px; color: var(--ink); }
+.felt-page h4 { font: 400 19px/1.1 var(--pixel); margin: 0 0 6px; letter-spacing: .02em; }
+.felt-page .lede { color: var(--muted); max-width: 78ch; font-size: 15px; }
+.felt-page .muted, .felt-page .small.muted { color: var(--muted); opacity: 1; }
+.felt-page .panel a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.felt-page code { background: var(--plate-2); }
+
+/* ---- tabs: chips, the one shown filled ---- */
+.felt-page .tabs { border: 0; gap: 6px; margin: 12px 0 16px; }
+.felt-page .tabs button {
+  font: 400 19px/1 var(--pixel); letter-spacing: .02em; padding: 6px 13px 7px; border-radius: 999px;
+  background: var(--plate-2); color: var(--ink); border: 2px solid var(--plate-line); box-shadow: 0 2px 0 var(--plate-line);
+}
+.felt-page .tabs button:hover { border-color: var(--ink); }
+.felt-page .tabs button.on { background: var(--ink); color: var(--plate); border-color: var(--ink); box-shadow: 0 2px 0 var(--shadow); }
+
+/* ---- controls on the plate ---- */
+.felt-page .panel input, .felt-page .panel select, .felt-page .panel button {
+  background: var(--bg); color: var(--ink); border: 2px solid var(--plate-line); border-radius: 9px; padding: 4px 9px;
+}
+.felt-page .panel button { font: 400 18px/1 var(--pixel); letter-spacing: .03em; padding: 6px 13px 7px; box-shadow: 0 2px 0 var(--plate-line); }
+.felt-page .panel button:hover { border-color: var(--ink); }
+.felt-page .panel button.on { background: var(--ink); color: var(--plate); border-color: var(--ink); }
+.felt-page .panel label { color: var(--muted); }
+.felt-page .filters { gap: 8px 16px; margin-top: 4px; }
+.felt-page .progress { background: var(--plate-2); height: 8px; border-radius: 4px; }
+.felt-page .progress div { background: var(--f-complex); }
+
+/* ---- tables ---- */
+.felt-page table.data { font-size: 14px; }
+.felt-page table.data th {
+  background: var(--plate); color: var(--muted); font: 400 15px/1.1 var(--pixel); text-transform: uppercase; letter-spacing: .07em;
+  border-bottom: 2px solid var(--plate-line); padding: 6px 7px;
+}
+.felt-page table.data td { border-bottom: 1px solid var(--plate-line); padding: 5px 7px; }
+.felt-page table.data tr:nth-child(even) td { background: color-mix(in srgb, var(--plate-2) 55%, transparent); }
+.felt-page table.data tr.hl td { background: var(--plate-2); }
+.felt-page table.data tr:hover td { background: color-mix(in srgb, var(--f-medium) 9%, var(--plate)); }
+
+/* ---- tiers and grades in the Table's colours ---- */
+.felt-page .tier { font: 400 20px/1.15 var(--pixel); width: 28px; border-radius: 7px; box-shadow: 0 2px 0 rgba(0, 0, 0, .18); }
+.felt-page .tier-S { box-shadow: 0 0 10px rgba(255, 200, 40, .75), 0 2px 0 rgba(0, 0, 0, .18); }
+.felt-page .gbadge { display: inline-block; font: 400 16px/1 var(--pixel); letter-spacing: .05em; padding: 3px 10px 4px; border-width: 2px; border-radius: 8px; transform: rotate(-2deg); background: color-mix(in srgb, currentColor 8%, var(--plate)); }
+
+/* ---- the Codex: card faces in a grid, the Grasp × Craft board ---- */
+.felt-page .facegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 22px 16px; justify-items: center; margin: 8px 0 18px; }
+.felt-page .facegrid .tcg { --cw: 172px; cursor: pointer; transition: transform .15s; }
+.felt-page .facegrid .tcg:hover { transform: translateY(-6px); }
+.felt-page .facegrid .tcg-btn.peek { display: none; }
+.felt-page .cardface .tcg { --cw: min(300px, 86vw); }
+.felt-page .cardface .tcg-btn.peek { display: none; }
+.felt-page .quad { border: 2px solid var(--plate-line); border-radius: 12px; }
+.felt-page .quad > div { border: 1px solid var(--plate-line); background: var(--plate); }
+.felt-page .quad > div:nth-child(1) { background: color-mix(in srgb, var(--exc) 9%, var(--plate)); }
+.felt-page .quad > div:nth-child(2) { background: color-mix(in srgb, var(--pass) 9%, var(--plate)); }
+.felt-page .quad > div:nth-child(3) { background: color-mix(in srgb, var(--good) 10%, var(--plate)); }
+.felt-page .quad > div:nth-child(4) { background: color-mix(in srgb, var(--fail) 8%, var(--plate)); }
+.felt-page .quad .pill, .felt-page table.gc .pill {
+  background: var(--plate); border: 1px solid var(--plate-line); color: var(--ink); font: 400 16px/1.2 var(--pixel); letter-spacing: .02em; padding: 2px 8px 3px;
+}
+.felt-page table.gc td { border: 1px solid var(--plate-line); }
+.felt-page .cardpage { gap: 22px; }
+.felt-page .doc p, .felt-page .doc li { max-width: 92ch; }
+.felt-page .doc strong { font-weight: 650; }
+.felt-page .doc td, .felt-page .doc th { border: 1px solid var(--plate-line); }
+
+/* ---- charts on cream ---- */
+.felt-page .chart { background: var(--bg); border: 2px solid var(--plate-line); border-radius: 10px; }
+.felt-page .chart text { fill: var(--muted); font-family: var(--pixel); font-size: 13px; }
+
+/* ---- the growth ratio: how many times the moves grow when n grows four times ---- */
+.growth { display: grid; gap: 4px; margin: 10px 0 4px; }
+.growth .grow-row { display: grid; grid-template-columns: minmax(130px, 210px) minmax(0, 1fr) 64px; align-items: center; gap: 10px; }
+.growth .grow-name { font: 400 17px/1.1 var(--pixel); letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.growth .grow-bar { position: relative; height: 18px; border-radius: 6px; background: var(--plate-2); overflow: hidden; }
+.growth .grow-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--c, var(--f-medium)); }
+.growth .grow-bar .mark { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); opacity: .55; }
+.growth .grow-val { font: 400 19px/1 var(--pixel); text-align: right; font-variant-numeric: tabular-nums; }
+.growth .grow-axis { display: grid; grid-template-columns: minmax(130px, 210px) minmax(0, 1fr) 64px; gap: 10px; }
+.growth .grow-axis div { position: relative; height: 18px; font: 400 14px/1 var(--pixel); color: var(--muted); }
+.growth .grow-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+@media (max-width: 560px) {
+  .felt-page h1 { font-size: 36px; }
+  .growth .grow-row, .growth .grow-axis { grid-template-columns: 96px minmax(0, 1fr) 48px; }
+  .felt-page .facegrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .felt-page .facegrid .tcg { --cw: 148px; }
+}
+
+/* ---- the Codex's Meta and Cursed cards: plain cards on the plate ---- */
+.felt-page .grid .card { background: var(--bg); color: var(--ink); border: 2px solid var(--plate-line); border-radius: 12px; box-shadow: 0 3px 0 var(--plate-line); padding: 9px 12px; }
+.felt-page .grid .card .name { font: 400 20px/1.1 var(--pixel); letter-spacing: .02em; }
+.felt-page .grid .card.cursed { border-style: dashed; background: repeating-linear-gradient(135deg, var(--bg) 0 14px, var(--plate-2) 14px 15px); }
+.felt-page h2.full { margin-top: 10px; }

@@ -1,7 +1,11 @@
 # 8. Views
 
 There are four pages, Table, Codex, Meta and Lab, with a shared top bar. Paths run on the
-Table as a guided mode (§8.5). Light and dark themes, usable at phone width.
+Table as a guided mode (§8.5). Light and dark themes, usable at phone width. All four wear the
+Table's look (`css/felt.css`): the felt with its pools of light, cream plates, pixel headings, the
+card faces and the tier colours; the Codex, Meta and the Lab add chip tabs and tables on the plate
+(`css/pages.css`). `tools/perf.mjs` holds every page to 60 frames a second at idle and while
+scrolling, in headless Chromium without a GPU.
 
 ## 8.1 Table (`index.html`): the play page
 
@@ -137,18 +141,22 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 
 ## 8.2 Codex (`codex.html`)
 
-- Every card, as a grid of card faces. Filter by type, family, role and rarity.
+- Every card, as a grid of the Table's card faces, with their covers, gems and badges. Filter by
+  type, family, role and rarity; the faces' effects only play on the card under the pointer.
 - **Card page:** the card face and its full text in the same top-down order (the idea, step
   by step, under the hood, lore, pros and cons), compatible cards, a mini replay, its Path
   position, and "play on Table". Clicking a card in the grid opens its page.
 - The **Grasp × Craft grid** with all Algorithm cards plotted and the quadrants labelled
-  (Starter, Grinder, Elegant, Boss).
+  (Starter, Grinder, Elegant, Boss): Grasp is high from 6, Craft from 10 functions.
 - Cursed cards in their own section.
 
 ## 8.3 Meta (`meta.html`)
 
 See [05-meta.md](05-meta.md): tier list, builds, Pareto front, technique value table,
-interaction matrix, class check, disorder winners, named decks, open spaces.
+interaction matrix, class check, **growth ratio**, disorder winners, named decks, open spaces.
+The growth ratio ([09-metrics.md](09-metrics.md#growth)) draws every Algorithm card's moves at 4n
+over its moves at n as a bar against the n log n, n√n and n² marks, coloured by the class it grows
+like, with the numbers in a table below.
 
 ## 8.4 Lab (`lab.html`)
 
@@ -156,7 +164,8 @@ The analysis tools, all running in a Web Worker with progress and cancel:
 
 - **Scaling:** ops against n for the chosen hands, with a min–max band over seeds. Reference
   curves (n², n√n, n log₂ n) and grade thresholds are drawn. A normalised mode plots
-  ops ÷ (n log₂ n) and ops ÷ (n√n).
+  ops ÷ (n log₂ n) and ops ÷ (n√n). Below the class check, the hands' growth ratios as bars
+  (512 to 2048 when 2048 is included, else 128 to 512).
 - **Disorder map:** at fixed n, mean ops against exact disorder per hand. The Adaptive
   thresholds can be edited and are drawn on the map, along with the band where uniform random
   input falls (0.50 ± 0.03 at n=100, ± 0.015 at n=500). Moving a threshold flags any regime

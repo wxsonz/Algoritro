@@ -52,7 +52,7 @@ export const proofMark = p => ({ yes: '✓', avg: '~', no: '✕' }[p] || '');
 export const dots = (k, max = 5) => '●'.repeat(Math.max(0, Math.min(max, k))) + '○'.repeat(Math.max(0, max - Math.min(max, k)));
 export const speedDots = ms => ms == null ? '' : dots(ms < 1 ? 5 : ms < 10 ? 4 : ms < 100 ? 3 : ms < 1000 ? 2 : 1);
 export const gradeName = g => (g || '').replace('~', '');
-export function badge(n, g) { return el('span.badge.' + gradeName(g), { title: thresholds(n).approx ? 'Interpolated: the subject only grades n=100 and n=500' : `The subject's threshold at n=${n}` }, g); }
+export function badge(n, g) { return el('span.gbadge.' + gradeName(g), { title: thresholds(n).approx ? 'Interpolated: the subject only grades n=100 and n=500' : `The subject's threshold at n=${n}` }, g); }
 // A 9-cell bar: how far a mean sits between FAIL (twice the PASS bar) and half the EXCELLENT bar.
 export function gradeBar(n, mean) {
   const t = thresholds(n), lo = Math.log(t.EXCELLENT / 2), hi = Math.log(t.PASS * 2), x = (hi - Math.log(mean)) / (hi - lo);

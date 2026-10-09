@@ -220,15 +220,18 @@ await ev(`document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Arrow
 check('arrow keys step, and quick presses add up', Math.abs((await stepNow()) - (await total()) / 2 - 2) <= 1, await stepNow());
 
 // Codex, Meta, Lab
-for (const [page, sel, min] of [['codex.html', '.card', 40], ['meta.html', 'table.data tr', 30], ['lab.html', 'button', 5]]) {
+for (const [page, sel, min] of [['codex.html', '.facegrid .tcg', ALGOS.length + 30], ['meta.html', 'table.data tr', 30], ['lab.html', 'button', 5]]) {
   await go(page, 2500);
   const k = await ev(`document.querySelectorAll(${JSON.stringify(sel)}).length`);
   check(`${page} renders (${sel} × ${k})`, k >= min, k);
   await shot(page.replace('.html', '.png'));
 }
+check('the pages wear the felt: plates, pixel headings and the Table\'s card faces', (await ev(`getComputedStyle(document.body).backgroundColor`)) !== 'rgb(246, 246, 243)' && /Jersey/.test(await ev(`getComputedStyle(document.querySelector('h1')).fontFamily`)), await ev(`getComputedStyle(document.body).backgroundColor`));
 await go('codex.html#turk', 2500);
 const body = await ev('document.body.textContent');
-check('Codex card page', ['The idea', 'Step by step', 'Under the hood', 'Lore'].every(h => body.includes(h)), body.length);
+check('Codex card page', ['The idea', 'Step by step', 'Under the hood', 'Lore'].every(h => body.includes(h)) && (await ev(`!!document.querySelector('.cardface .tcg.algo')`)), body.length);
+await go('meta.html#growth', 2500);
+check('Meta shows the growth ratio: an O(n²) card near 16×, LSD Radix near 4.9×', /×4\.9/.test(await ev(`[...document.querySelectorAll('.grow-row')].find(r => r.textContent.includes('LSD Radix'))?.textContent || ''`)) && (await ev(`document.querySelectorAll('.grow-row').length`)) >= 20, await ev(`document.querySelectorAll('.grow-row').length`));
 await go('lab.html#gap', 2000);
 await ev(`[...document.querySelectorAll('button')].find(b => /^Run/.test(b.textContent) && b.offsetParent).click()`); await sleep(6000);
 check('Lab optimality gap runs', /extra ops/.test(await ev('document.body.textContent')), '');

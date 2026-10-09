@@ -35,8 +35,10 @@ algoritro/  (the repository; the local folder may still be push_swap_explorer/)
 ├── meta.html              the Meta page
 ├── lab.html               scaling, disorder map, param sweep, optimality gap
 ├── package.json           scripts only (dev, test, test:ui, sim); no dependencies
-├── css/style.css          theme, card frames, board (Codex, Meta, Lab)
-├── css/table.css          the Table's felt, panels, mat, hand and overlays
+├── css/style.css          the base: layout, forms, tables, grades
+├── css/felt.css           the look every page shares: tokens, the felt, the top bar, pixel type
+├── css/table.css          the Table's panels, mat, hand and overlays
+├── css/pages.css          the Codex, Meta and the Lab on the felt: plates, chip tabs, tables
 ├── css/tcg.css            trading-card faces, backs, piles and the Codex book
 ├── data/                  generated; the pages and tests read it with core/data.js
 │   ├── cards.json         card text (extracted from spec/cards and spec/techniques) and scores
@@ -78,6 +80,7 @@ algoritro/  (the repository; the local folder may still be push_swap_explorer/)
 │   ├── pool.mjs           worker-thread pool for meta.mjs
 │   ├── precompute.mjs     data/stacks.json; version.mjs gives the code's version it carries
 │   ├── grasp-craft.mjs    spec/grasp-craft.md, from the card data (--check for the tests)
+│   ├── perf.mjs           the frame-rate probe: every page, idle and scrolling
 │   ├── count.mjs          a deck's moves on the study's seeds (Python-exact inputs)
 │   └── ui-check.mjs       browser smoke test over CDP (headless Chromium)
 └── tests/

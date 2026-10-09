@@ -36,7 +36,12 @@ replaced by explorer measurements as cards are implemented. "sim" numbers come f
    [09-metrics.md](09-metrics.md#growth). Hands whose claim fails are flagged. In the sim, the
    check flags Butterfly and Chunks with constant params and Turk labelled n log n, and passes
    Quick 2-Way, LSD Radix and √n-scaled params.
-7. **Disorder winners:** at n=100, which hand wins at each disorder level. Feeds the Adaptive
+7. **Growth ratio:** the class check as one number per card, the moves at 4n over the moves at n
+   ([09-metrics.md](09-metrics.md#growth)), drawn against the n log n (4.9×), n√n (8×) and n² (16×)
+   marks. It sorts the deck into three clean bands: the Divide and Digit cards near 4.9×, the
+   insertion greedies and the bucket cards near 7×, the selection and plain insertion cards at
+   16×.
+8. **Disorder winners:** at n=100, which hand wins at each disorder level. Feeds the Adaptive
    Selector.
 
 Meta data is generated offline with `node tools/meta.mjs` and shipped as `data/meta.json`. The

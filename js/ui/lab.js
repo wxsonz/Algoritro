@@ -4,6 +4,7 @@ import { ALGOS, byId } from '../cards/index.js';
 import { DECKS, deckById } from '../cards/decks.js';
 import { parseDeck, deckString, resolve } from '../core/hand.js';
 import { stats, classCheck, CLASS_F, thresholds } from '../core/metrics.js';
+import { growthBars, growthRatio } from './growth.js';
 import { METRICS, TARGETS, meetsTarget, classProblems } from '../core/meta-run.js';
 import { generate, ranks } from '../core/input.js';
 import { $, el, topBar, f0, f1, cls, pct, store } from './common.js';
@@ -67,6 +68,10 @@ function scaling() {
       return el('tr', {}, el('td', {}, nameOf(v)), el('td', {}, cls(a.claimedClass)), el('td', { className: c?.checks.length ? (c.flagged ? 'bad' : 'good') : 'muted' }, c?.checks.length ? `${c.flagged ? '⚑ flagged' : '✓ holds'}: ${c.checks.map(k => `n=${k.n} ${k.excess > 0 ? '+' : ''}${(100 * k.excess).toFixed(1)} %`).join(', ')}` : 'include 2048 / 4096 to check'), el('td.small.bad', {}, probs.join('; ')));
     });
     out.append(el('h3', {}, 'Class check'), el('div.tablewrap', {}, el('table.data', {}, el('tr', {}, el('th', {}, 'hand'), el('th', {}, 'claimed'), el('th', {}, 'growth check'), el('th', {}, 'params')), rows)));
+    // The growth ratio: the class check as one number (the moves at 4n over the moves at n).
+    const growth = Object.entries(by).map(([v, pts]) => ({ v, g: growthRatio(pts.map(([n, s]) => [n, s.mean])) })).filter(x => x.g)
+      .map(({ v, g }) => ({ name: nameOf(v), cls: byId[handOf(v).algo].claimedClass, ...g }));
+    if (growth.length) out.append(el('h3', {}, 'Growth ratio'), el('p.small.muted', {}, 'How many times the moves grow when n grows four times: O(n²) 16×, O(n√n) 8×, O(n log n) about 4.9×. Include 2048 for the 512 to 2048 step.'), growthBars(growth));
   }
   return box;
 }

@@ -3,13 +3,14 @@ import { ALGOS, TECHS, byId, techById, label } from '../cards/index.js';
 import { DECKS } from '../cards/decks.js';
 import { fits, resolve, parseDeck, deckString } from '../core/hand.js';
 import { $, el, topBar, metaData, f0, f1, pct, signed, cls, proofMark, badge, tier, gradeName } from './common.js';
+import { growthBars, growthRatio, growsLike } from './growth.js';
 
 topBar('Meta');
 const M = await metaData();
 if (!M) { $('content').append(el('p.error', {}, 'data/meta.json is missing: run node tools/meta.mjs.')); throw new Error('no meta'); }
 $('generated').textContent = `Generated ${M.generated} with ${M.seeds[100]} seeds at n=100 and ${M.seeds[500]} at n=500${M.quick ? ' (quick mode)' : ''}. Seeds 1000 onwards, the same for every hand; technique effects are paired.`;
 
-const SECTIONS = [['tiers', 'Tier list'], ['builds', 'Builds'], ['pareto', 'Pareto front'], ['value', 'Technique value'], ['matrix', 'Interactions'], ['class', 'Class check'], ['disorder', 'Disorder winners'], ['decks', 'Named decks'], ['open', 'Open spaces']];
+const SECTIONS = [['tiers', 'Tier list'], ['builds', 'Builds'], ['pareto', 'Pareto front'], ['value', 'Technique value'], ['matrix', 'Interactions'], ['class', 'Class check'], ['growth', 'Growth ratio'], ['disorder', 'Disorder winners'], ['decks', 'Named decks'], ['open', 'Open spaces']];
 const tabs = $('tabs'), content = $('content');
 tabs.append(...SECTIONS.map(([id, t]) => el('button', { dataset: { id }, onclick: () => { location.hash = id; } }, t)));
 const play = (deck, presets, n = 100) => `index.html#deck=${deck}&n=${n}&gen=uniform&seed=42${Object.entries(presets || {}).map(([k, v]) => `&preset.${k}=${encodeURIComponent(v)}`).join('')}`;
@@ -36,7 +37,7 @@ const capped = x => x;   // Grasp and Craft are uncapped: a hand shows its real 
 const render = {
   tiers() {
     const box = el('div');
-    box.append(el('p.lede', {}, 'Complete hands ranked by mean ops. The evaluation grades every run, so each row also shows the share of runs under its bar. Hand Grasp and Craft are the card plus the costs of what was added, on a 0–10 scale (a big hand can go past 10).'));
+    box.append(el('p.lede', {}, 'Complete hands ranked by mean ops. The evaluation grades every run, so each row also shows the share of runs under its bar. Hand Grasp is the weight of the ideas a hand needs, each counted once; Hand Craft its functions under the Norm, past the base kit (spec/grasp-craft.md).'));
     for (const n of [100, 500]) {
       const rows = HANDS.filter(h => h.at[n]).sort((a, b) => a.at[n].mean - b.at[n].mean);
       box.append(el('h3', {}, `n = ${n}`), table([['tier'], ['hand'], ['mean', 1], ['grade'], ['runs < EXC', 1], ['worst', 1], ['Grasp', 1], ['Craft', 1], ['class']],
@@ -110,6 +111,17 @@ const render = {
         const c = M.cards[a.id], ck = c?.classCheck, x = n => { const k = ck?.checks.find(z => z.n === n); return k ? `${k.excess > 0 ? '+' : ''}${(100 * k.excess).toFixed(1)} %` : '—'; };
         return el('tr', {}, el('td', {}, el('a', { href: `codex.html#${a.id}` }, a.name)), el('td', {}, cls(a.claimedClass)), el('td', {}, proofMark(a.proof)), el('td.num', {}, x(2048)), el('td.num', {}, x(4096)),
           el('td', { className: ck ? (ck.flagged ? 'bad' : 'good') : 'muted' }, ck ? (ck.flagged ? '⚑ flagged' : '✓ holds') : 'not checked'), el('td.small', { className: c?.paramFlags?.length ? 'bad' : '' }, c?.paramFlags?.join('; ') || ''));
+      })));
+  },
+  growth() {
+    const rows = ALGOS.map(a => ({ a, g: growthRatio(M.cards[a.id]?.growth) })).filter(x => x.g).sort((x, y) => x.g.ratio - y.g.ratio)
+      .map(({ a, g }) => ({ name: a.name, href: `codex.html#${a.id}`, cls: a.claimedClass, ...g }));
+    return el('div', {}, el('p.lede', {}, 'The class check as one number: how many times the moves grow when n grows four times, from 512 to 2048 (from 128 to 500 for the slow cards, which stop there). An O(n²) card grows 16×, O(n√n) 8×, O(n log n) about 4.9×. The bar\'s colour is the class it grows like; ⚑ marks a card that grows faster than its claim.'),
+      growthBars(rows),
+      table([['card'], ['claimed'], ['from', 1], ['to', 1], ['moves', 1], ['moves', 1], ['ratio', 1], ['grows like']], rows.map(r => {
+        const c = M.cards[ALGOS.find(a => a.name === r.name).id].growth, at = n => c.find(p => p[0] === n)[1];
+        return el('tr', {}, el('td', {}, el('a', { href: r.href }, r.name)), el('td', {}, cls(r.cls)), el('td.num', {}, r.from), el('td.num', {}, r.to), el('td.num', {}, f0(at(r.from))), el('td.num', {}, f0(at(r.to))),
+          el('td.num', {}, `×${r.ratio.toFixed(2)}`), el('td', {}, cls(growsLike(r.ratio, r.from, r.to))));
       })));
   },
   disorder() {

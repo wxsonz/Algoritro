@@ -50,6 +50,17 @@
   every stack keeps its ★, in 17,988 moves against the strong build's 20,270. **Use this
   build** copies it in. Both search the cache (every legal hand × every subset of the post cards)
   in about 50 ms. Portfolio is gone from the cards, the Codex and the spec as well.
+- **Step 11, the Codex, Meta and the Lab on the felt.** The three pages take the Table's look in
+  light and dark: the felt with its pools of light, cream plates, pixel headings, chip tabs,
+  tables on the plate, grades as stamps, the tier colours. What the four pages share moved from
+  `table.css` to a new `felt.css`; `pages.css` styles the other three. The Codex shows every card
+  as the Table's card face (cover, gems, badges; the effects play only on the card under the
+  pointer), and a card's page shows its face beside its text. A **growth ratio** joins Meta and
+  the Lab's scaling results: each card's moves at 4n over its moves at n, as a bar against the
+  n log n (4.9×), n√n (8×) and n² (16×) marks, coloured by the class it grows like (LSD Radix
+  4.89, Bucket Beam 5.10, Chunks 7.32, Min Extract 15.70). `tools/perf.mjs` (`npm run perf`)
+  holds every page to 60 fps at idle and while scrolling, in headless Chromium without a GPU,
+  and all four pass the phone-width checks. With this step, every step of objective.md is built.
 - **Step 10, imports from the study.** Each one is checked against its source.
   - **DP Splits is the study's full planner**, ported op for op from claude-opus-5.5-max
     (`js/cards/engines/planned.js`): expected `rr` merges, free reads of a chunk alone on its

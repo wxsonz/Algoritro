@@ -1,12 +1,18 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="felt">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Codex · Algoritro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/felt.css">
+  <link rel="stylesheet" href="css/tcg.css">
+  <link rel="stylesheet" href="css/pages.css">
 </head>
-<body>
+<body class="felt felt-page">
   <main class="wide">
     <section id="page" class="panel" hidden></section>
     <div id="index">
@@ -17,7 +23,7 @@
       </section>
       <section class="panel" style="margin-top:12px">
         <h2>Grasp × Craft</h2>
-        <p class="muted small">Grasp: how hard it is to understand. Craft: how hard it is to build in C under the Norm. Scores run 0–10: 0–4 counts as low, 5–10 as high.</p>
+        <p class="muted small">Grasp: the ideas a card needs you to know first, each weighted 1 to 3. Craft: its functions under the Norm, counted from real C where it exists. Grasp is high from 6, Craft from 10 functions. Every card's reasons are in <code>spec/grasp-craft.md</code>.</p>
         <div id="quad" class="cardpage"></div>
       </section>
       <section class="panel" style="margin-top:12px"><div id="grid"></div></section>

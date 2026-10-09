@@ -1,8 +1,8 @@
 # Objective: the Table plays a push_swap build
 
 Planned on 2026-10-10 and extended the same day: the study review, one global seed, the cache
-and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–10 of
-the build order are built (see `spec/CHANGELOG.md`); the rest is planned. Each step in
+and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. All eleven steps of
+the build order are built (see `spec/CHANGELOG.md`). Each step in
 [Build order](#build-order) ships on its own, with its tests, UI checks and spec updates.
 
 ## Why
@@ -239,7 +239,7 @@ affects a custom stack.
 - The reference builds pay off twice: they give those three cards real `ref` numbers, and their
   function counts feed the new Craft (section 8).
 
-### 12. Reskin of Codex, Meta and Lab
+### 12. Reskin of Codex, Meta and Lab (built)
 
 The three pages still use the plain theme. They take the Table's look: the felt, pixel headings,
 cream panels, card faces, tier colours, and the same rules for drawing light. It comes **last**:

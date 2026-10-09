@@ -63,7 +63,7 @@ button.on, .chip.on { background: var(--accent); color: #fff; border-color: var(
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; background: var(--soft); padding: 0 3px; border-radius: 3px; }
 
 /* grades */
-.badge { padding: 3px 10px; border-radius: 999px; font-weight: 700; border: 2px solid currentColor; font-size: 13px; white-space: nowrap; }
+.gbadge { padding: 3px 10px; border-radius: 999px; font-weight: 700; border: 2px solid currentColor; font-size: 13px; white-space: nowrap; }
 .EXCELLENT { color: var(--exc); } .GOOD { color: var(--good); } .PASS { color: var(--pass); } .FAIL { color: var(--fail); }
 .g { font-weight: 600; font-size: 12px; }
 .valid.yes { color: var(--ok); font-weight: 600; } .valid.no { color: var(--bad); font-weight: 600; }

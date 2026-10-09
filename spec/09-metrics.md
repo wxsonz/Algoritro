@@ -31,6 +31,14 @@
   and Chunks with constant params (+14 % and +10 % at n=2048, +42 % and +36 % at n=4096) and
   Turk labelled n log n (+14 % at n=2048). It passes Quick 2-Way, LSD Radix and the √n-scaled
   params, all within 1 %.
+- **Growth ratio.** The class check as one number peers can read (the study's visualizer does
+  the same): the moves at 4n over the moves at n, from 512 to 2048 (the graded 500 to 2000, near
+  enough), or from 128 to 500 for the slow cards that stop there. A class grows by its own ratio:
+  n² 16×, n√n 8×, n log₂ n about 4.9× (from 512). The Meta page and the Lab draw each hand's
+  ratio against those three marks, coloured by the class it grows like, and flag a hand that
+  grows more than 12 % faster than its claim. It reads the same data as the class check, so it
+  inherits its caveats below. Measured: LSD Radix 4.89 (n log n exactly), Four-End Quicksort
+  4.77, Bucket Beam 5.10 (it claims n√n), Chunks 7.32, Turk 7.31, Min Extract 15.70.
 - **Why not "a ratio that keeps rising".** Ops ÷ f(n) can rise for a valid claim when the
   lower-order term is negative: Quick 2-Way's ops ÷ n log₂ n rises from 1.08 at n=128 to 1.25
   at n=4096, yet it is O(n log n). It can also stay flat up to n=1000 for a failing claim: with

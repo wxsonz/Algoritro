@@ -7,7 +7,8 @@ import { generate, ranks } from '../core/input.js';
 import { runHand } from '../core/hand.js';
 import { $, el, topBar, cardsData, metaData, f0, pct, signed, cls, proofMark, dots, RARITY, badge } from './common.js';
 import { markdown } from './markdown.js';
-import { algoCard, techCard, sparkline } from './card.js';
+import { sparkline } from './card.js';
+import { algoFace, techFace, bindCardFx } from './tcg.js';
 import { PATHS } from './paths.js';
 import { deckString } from '../core/hand.js';
 
@@ -33,14 +34,20 @@ function matches(c, kind) {
 }
 function grid() {
   const g = $('grid'); g.innerHTML = '';
-  const add = (title, items) => { if (items.length) g.append(el('h2.full', {}, title), el('div.grid', {}, items)); };
-  add('Algorithm cards', ALGOS.filter(a => matches(a, 'algorithm')).map(a => link(a.id, algoCard(a, { stats: META?.cards?.[a.id] }))));
-  add('Technique cards', TECHS.filter(t => t.role !== 'leaf' && matches(t, 'technique')).map(t => link(t.id, techCard(t, { state: { ok: !t.unbuildable, reason: t.unbuildable || '' }, doc: DOC?.techniques?.[t.id] }))));
-  add('Finishers', TECHS.filter(t => t.role === 'leaf' && matches(t, 'leaf')).map(t => link(t.id, techCard(t, { state: { ok: !t.unbuildable, reason: t.unbuildable || '' }, doc: DOC?.techniques?.[t.id] }))));
-  add('Meta cards', METACARDS.filter(m => matches(m, 'meta')).map(m => link(m.id, el('div.card.tech.meta', {}, el('div.head', {}, el('b.name', {}, m.name), el('span.rarity.' + m.rarity, {}, RARITY[m.rarity])), el('div.tagline', {}, `“${m.tagline}”`), el('div.meta', {}, `cost: ${m.cost} · Grasp ${m.grasp} · Craft ${m.craft}`)))));
-  add('Cursed cards', CURSED.filter(c => matches(c, 'cursed')).map(c => link(c.id, el('div.card.tech.cursed', {}, el('div.head', {}, el('b.name', {}, c.name), el('span.rarity', {}, c.playable ? 'playable' : 'lesson')), el('div.effect', {}, c.why)))));
+  const add = (title, items, faces = true) => { if (items.length) g.append(el('h2.full', {}, title), el(faces ? 'div.facegrid' : 'div.grid', {}, items)); };
+  add('Algorithm cards', ALGOS.filter(a => matches(a, 'algorithm')).map(a => link(a.id, algoFace(a, { stats: META?.cards?.[a.id] }))));
+  add('Technique cards', TECHS.filter(t => t.role !== 'leaf' && matches(t, 'technique')).map(t => link(t.id, techFace(t, { state: { ok: !t.unbuildable, reason: t.unbuildable || '', always: t.always }, doc: DOC?.techniques?.[t.id] }))));
+  add('Finishers', TECHS.filter(t => t.role === 'leaf' && matches(t, 'leaf')).map(t => link(t.id, techFace(t, { state: { ok: !t.unbuildable, reason: t.unbuildable || '' }, doc: DOC?.techniques?.[t.id] }))));
+  add('Meta cards', METACARDS.filter(m => matches(m, 'meta')).map(m => link(m.id, el('div.card.tech.meta', {}, el('div.head', {}, el('b.name', {}, m.name), el('span.rarity.' + m.rarity, {}, RARITY[m.rarity])), el('div.tagline', {}, `“${m.tagline}”`), el('div.meta', {}, `cost: ${m.cost} · Grasp ${m.grasp} · Craft ${m.craft}`)))), false);
+  add('Cursed cards', CURSED.filter(c => matches(c, 'cursed')).map(c => link(c.id, el('div.card.tech.cursed', {}, el('div.head', {}, el('b.name', {}, c.name), el('span.rarity', {}, c.playable ? 'playable' : 'lesson')), el('div.effect', {}, c.why)))), false);
 }
-const link = (id, node) => { node.style.cursor = 'pointer'; node.onclick = e => { if (e.target.closest('a,button')) return; location.hash = id; }; return node; };
+// A card opens its page: by a click (not on a link), or by Enter on the focused card.
+const link = (id, node) => {
+  node.style.cursor = 'pointer';
+  node.onclick = e => { if (e.target.closest('a')) return; location.hash = id; };
+  node.onkeydown = e => { if (e.key === 'Enter') location.hash = id; };
+  return node;
+};
 
 // ---- Grasp × Craft grid --------------------------------------------------------------------
 function quad() {
@@ -77,7 +84,7 @@ function statsTable(stats) {
 function pathsOf(match) { const out = []; for (const p of PATHS) p.steps.forEach((s, i) => { if (match(s.deck)) out.push(el('a', { href: `index.html#deck=${s.deck}&n=${s.n ?? 100}&gen=uniform&seed=42&path=${p.id}&step=${i}` }, `${p.name}, step ${i + 1}`)); }); return out; }
 function algoPage(a, box, back) {
   const d = DOC?.algorithms?.[a.id], st = META?.cards?.[a.id];
-  const side = el('div', {}, algoCard(a, { stats: st }), el('p', {}, el('a', { href: `index.html#deck=${a.id}&n=${a.maxN ? Math.min(a.maxN, 7) : 100}&gen=uniform&seed=42` }, 'Play on the Table →')));
+  const side = el('div.cardface', {}, algoFace(a, { stats: st, cls: 'focus' }), el('p', {}, el('a', { href: `index.html#deck=${a.id}&n=${a.maxN ? Math.min(a.maxN, 7) : 100}&gen=uniform&seed=42` }, 'Play on the Table →')));
   const main = el('div', {}, el('h1', {}, `${FAMILIES[a.family].icon} ${a.name}`), el('p.lede', {}, `“${a.tagline}” · ${cls(a.claimedClass)} ${proofMark(a.proof)} · Grasp ${a.grasp} · Craft ${a.craft} functions · ${RARITY[a.rarity]}`));
   main.append(el('div.doc', { html: markdown(d?.doc || '', d?.source) }));
   main.append(el('h3', {}, 'Measured (explorer)'), statsTable(st));
@@ -108,7 +115,7 @@ function techPage(t, box, back) {
   const hosts = ALGOS.filter(a => fits(a, t).ok);
   main.append(el('h3', {}, 'Fits'), el('p', {}, hosts.length ? hosts.map(a => el('a', { href: '#' + a.id }, a.name)).flatMap((x, i) => i ? [', ', x] : [x]) : el('span.muted', {}, t.role === 'prep' || t.role === 'post' ? 'every card' : 'no card yet')));
   const ps = pathsOf(deck => deck.split('+').includes(t.id)); if (ps.length) main.append(el('h3', {}, 'On the Paths'), el('p', {}, ps.flatMap((x, i) => i ? [' · ', x] : [x])));
-  box.append(back, el('div.cardpage', {}, el('div', {}, techCard(t, { state: { ok: !t.unbuildable }, doc: d })), main));
+  box.append(back, el('div.cardpage', {}, el('div.cardface', {}, techFace(t, { state: { ok: !t.unbuildable, always: t.always }, doc: d })), main));
 }
 function metaPage(m, box, back) {
   const d = DOC?.meta?.[m.id];
@@ -133,3 +140,4 @@ function cursedPage(c, box, back) {
 
 addEventListener('hashchange', page);
 grid(); quad(); page();
+bindCardFx(document);

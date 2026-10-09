@@ -31,6 +31,7 @@ An older `#deck=…` link fills every seat with its hand.
 ```sh
 npm test                      # unit, reference (±5 % of the sim), growth and data suites
 npm run test:ui               # the four pages in headless Chromium (needs npm run dev and chromium)
+node tools/perf.mjs           # frames per second on every page, idle and scrolling (the same setup)
 node tools/build-data.mjs     # data/cards.json, compat.json, seeds.json
 node tools/meta.mjs           # data/meta.json: measures everything (≈3 min on many cores)
 node tools/precompute.mjs     # data/stacks.json: every legal hand on every stack at seed 1000 (≈1 min on many cores)
