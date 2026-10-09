@@ -51,6 +51,7 @@ marks the grade of the mean; the card files give the share of runs under each ba
 | Chunks | ■ | O(n√n) · ~ (✓ with K ∝ √n and One-Way Sweep) | 662 sim EXC | 5927 sim GOOD | 3 | 6 | Common |
 | Butterfly | ■ | O(n√n) · ✕ if w is constant | 577 sim EXC | 5080 sim EXC | 3 | 5 | Uncommon |
 | Bucket Insertion | ■ | O(n√n) · ✓ | 606 sim EXC (576 ref) | 4291 sim EXC (4121 ref) | 8 | 12 | Rare |
+| Bucket Beam | ■ | O(n√n) · ✓ | 488 ref EXC | 3394 ref EXC | 18 | 58 | Legendary |
 | LSD Radix | ♦ | O(n log n) · ✓ | 1084 sim GOOD | 6784 sim GOOD | 3 | 2 | Common |
 | Ternary Radix | ♦ | O(n log n) · ✓ | 1333 sim GOOD | 7362 sim GOOD | 5 | 5 | Rare |
 | MSD Radix | ♦ | O(n log n) · ✓ | 757 sim GOOD | 5263 sim EXC | 7 | 6 | Uncommon |
@@ -86,7 +87,7 @@ Codex links each example to its card:
 | selection sort adaptation; min/max extraction | O(n²) | Min Extract, Twin Extract |
 | bubble sort adaptation | O(n²) | Bubble Wheel |
 | chunk-based sorting (√n chunks); range-based | O(n√n) | Chunks, Butterfly |
-| bucket sort with √n buckets; block partitioning | O(n√n) | Bucket Insertion |
+| bucket sort with √n buckets; block partitioning | O(n√n) | Bucket Insertion, Bucket Beam |
 | radix sort (LSD) | O(n log n) | LSD Radix, Ternary Radix |
 | radix sort (MSD) | O(n log n) | MSD Radix (on ranks it is Quick 2-Way with power-of-two pivots) |
 | merge sort using two stacks | O(n log n) | Natural Merge, Tape Merge |

@@ -22,17 +22,19 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 - **Wide screens fit the window** like a game screen (from 1100 × 620): only the stack list,
   the slot row and the overlays scroll. Narrower screens stack the panels and the page scrolls;
   on a phone the hand becomes a scrolling row.
-- **Stacks**, the starting stack A to sort, from easy to hard (26 in all). Easy: 1 number and
-  2 in order (0 moves), 2 swapped (1 move), 3 numbers every order (at most 3 moves) and 5
-  numbers every order (at most 12), Already sorted (0 moves), One swap, Nearly sorted (3
+- **Stacks**, the starting stack A to sort, from easy to hard (29 in all). Easy: 1 number and
+  2 in order (0 moves), 2 swapped (1 move), 3 numbers every order (at most 3 moves), 4 numbers
+  every order (at most 12, best 5), 5 numbers every order (at most 12), 6 numbers every order
+  (no limit in the subject: the line is 20, twice the best, 10), Already sorted (0 moves), One swap, Nearly sorted (3
   swaps), Smallest at the bottom (one `rra` away). Medium: Random 100, Reversed 100, Rotated
   100 (by 37), Up then down, Four runs, Down then up, Interleaved halves, Nearly reversed,
-  Twenty runs, and exact disorder at 25 %, 50 % and 75 %. Hard: Random 500, Reversed 500, Up
-  then down 500, Nearly sorted 500 (10 swaps), Rotated 500 (by 137). Seeded stacks (the nine that
+  Twenty runs, exact disorder at 25 %, 50 % and 75 %, and a quarter messy by neighbour swaps
+  only (local disorder, every number near its place). Hard: Random 500, Reversed 500, Up
+  then down 500, Nearly sorted 500 (10 swaps), Rotated 500 (by 137). Seeded stacks (the ten that
   use randomness) follow the **global seed**, top right, which starts at 1000: rolling it changes
-  all nine at once, and their routes follow. An "every order" stack runs all n! orders, is
+  all ten at once, and their routes follow. An "every order" stack runs all n! orders, is
   stamped by the worst, and picking it plays that worst order. Each row also shows the stack's **route**: its disorder, the flag it goes
-  to (`--simple` below 0.2, `--medium` up to 0.5, `--complex` from 0.5, or `tiny` for 5 numbers or
+  to (`--simple` below 0.2, `--medium` up to 0.5, `--complex` from 0.5, or `tiny` for 7 numbers or
   fewer, whatever the disorder) and the icon of the card that sorted it. The flags have their
   own colours, never the stack levels'. A stack with a hard limit is graded against its optimum (the worst
   order's shortest solution, found by the Oracle: 1 for 2 swapped, 2 for 3 numbers, 8 for 5):
@@ -86,6 +88,11 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
   build, and **Use this build** copies them in. Both read the cache, every legal hand × every
   subset of the post cards (9,008 candidates), in about 50 ms. At a seed the cache holds only
   partly they search what is kept, and say so.
+- **`--bench`.** A toggle at the end of the route banner shows the readout the subject asks
+  push_swap to print on stderr, as the study's builds print it: the disorder in percent, the
+  strategy and the class of the method that actually ran, the total, and the count of each of
+  the 11 moves. On Random 100 at seed 1000 with the Legendary build it reads the same as
+  claude-opus-5.5-max's own `--bench`, move type by move type.
 - **The route banner** above the board names the stack, why it goes where it goes (its
   disorder, or its size for the tiny seat), the flag, and the card; clicking the card opens
   Inspect. On the tiny seat the slots say it is built in, and the hand is empty.

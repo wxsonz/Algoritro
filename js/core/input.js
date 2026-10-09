@@ -17,6 +17,8 @@ export const GENERATORS = {
   organ: { label: 'organ pipe', param: null, make: n => { const a = []; for (let i = 0; i < n; i += 2) a.push(i); for (let i = n - 1 - (n % 2 ? 1 : 0); i > 0; i -= 2) a.push(i); return a; } },
   sawtooth: { label: 'sawtooth (k runs)', param: { name: 'k', def: 4 }, make: (n, next, k) => { k = Math.max(1, Math.min(n || 1, Math.round(k))); const a = []; for (let j = 0; j < k; j++) for (let x = j; x < n; x += k) a.push(x); return a; } },
   disorder: { label: 'exact disorder', param: { name: 'd', def: 0.2 }, make: (n, next, d) => exactDisorder(n, Math.min(1, Math.max(0, d)), next) },
+  // The push_swap visualizer's "local" shape, bit for bit: exact disorder made of adjacent swaps.
+  local: { label: 'exact disorder, local (adjacent swaps)', param: { name: 'd', def: 0.25 }, make: (n, next, d, seed) => localDisorder(n, Math.min(1, Math.max(0, d)), seed) },
   valley: { label: 'down then up', param: null, make: n => GENERATORS.organ.make(n).map(v => n - 1 - v) },
   interleave: { label: 'interleaved halves', param: null, make: n => { const h = Math.ceil(n / 2), a = []; for (let i = 0; i < h; i++) { a.push(i); if (h + i < n) a.push(h + i); } return a; } },
   nearrev: { label: 'nearly reversed (k swaps)', param: { name: 'k', def: 3 }, make: (n, next, k) => GENERATORS.nearly.make(n, next, k).map(v => n - 1 - v) },
@@ -43,6 +45,25 @@ export function exactDisorder(n, d, next) {
   let K = Math.round(d * n * (n - 1) / 2); const open = [...Array(n).keys()].filter(i => cap[i] > 0);
   while (K > 0 && open.length) { const j = randInt(next, open.length), i = open[j]; c[i]++; K--; if (c[i] === cap[i]) open.splice(j, 1); }
   const avail = [...Array(n).keys()]; return c.map(ci => avail.splice(ci, 1)[0]);
+}
+
+// Exact disorder d by local moves (the push_swap visualizer's input.js, ported): from sorted, K =
+// round(d·n(n−1)/2) times swap a random adjacent pair that is still in order, each swap adding
+// exactly one inversion. Next to the Lehmer shape above (global), the same disorder stays local:
+// every value ends near its place. Seeded as the visualizer does (values sampled first), so a
+// seed gives the visualizer's input.
+export function localDisorder(n, d, seed) {
+  const rng = new Random(seed), sorted = rng.sampleRange(-100000, 100000, n).sort((x, y) => x - y);
+  const p = Int32Array.from({ length: n }, (_, i) => i), m = Math.max(n - 1, 0), list = new Int32Array(m), where = new Int32Array(m).fill(-1);
+  let len = 0, K = Math.round(d * (n < 2 ? 0 : n * (n - 1) / 2));
+  const add = x => { if (x < 0 || x >= n - 1 || where[x] >= 0 || p[x] > p[x + 1]) return; where[x] = len; list[len++] = x; };
+  const drop = x => { if (x < 0 || x >= n - 1 || where[x] < 0) return; const w = where[x]; list[w] = list[--len]; where[list[w]] = w; where[x] = -1; };
+  for (let i = 0; i < n - 1; i++) add(i);
+  while (K-- > 0 && len > 0) {
+    const j = list[rng.randbelow(len)], t = p[j]; p[j] = p[j + 1]; p[j + 1] = t;
+    drop(j - 1); drop(j); drop(j + 1); add(j - 1); add(j); add(j + 1);
+  }
+  return Array.from(p, r => sorted[r]);
 }
 
 // Manual input: integers only, signed 32-bit, no duplicates. Returns { values } or { error }.

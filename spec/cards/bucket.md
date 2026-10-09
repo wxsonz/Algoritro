@@ -128,3 +128,54 @@ return, restricted per bucket so the proof survives. One reference build did it 
 
 **Slots:** 3, from sweep, band, cost and order. The bucket-restricted pick and return are
 native. Defaults: One-Way Sweep, `rb` Sink and Two-Way Cost. Param: the bucket width.
+
+---
+
+## Bucket Beam — *"Plan the crates, fill each one in its best order"*
+
+| class | @100 | @500 | Grasp | Craft | rarity |
+| --- | --- | --- | --- | --- | --- |
+| O(n√n) · ✓ | 488 ref EXC | 3394 ref EXC | 18 | 58 | Legendary |
+
+**The idea.** Cut the numbers into small crates the way a careful planner would, then empty each
+crate into A in the best order there is: keep the part already in order where it stands, and
+slot the others in, choosing their order by trying many orders at once.
+
+**Step by step.**
+1. Split the stack three ways by rank, sending the parts to the other ends, as Four-End
+   Quicksort does, with each split's sizes taken from a plan worked out in advance.
+2. Stop splitting at crates of about √n numbers.
+3. In each crate, keep its longest increasing run in A and push the rest to B.
+4. Insert the pushed numbers back one by one, in the order a beam search finds cheapest, turning
+   both stacks together where it can.
+
+**Under the hood.** The study's best `--medium` (claude-opus-5.5-max), ported op for op. Its
+buckets come from **DP Splits** in forced mode: every chunk of at most b = ⌈√n⌉ values is a
+leaf, whose expected cost is that build's measured insertion cost, and the planner chooses the
+three-way splits above it. Each bucket keeps a **longest increasing subsequence** in A (scanned
+from the end its values sit nearest to) and pushes the rest; then a **beam over insertion
+orders** (width about 1 800 000 / b², at most 2000) inserts them, each move turning A to the
+slot and B to the value, sharing `rr`/`rrr`, then `pa`. The build also tries two sweep layouts
+and keeps the shortest stream (a portfolio); on random input the planned layout always won, so
+the card is that layout alone.
+
+**As built (ref).** With both peepholes, 488.0 / 3394.2 on the study's seeds 1000–1004, against
+the build's 488.2 / 3394.4 (its one-pass peephole saves one more move on two of the ten inputs);
+without them, every stream is identical to the build's, move for move (`tests/planned.test.mjs`).
+
+**Lore.** A recombination of the study's strongest ideas: Four-End Quicksort's exact-rank
+splits, DP Splits' planning, the LIS anchor of the insertion builds, and a beam over insertion
+orders. The bound needs only the bucket size: O(b²) per bucket of b values, whatever the order.
+
+**Pros**
+- The best measured medium method: 488 / 3394, ahead of Bucket Insertion (576 / 4121, ref)
+  with the same provable class.
+- Each idea is a card you can study alone: Four Ends, DP Splits, LIS Anchor, Beam over Orders.
+
+**Cons**
+- Legendary Grasp and Craft (18 and 58 functions): a planner, an LIS and a beam in one method.
+- It is slow for push_swap: about 0.7 s a sort at n=500 in JavaScript.
+- On inputs with long sorted runs the planned layout loses to a plain sweep; the build's
+  portfolio kept those, this card does not.
+
+**Slots:** none. Built in: Four Ends, DP Splits, LIS Anchor and Beam over Orders.

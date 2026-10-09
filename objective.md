@@ -1,7 +1,7 @@
 # Objective: the Table plays a push_swap build
 
 Planned on 2026-10-10 and extended the same day: the study review, one global seed, the cache
-and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–9 of
+and its ☢ button, lesson icons, reference builds, and a reskin of the other pages. Steps 1–10 of
 the build order are built (see `spec/CHANGELOG.md`); the rest is planned. Each step in
 [Build order](#build-order) ships on its own, with its tests, UI checks and spec updates.
 
@@ -82,14 +82,14 @@ stacks, each with its route:           | route: Reversed 500 · 1.00 → --compl
 - Each seat shows a **summary** of its stacks, such as "sorts 8 stacks · 7 ★ 1 ✓", so a weak
   seat stands out.
 
-Today's 26 stacks route like this at the default seed, 1000 (Python's own random, step 5). The
-global seed (section 9) moves the nine random ones:
+Today's 29 stacks route like this at the default seed, 1000 (Python's own random, step 5). The
+global seed (section 9) moves the ten random ones:
 
 | seat | stacks |
 | --- | --- |
-| tiny (5) | 1 number, 2 in order, 2 swapped, 3 numbers every order, 5 numbers every order |
+| tiny (7) | 1 number, 2 in order, 2 swapped, 3, 4, 5 and 6 numbers every order |
 | `--simple` (5) | Already sorted 0.000, One swap 0.001, Smallest at the bottom 0.020, Nearly sorted 500 0.020, Nearly sorted 0.025 |
-| `--medium` (9) | Interleaved halves 0.247, A quarter messy 0.250, Four runs 0.364, Twenty runs 0.384, Rotated 500 0.399, Rotated 100 0.471, Random 500 0.472, Up then down 0.495, Up then down 500 0.499 |
+| `--medium` (10) | Interleaved halves 0.247, A quarter messy 0.250, A quarter messy, local 0.250, Four runs 0.364, Twenty runs 0.384, Rotated 500 0.399, Rotated 100 0.471, Random 500 0.472, Up then down 0.495, Up then down 500 0.499 |
 | `--complex` (7) | Half messy 0.500, Down then up 0.505, Random 100 0.536, Three quarters messy 0.750, Nearly reversed 0.975, Reversed 100 1.000, Reversed 500 1.000 |
 
 Mirror shapes split across the line: Up then down is 0.495 (`--medium`) and Down then up 0.505
@@ -264,13 +264,13 @@ or deck.
 
 | # | what | from | why |
 | --- | --- | --- | --- |
-| 1 | **Bucket Beam**, for `--medium` | `claude-opus-5.5-max`: `bucket.c`, `bucket_extract.c`, `ins_beam.c`, `ins_cost.c`, `ins_apply.c`, `lis.c` | √n buckets, each sorted by insertion around its longest increasing run, with a beam over insertion orders. It measures 488.2 / 3394.4 against Bucket Insertion's 576.0 / 4120.8 (ref), and stays O(n√n). About half of the graded random inputs go to `--medium`, so this is the biggest gain for a real build. Today Beam over Orders says "Not built on Bucket Insertion yet", and Bucket Insertion has no anchor role, so this needs new engine code, not a new deck. |
-| 2 | **Beam Leaf** (leaves up to 32) | `-max`: `beam*.c`, `tbl_*.c`, `dp_leaf.c` | A beam search over leaves of up to 32 values, guided by exact distance tables on groups of 4 ranks. It is the card marked "not built here yet", and the main gap between Four Corners (3825 at n=500, sim) and Oracle's Plan (3111, ref). |
-| 3 | **Full DP Splits** | `-max`: `dp.c`, `dp_cost.c`, `dp_search.c`, `dp_climb.c`, `dp_settle.c` | Adds expected `rr` merges and free reads of a chunk alone on its stack to the sim's simplified DP. It answers the open space "how much do they add alone?". |
-| 4 | **Python-exact seeds** | `visualizer/js/rng.js` | Reproduces `random.Random(seed).sample(range(lo, hi), n)` bit for bit. The study's seeds 1000–1004 and peers' Python testers would then name the same inputs here, so sim and reference numbers can be compared seed by seed instead of within ±5 %. It changes every random input, so it comes before the first precompute. |
-| 5 | **Local disorder** | `visualizer/js/input.js` | Exact disorder made of adjacent swaps (local), next to today's Lehmer shape (global). The same 25 % behaves very differently for chunk cards. New stack: A quarter messy, local. |
-| 6 | **Tiny seat up to 7** | both `claude-opus` builds solve n ≤ 7 optimally by BFS | The tiny seat stops at 5. Going to 7 costs little (about 40 000 states), and two stacks would test it: every order of 4 (24 orders) and 6 numbers. |
-| 7 | **`--bench` readout** | the `claude-opus` builds report the class of the method that actually ran | A subject-style readout on the route banner: disorder, the method and its class, total moves, and the count of each of the 11 moves. It brings back the per-move counts the Stats overlay used to show. |
+| 1 | **Bucket Beam**, for `--medium` | `claude-opus-5.5-max`: `bucket.c`, `bucket_extract.c`, `ins_beam.c`, `ins_cost.c`, `ins_apply.c`, `lis.c` | √n buckets, each sorted by insertion around its longest increasing run, with a beam over insertion orders. It measures 488.2 / 3394.4 against Bucket Insertion's 576.0 / 4120.8 (ref), and stays O(n√n). About half of the graded random inputs go to `--medium`, so this is the biggest gain for a real build. Today Beam over Orders says "Not built on Bucket Insertion yet", and Bucket Insertion has no anchor role, so this needs new engine code, not a new deck. **Imported in step 10.** |
+| 2 | **Beam Leaf** (leaves up to 32) | `-max`: `beam*.c`, `tbl_*.c`, `dp_leaf.c` | A beam search over leaves of up to 32 values, guided by exact distance tables on groups of 4 ranks. It is the card marked "not built here yet", and the main gap between Four Corners (3825 at n=500, sim) and Oracle's Plan (3111, ref). **Imported in step 10.** |
+| 3 | **Full DP Splits** | `-max`: `dp.c`, `dp_cost.c`, `dp_search.c`, `dp_climb.c`, `dp_settle.c` | Adds expected `rr` merges and free reads of a chunk alone on its stack to the sim's simplified DP. It answers the open space "how much do they add alone?". **Imported in step 10.** |
+| 4 | **Python-exact seeds** | `visualizer/js/rng.js` | Reproduces `random.Random(seed).sample(range(lo, hi), n)` bit for bit. The study's seeds 1000–1004 and peers' Python testers would then name the same inputs here, so sim and reference numbers can be compared seed by seed instead of within ±5 %. It changes every random input, so it comes before the first precompute. **Imported in step 5.** |
+| 5 | **Local disorder** | `visualizer/js/input.js` | Exact disorder made of adjacent swaps (local), next to today's Lehmer shape (global). The same 25 % behaves very differently for chunk cards. New stack: A quarter messy, local. **Imported in step 10.** |
+| 6 | **Tiny seat up to 7** | both `claude-opus` builds solve n ≤ 7 optimally by BFS | The tiny seat stops at 5. Going to 7 costs little (about 40 000 states), and two stacks would test it: every order of 4 (24 orders) and 6 numbers. **Imported in step 10.** |
+| 7 | **`--bench` readout** | the `claude-opus` builds report the class of the method that actually ran | A subject-style readout on the route banner: disorder, the method and its class, total moves, and the count of each of the 11 moves. It brings back the per-move counts the Stats overlay used to show. **Imported in step 10.** |
 | 8 | **Growth ratio** | the visualizer's bench charts | The class check as one number peers can read: moves at n=2000 ÷ moves at n=500 (n² about 16×, n√n about 8×, n log n about 4.9×). For the Meta and Lab reskin. |
 
 **Not bringing in:**

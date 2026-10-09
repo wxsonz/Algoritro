@@ -12,7 +12,9 @@ export const STACKS = [
   { id: 'two-sorted', level: 'easy', icon: '2', name: '2 in order', n: 2, gen: 'sorted', desc: 'Two numbers, already in order. Any move is a fail.', limit: 0 },
   { id: 'two-swapped', level: 'easy', icon: '⇅', name: '2 swapped', n: 2, gen: 'reversed', desc: 'Two numbers, the wrong way round: exactly one sa.', limit: 1, best: 1 },
   { id: 'three', level: 'easy', icon: '3', name: '3 numbers, every order', n: 3, gen: 'perm', seeds: range(6), desc: 'All 6 orders of three numbers, stamped by the worst. The subject allows at most 3 moves.', limit: 3, best: 2 },
+  { id: 'four', level: 'easy', icon: '4', name: '4 numbers, every order', n: 4, gen: 'perm', seeds: range(24), desc: 'All 24 orders of four numbers, stamped by the worst. The subject\'s rule for five or fewer allows 12 moves; 5 is the best possible.', limit: 12, best: 5 },
   { id: 'five', level: 'easy', icon: '5', name: '5 numbers, every order', n: 5, gen: 'perm', seeds: range(120), desc: 'All 120 orders of five numbers, stamped by the worst. The subject allows at most 12 moves.', limit: 12, best: 8 },
+  { id: 'six', level: 'easy', icon: '6', name: '6 numbers, every order', n: 6, gen: 'perm', seeds: range(720), desc: 'All 720 orders of six numbers, stamped by the worst. The subject sets no limit here; the line is twice the best possible, 10.', limit: 20, best: 10 },
   { id: 'sorted', level: 'easy', icon: '✓', name: 'Already sorted', n: 100, gen: 'sorted', desc: 'Nothing to do. Any move at all is a fail.', limit: 0 },
   { id: 'one-swap', level: 'easy', icon: '⇄', name: 'One swap', n: 100, gen: 'nearly', param: 1, desc: 'Sorted, except one pair swapped.' },
   { id: 'nearly', level: 'easy', icon: '≈', name: 'Nearly sorted', n: 100, gen: 'nearly', param: 3, desc: 'Sorted, except three pairs swapped.' },
@@ -27,6 +29,7 @@ export const STACKS = [
   { id: 'nearrev-100', level: 'medium', icon: '◑', name: 'Nearly reversed', n: 100, gen: 'nearrev', param: 3, desc: 'Largest first, except three pairs swapped.' },
   { id: 'runs20-100', level: 'medium', icon: '≋', name: 'Twenty runs', n: 100, gen: 'sawtooth', param: 20, desc: 'Twenty short sorted runs, one after another.' },
   { id: 'messy25-100', level: 'medium', icon: '¼', name: 'A quarter messy', n: 100, gen: 'disorder', param: 0.25, desc: 'Exactly 25 % of the pairs out of order.' },
+  { id: 'local25-100', level: 'medium', icon: '⁓', name: 'A quarter messy, local', n: 100, gen: 'local', param: 0.25, desc: 'Exactly 25 % of the pairs out of order, by swaps of neighbours: every number stays near its place. The push_swap visualizer\'s "local" shape.' },
   { id: 'messy50-100', level: 'medium', icon: '½', name: 'Half messy', n: 100, gen: 'disorder', param: 0.5, desc: 'Exactly half of the pairs out of order: random, on average.' },
   { id: 'messy75-100', level: 'medium', icon: '¾', name: 'Three quarters messy', n: 100, gen: 'disorder', param: 0.75, desc: 'Exactly 75 % of the pairs out of order: closer to reversed.' },
   { id: 'random-500', level: 'hard', icon: '✶', name: 'Random 500', n: 500, gen: 'uniform', desc: '500 numbers in random order: the subject’s big test.' },
@@ -37,7 +40,7 @@ export const STACKS = [
 ];
 export const SEED = 1000;   // the default global seed: the study's first, so Random 100 is its first graded input
 function range(k) { return Array.from({ length: k }, (_, i) => i); }
-const RANDOM = new Set(['uniform', 'nearly', 'disorder', 'nearrev']);   // generators that use the seed
+const RANDOM = new Set(['uniform', 'nearly', 'disorder', 'local', 'nearrev']);   // generators that use the seed
 // A stack the global seed changes: a seeded shape that is not a fixed set of orders.
 export const seeded = b => RANDOM.has(b.gen) && !b.seeds;
 export const stackById = Object.fromEntries(STACKS.map(b => [b.id, b]));

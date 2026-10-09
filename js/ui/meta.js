@@ -125,7 +125,7 @@ const render = {
     return el('div', {}, el('p.lede', {}, 'Named decks give peers a shared vocabulary. Natives and defaults are part of the card and add nothing to the Hand totals. "sim" is the reference simulator\'s number, "ref" the reference C build\'s.'),
       table([['deck'], ['hand'], ['@100', 1], ['@500', 1], ['sim', 1], ['ref', 1], ['Grasp / Craft'], ['tier @500'], ['note']], DECKS.map(d => {
         const m = M.decks[d.id]; return el('tr', {}, el('td', {}, el('a', { href: play(m.deck, m.presets, 100) }, el('b', {}, d.name))), el('td.small', {}, m.deck, m.presets ? ` (${Object.values(m.presets).join(', ')})` : ''),
-          el('td.num', {}, f0(m.at[100].mean)), el('td.num', {}, f0(m.at[500].mean)), el('td.num.muted', {}, `${d.sim[0]} / ${d.sim[1]}`), el('td.num.muted', {}, d.ref ? `${d.ref[0]} / ${d.ref[1]}` : ''),
+          el('td.num', {}, f0(m.at[100].mean)), el('td.num', {}, f0(m.at[500].mean)), el('td.num.muted', {}, d.sim ? `${d.sim[0]} / ${d.sim[1]}` : ''), el('td.num.muted', {}, d.ref ? `${d.ref[0]} / ${d.ref[1]}` : ''),
           el('td', {}, `${capped(m.grasp)} / ${capped(m.craft)}`), el('td', {}, el('span.tier.tier-' + tier(500, m.at[500].mean), {}, tier(500, m.at[500].mean))), el('td.small', {}, d.note));
       })));
   },

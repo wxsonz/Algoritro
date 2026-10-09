@@ -20,7 +20,6 @@ export default [
     finish: m => bfsSortA(m), effect: 'Four-End Quicksort: ≤ 3 −95 / −635, ≤ 5 −142 / −657' },
   { id: 'distance-tables', role: 'leaf', name: 'Distance Tables', knows: ['bfs',  'heuristic'], fns: 0, uses: ['tables'], from: "counted: claude-opus-5.5-max's tables, built by BFS", rarity: 'legendary', rest: 4, leaf: 4,
     finish: m => bfsSortA(m), effect: 'the same ops as BFS Leaf ≤ 4 (−105 / −657), only faster' },
-  { id: 'beam-leaf', role: 'leaf', name: 'Beam Leaf (≤ 32)', short: 'Beam Leaf', knows: ['beam',  'heuristic',  'bfs'], fns: 24, uses: ['tables'], from: "counted: claude-opus-5.5-max beam.c, beam_heur.c, beam_mem.c, beam_moved.c, beam_path.c, beam_search.c, beam_select.c (24) on its distance tables", rarity: 'legendary',
-    unbuildable: 'Reference builds only: not built here yet. It is the main open space between Four Corners and Oracle\'s Plan.',
-    effect: 'ref only' },
+  { id: 'beam-leaf', role: 'leaf', name: 'Beam Leaf (≤ 32)', short: 'Beam Leaf', knows: ['beam',  'heuristic',  'bfs'], fns: 24, uses: ['tables'], from: "counted: claude-opus-5.5-max beam.c, beam_heur.c, beam_mem.c, beam_moved.c, beam_path.c, beam_search.c, beam_select.c (24) on its distance tables", rarity: 'legendary', leaf: 32,
+    effect: 'on Four-End Quicksort with DP Splits and both peepholes, against BFS Leaf: −97 @100, −479 @500 (claude-opus-5.5-max\'s leaves, ported)' },
 ].map(c => ({ kind: 'technique', requires: [], conflicts: [], ...c }));

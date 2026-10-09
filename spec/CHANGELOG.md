@@ -50,6 +50,31 @@
   every stack keeps its ★, in 17,988 moves against the strong build's 20,270. **Use this
   build** copies it in. Both search the cache (every legal hand × every subset of the post cards)
   in about 50 ms. Portfolio is gone from the cards, the Codex and the spec as well.
+- **Step 10, imports from the study.** Each one is checked against its source.
+  - **DP Splits is the study's full planner**, ported op for op from claude-opus-5.5-max
+    (`js/cards/engines/planned.js`): expected `rr` merges, free reads of a chunk alone on its
+    stack, hill-climbed sizes, every size up to n. With BFS Leaf and both peepholes it measures
+    516.2 / 3590.0 on the study's seeds 1000–1004, against 528.0 / 3823.0 for Pivot by Leaf Count;
+    its two additions are worth −4 / −69 over the sim's simplified DP on their own. The shipped
+    plan tables (`data/dp-plans.json`) are gone: plans are computed on first use and cached.
+  - **Beam Leaf is built**: the study's search over leaves of up to 32 values (a level beam
+    ranked by exact table distances of groups of 4 ranks, plus penalties), played with DP
+    Splits. Four-End Quicksort + DP Splits + Beam Leaf + both peepholes is now Oracle's Plan:
+    419.6 / 3110.8, claude-opus-5.5-max's `--complex` exactly. Without the peepholes the streams
+    are identical move for move on 43 inputs from 8 to 1000 values.
+  - **Bucket Beam**, a new Bucket card: the study's best `--medium`, planned splits down to
+    buckets of ⌈√n⌉ values, each sorted by insertion around its longest increasing run in the
+    order a beam finds cheapest. With both peepholes (the new Planned Crates deck) 488.0 /
+    3394.2, against the build's 488.2 / 3394.4; identical streams without them on 36 inputs. The
+    build's portfolio of three layouts is not imported: on random input it always kept this one.
+  - **Local disorder**: the push_swap visualizer's "local" exact disorder (adjacent swaps only),
+    bit for bit, as a new input shape and a new stack, A quarter messy, local.
+  - **The tiny seat goes up to 7 numbers**, by the Oracle's search: optimal, and equal to
+    claude-opus-5.5-max's exact search on all 744 orders of 4 and 6. Two new stacks test it, 4
+    and 6 numbers in every order: 29 stacks in all.
+  - **`--bench`**: a toggle on the route banner shows the subject's readout. On Random 100 at
+    seed 1000 with the new Legendary build (Long Line, Planned Crates, Oracle's Plan) it reads
+    exactly as claude-opus-5.5-max's own `--bench`, move type by move type.
 - **Step 9, Grasp and Craft redefined.** Grasp is now the prior knowledge a card needs: the sum
   of the weights of the concepts you must know first (18 concepts, weights 1 to 3; the stacks, the
   moves, loops and arrays are free). Craft is the number of functions under the Norm, counted from

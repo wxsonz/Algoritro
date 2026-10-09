@@ -57,14 +57,6 @@ export function bfsLeaf(loc, wA, wB, rel) {
   ops.reverse(); leafCache.set(key, ops);
   return ops;
 }
-// Expected BFS cost of a leaf of size s at loc, with walls on both stacks: DP Splits' base case.
-const avgCache = new Map();
-export function avgLeaf(s, loc) {
-  const key = s * 4 + loc; if (avgCache.has(key)) return avgCache.get(key);
-  let sum = 0, cnt = 0; const p = [...Array(s).keys()];
-  (function go(i) { if (i === s) { sum += bfsLeaf(loc, true, true, p).length; cnt++; return; } for (let j = i; j < s; j++) { [p[i], p[j]] = [p[j], p[i]]; go(i + 1); [p[i], p[j]] = [p[j], p[i]]; } })(0);
-  avgCache.set(key, sum / cnt); return sum / cnt;
-}
 // Compress values to ranks 0..k-1, so leaf caches are shared between leaves.
 export const compress = vals => { const s = vals.slice().sort((a, b) => a - b); return vals.map(v => s.indexOf(v)); };
 

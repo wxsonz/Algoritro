@@ -68,14 +68,22 @@ up to 5 values), instead of splitting in equal thirds.
 values) chooses part sizes and destinations that minimise the **expected** op count. It
 includes `rr` merges and free cases, such as a chunk alone on its stack.
 
-- **Measured (sim, simplified):** a DP over (size, end) using per-value move costs and the BFS
-  leaves' average costs, without `rr` merges or free reads. Instead of Pivot by Leaf Count, with
-  BFS Leaf ≤ 5: −17 at n=100 and −214 at n=500.
-- **Measured (ref):** the build that uses the full DP, together with beam leaves, averages 3111
-  at n=500 on its complex method, against 3824 for the reference Four-End Quicksort without
-  them (5 seeds).
+- **As built (ref):** the study's full planner (claude-opus-5.5-max's `dp*.c`), ported op for op
+  (`js/cards/engines/planned.js`). It plans every size up to n (up to 2000, scaled beyond) and
+  every context: the chunk's end, and whether each stack holds anything else. A split costs each
+  value's move (≤ 3 ops) plus each part's expected cost, less the expected `rr` merges, and a
+  chunk alone on its stack reads from either end for free. Sizes come from an exhaustive scan up
+  to 32 values, else from hill climbing from the previous size's optimum, re-anchored by a grid
+  every 16 sizes. Leaf costs come from the Finisher: exact table averages for BFS Leaf (≤ 5) and
+  Distance Tables (≤ 4), and the build's measured beam costs for Beam Leaf (≤ 32).
+- **Measured (seeds 1000–1004, both peepholes):** with BFS Leaf, 516.2 / 3590.0, against Pivot by
+  Leaf Count's 528.0 / 3823.0 (−12 / −233). The sim's simplified DP (no `rr` merges, no free
+  reads) measures 520.2 / 3658.8 on the same inputs, so the full planner's two additions are worth
+  −4 / −69 on their own. With Beam Leaf it is claude-opus-5.5-max's `--complex`: 419.6 / 3110.8,
+  the same streams move for move (`tests/planned.test.mjs`).
 - **Pros:** the strongest partition card.
-- **Cons:** Legendary Grasp. It needs measured leaf costs as input.
+- **Cons:** Legendary Grasp (dynamic programming) and Craft (24 functions). It needs measured leaf
+  costs as input, and planning takes about half a second in JavaScript the first time.
 - **Requires:** Four Ends. **Conflicts:** Median Pivot and Pivot by Leaf Count, because it
   chooses the part sizes itself.
 

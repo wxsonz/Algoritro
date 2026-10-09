@@ -52,14 +52,14 @@ and error bars are in [../sim/results.md](../sim/results.md).
 | Four Ends | ends | +1 | +4 | vs Quick 2-Way, both with 2-value leaves: +6 @100, −355 @500 | Rare |
 | Restore Skip | ends | +0 | +1 | the whole-stack case is in the bare Quick 2-Way (−139 / −732 vs always restoring); the other case is not built | Uncommon |
 | Thirds Split | split | +2 | +1 | given Four Ends, no Finisher: −86 @100, −330 @500 | Rare |
-| DP Splits | split | +3 | +24 | simplified DP vs Pivot by Leaf Count, BFS Leaf ≤ 5: −17 @100, −214 @500; ref 3824 → 3111 with beam leaves | Legendary |
+| DP Splits | split | +3 | +24 | with BFS Leaf and both peepholes, vs Pivot by Leaf Count: −12 @100, −233 @500; with Beam Leaf, the study's best `--complex`, 419.6 / 3110.8 | Legendary |
 | Median Pivot | pivot | +0 | +0 | Quick 2-Way baseline | Common |
 | Pivot by Leaf Count | pivot | +0 | +1 | with BFS Leaf ≤ 5: −27 @100, −334 @500; without it +12 / −89 (a synergy) | Rare |
 | Hardcoded Three | leaf | +0 | +1 | — | Common |
 | Five Hand | leaf | +1 | +3 | — | Common |
 | BFS Leaf (≤ 5) | leaf | +3 | +18 | Four-End Quicksort: ≤ 3 −95 / −635, ≤ 5 −142 / −657 | Rare |
 | Distance Tables | leaf | +5 | +21 | the same ops as BFS Leaf ≤ 4 (−105 / −657 on Four-End Quicksort), only faster | Legendary |
-| Beam Leaf (≤ 32) | leaf | +8 | +45 | ref only: not built in the sim | Legendary |
+| Beam Leaf (≤ 32) | leaf | +8 | +45 | with DP Splits and both peepholes, vs BFS Leaf: −97 @100, −479 @500 (ported from the study) | Legendary |
 | No-op Suppression | post | +0 | +1 | under 0.5 op per stream on every sim card | Common |
 | Peephole Cancel | post | +2 | +2 | Radix −78 @100, −55 @500; Turk and LIS hosts < 1 | Uncommon |
 | Peephole Fuse | post | +2 | +1 | Chunks −17 / −106; Butterfly −20 / −166; Radix 0; Turk and LIS hosts < 1. With Cancel on Four-End Quicksort: −33 / −217 | Uncommon |

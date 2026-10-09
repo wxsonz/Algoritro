@@ -2,11 +2,9 @@
 //   data/compat.json   roles, natives, defaults, requires, conflicts (from the card modules)
 //   data/cards.json    card text (from spec/cards/*.md and spec/techniques/*.md) and scored stats
 //   data/seeds.json    the fixed seed lists per n (spec/09)
-//   data/dp-plans.json DP Splits' plan tables for sizes ≤ 1000 (slow to compute in the browser)
-// Usage: node tools/build-data.mjs [--no-dp]
+// Usage: node tools/build-data.mjs
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
 import { ALGOS, TECHS, CURSED, META, ROLES } from '../js/cards/index.js';
-import { dpPlan } from '../js/cards/engines/divide.js';
 
 const ROOT = new URL('..', import.meta.url), at = p => new URL(p, ROOT);
 await mkdir(at('data/'), { recursive: true });
@@ -59,13 +57,3 @@ if (missing.length) console.log('no spec section for:', missing.join(', '));
 const seeds = {}; for (const n of [3, 5, 7, 16, 20, 32, 64, 100, 128, 200, 256, 500, 512, 1000, 2048, 4096]) seeds[n] = Array.from({ length: n <= 100 ? 50 : n <= 500 ? 20 : 8 }, (_, i) => 1000 + i);
 await write('seeds', seeds);
 
-// dp-plans.json
-if (!process.argv.includes('--no-dp')) {
-  const N = 1000, plans = {};
-  for (const leaf of [1, 2, 4, 5]) {
-    const t0 = Date.now(), d = dpPlan(N, leaf), { plan, cost } = d.raw;
-    plans[leaf] = { cost: Array.from(cost, x => Math.round(x * 1e4) / 1e4), plan: plan.map(p => p ? [p.sizes.max, p.sizes.mid, p.sizes.min, p.dest.max, p.dest.mid, p.dest.min] : 0) };
-    console.log(`DP Splits, leaf ${leaf}: ${Date.now() - t0} ms`);
-  }
-  await writeFile(at('data/dp-plans.json'), JSON.stringify({ N, plans }) + '\n'); console.log('wrote data/dp-plans.json');
-}

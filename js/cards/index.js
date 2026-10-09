@@ -12,6 +12,7 @@ import turk from './algos/turk.js';
 import chunks from './algos/chunks.js';
 import butterfly from './algos/butterfly.js';
 import bucketInsertion from './algos/bucket-insertion.js';
+import bucketBeam from './algos/bucket-beam.js';
 import lsdRadix from './algos/lsd-radix.js';
 import ternaryRadix from './algos/ternary-radix.js';
 import msdRadix from './algos/msd-radix.js';
@@ -31,7 +32,7 @@ import META from './meta.js';
 import { tally } from './stats.js';
 
 export const ALGOS = [three, fiveHand, oracle, bubbleWheel, minExtract, twinExtract, insertIntoB, simpleInsertion, lisInsertion, turk,
-  chunks, butterfly, bucketInsertion, lsdRadix, ternaryRadix, msdRadix, quick2, fourEnd, tapeMerge, naturalMerge, lookahead, beamSorter, annealer]
+  chunks, butterfly, bucketInsertion, bucketBeam, lsdRadix, ternaryRadix, msdRadix, quick2, fourEnd, tapeMerge, naturalMerge, lookahead, beamSorter, annealer]
   .map(a => ({ natives: {}, open: [], defaults: {}, slots: 0, params: {}, ...a }));
 export const TECHS = [...PREP, ...SLOTS, ...LEAVES, ...POST];
 export { CURSED, META };

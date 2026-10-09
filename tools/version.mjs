@@ -7,7 +7,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 const ROOT = new URL('../', import.meta.url);
 const walk = dir => readdirSync(new URL(dir, ROOT)).flatMap(f => statSync(new URL(dir + f, ROOT)).isDirectory() ? walk(dir + f + '/') : f.endsWith('.js') ? [dir + f] : []);
 export function codeVersion() {
-  const files = [...walk('js/core/'), ...walk('js/cards/'), 'js/workers/jobs.js', 'js/ui/stacks.js', 'data/dp-plans.json'].sort();
+  const files = [...walk('js/core/'), ...walk('js/cards/'), 'js/workers/jobs.js', 'js/ui/stacks.js'].sort();
   const h = createHash('sha1');
   for (const f of files) h.update(f + '\0').update(readFileSync(new URL(f, ROOT)));
   return h.digest('hex').slice(0, 12);

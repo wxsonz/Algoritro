@@ -6,6 +6,8 @@ export default {
   rarity: 'rare', claimedClass: 'n log n', proof: 'yes', knows: ['recursion',  'partition'], fns: 2, from: "counted: claude-opus-5.5-high quick.c (quick_chunk, sort_complex); Four Ends and Thirds Split add their own",
   slots: 3, natives: { ends: 'four-ends' }, open: ['split', 'pivot', 'order'], defaults: { split: 'thirds-split', pivot: 'equal thirds' },
   finisher: null, finisherNote: 'none: the recursion goes down to single values', finishers: ['bfs-leaf', 'distance-tables', 'beam-leaf'],
+  // Beam Leaf needs the planner: DP Splits decides which chunks are leaves, and what a split would cost instead.
+  unbuilt(opt, finisher) { return finisher?.id === 'beam-leaf' && !opt.dp ? 'Beam Leaf works with DP Splits: the planner decides which chunks become leaves.' : null; },
   run(m, { opt, finisher }) {
     fourEnds(m, { parts: opt.parts || 2, pivot: opt.pivot === 'leaf' ? 'leaf' : 'equal', leaf: finisher ? finisher.leaf : 1, dp: !!opt.dp });
   },

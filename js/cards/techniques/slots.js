@@ -70,7 +70,7 @@ export default [
     hosts: ['quick-2way', 'four-end-quicksort'], hook: { parts: 3 }, effect: 'given Four Ends, no Finisher: −86 @100, −330 @500' },
   { id: 'dp-splits', role: 'split', name: 'DP Splits', tagline: 'Plan every split in advance', knows: ['dp'], fns: 24, from: "counted: claude-opus-5.5-max dp.c (5), dp_climb.c (2), dp_cost.c (4), dp_leaf.c (4), dp_search.c (4), dp_settle.c (5)", rarity: 'legendary',
     requires: [{ role: 'ends', card: 'four-ends' }], conflicts: ['median-pivot', 'pivot-by-leaf-count'],
-    hosts: ['quick-2way', 'four-end-quicksort'], hook: { dp: true }, effect: 'vs Pivot by Leaf Count, BFS Leaf ≤ 5: −17 @100, −214 @500' },
+    hosts: ['quick-2way', 'four-end-quicksort'], hook: { dp: true }, effect: 'with BFS Leaf and both peepholes, against Pivot by Leaf Count: −12 @100, −233 @500; the full planner\'s rr merges and free reads add −4 / −69 over the sim\'s simplified one' },
   // pivot
   { id: 'median-pivot', role: 'pivot', name: 'Median Pivot', knows: [], fns: 0, from: "est.: the middle rank of the range, one line", rarity: 'common', conflicts: ['thirds-split', 'dp-splits'],
     hosts: ['quick-2way', 'four-end-quicksort'], hook: { pivot: 'equal', parts: 2 }, effect: 'Quick 2-Way baseline' },

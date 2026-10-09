@@ -20,7 +20,7 @@ export const tests = [
   }],
   ['LSD Radix: exactly 1084 at n=100 and 6784 at n=500 (zero spread)', () => { ok(meanOps(bare('lsd-radix'), 100, 5) === 1084); ok(meanOps(bare('lsd-radix'), 500, 3) === 6784); }],
   ['every seed deck is within ±5 % of its sim number', () => {
-    for (const d of DECKS) { near(meanOps(d.hand, 100, 40), d.sim[0], 0.05, `${d.name} @100`); near(meanOps(d.hand, 500, 8), d.sim[1], 0.05, `${d.name} @500`); }
+    for (const d of DECKS.filter(x => x.sim)) { near(meanOps(d.hand, 100, 40), d.sim[0], 0.05, `${d.name} @100`); near(meanOps(d.hand, 500, 8), d.sim[1], 0.05, `${d.name} @500`); }
   }],
   ['technique effects match the spec (paired, n=100)', () => {
     const delta = (a, b, n = 100, k = 60) => meanOps(b, n, k) - meanOps(a, n, k);

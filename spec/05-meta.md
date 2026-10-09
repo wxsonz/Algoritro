@@ -59,7 +59,8 @@ in the Hand totals ([03-stats.md §3.4](03-stats.md#34-hand-totals)).
 | **Split Second** | Quick 2-Way + Median Pivot | 718 sim | 5235 sim | 5 / 6 | A | provable n log n that sees existing order, but only GOOD at n=100 |
 | **Long Line** | LIS Insertion + Four-Way Cost + `rb` Sink | 530 sim | 4425 sim | 11 / 14 | A | best O(n²) seed deck; running a second hand and keeping the shorter (a portfolio, no longer a card) adds −8 at n=100 and nothing at n=500 |
 | **Four Corners** | Four-End Quicksort + Thirds + Pivot by Leaf + BFS Leaf + Peephole | 533 sim (528 ref) | 3825 sim (3824 ref) | 11 / 29 | S | the provable n log n champion; the sim reproduces the reference build |
-| **Oracle's Plan** | Four-End Quicksort + DP Splits + Beam Leaf + Peephole | 420 ref | 3111 ref | 14 / 51 | S | the Legendary deck (the study's build also runs a portfolio, which is not a card); the sim's version without Beam Leaf measures 523 / 3667 |
+| **Oracle's Plan** | Four-End Quicksort + DP Splits + Beam Leaf + Peephole | 420 ref | 3111 ref | 19 / 78 | S | the Legendary deck: claude-opus-5.5-max's `--complex`, ported op for op (419.6 / 3110.8 on its seeds) |
+| **Planned Crates** | Bucket Beam + Peephole | 488 ref | 3394 ref | 20 / 61 | S | claude-opus-5.5-max's `--medium` planned layout, ported op for op (488.0 / 3394.2 on its seeds; the build's portfolio picks this layout on every random input) |
 
 The "ref" numbers are each reference method's own mean over 5 seeds, not its build's
 `--adaptive` mean. Where the sim also builds the deck, both are shown.
@@ -95,6 +96,11 @@ medium hand and half to the complex one, and a build's worst runs come from the 
 | `claude-opus-5.5-high`: LIS insertion / Bucket Insertion / Four Corners | yes, claimed | 529.8 ref | — | 3948.0 ref | — |
 | `claude-opus-5.5-max`: LIS insertion / buckets with beam-ordered insertion / Oracle's Plan | claimed; two regimes keep the shortest of several streams | 435.6 ref | — | 3236.2 ref | — |
 | `gemini-flash-3.8`: Min Extract / Butterfly (w = 15 / 30) / Turk | no | 545.8 ref | — | 5020.2 ref | — |
+| **Legendary build:** Long Line / Planned Crates / Oracle's Plan | yes | 435.4 on the study's seeds | — | 3236.2 on the study's seeds | — |
+
+The Legendary build is claude-opus-5.5-max's `--adaptive` rebuilt from cards: on the study's
+seeds it measures 435.4 / 3236.2 against that build's 435.6 / 3236.2 (Long Line never runs on
+random input; the 0.2 is one move its one-pass peephole saves on one medium input).
 
 The lesson in this table: the provable sim build is EXCELLENT on every n=500 run but on only
 half of the n=100 runs, because its complex method, Quick 2-Way, averages 718 at n=100. To be
@@ -178,10 +184,10 @@ explore:
 - **Tape Merge:** how close can merging get to Four-End Quicksort?
 - **LIS Anchor + Four-End Quicksort:** keep an increasing run in place while partitioning the
   rest?
-- **The full DP Splits:** the simplified DP in the sim saves 214 at n=500 over Pivot by Leaf
-  Count. The reference DP adds `rr` merges and free reads; how much do they add alone?
-- **Beam Leaf in the sim:** the reference build's leaves of up to 32 values are the main
-  difference left between Four Corners (3825) and Oracle's Plan (3111).
+- **The full DP Splits (answered, 2026-10-10):** ported from the study, its `rr` merges and free
+  reads add −4 / −69 over the sim's simplified DP on their own (seeds 1000–1004, BFS Leaf).
+- **Beam Leaf (answered, 2026-10-10):** ported from the study, it is the rest of the gap: with DP
+  Splits, 419.6 / 3110.8 against BFS Leaf's 516.2 / 3590.0.
 - **A greedy with a proven bound:** a cheapest pick restricted to a bounded window keeps a
   provable class (Bucket Insertion does it per bucket). How small can the window get?
 - **The Elegant quadrant:** no bare card is hard to see but short to write.

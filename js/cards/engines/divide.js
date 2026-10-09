@@ -1,5 +1,6 @@
 // The Divide family's engines, ported from spec/sim/divide.mjs and more.mjs.
-import { TA, BA, TB, BB, SEQ, MC, LOC, bfsLeaf, avgLeaf, compress } from '../leaf.js';
+import { TA, BA, TB, BB, SEQ, LOC, bfsLeaf, compress } from '../leaf.js';
+import { plannedQuick } from './planned.js';
 
 // Quick 2-Way. skipWhole: no restore when the chunk is the whole stack (part of the bare card).
 // pivot: median | msd (MSD Radix: cut at the top bit of the range, a power of two).
@@ -34,56 +35,14 @@ export function quick2(m, { skipWhole = true, pivot = 'median' } = {}) {
 const DEST3 = [{ max: BA, mid: TB, min: BB }, { max: TA, mid: TB, min: BB }, { max: TA, mid: BA, min: BB }, { max: TA, mid: BA, min: TB }];
 const DEST2 = [{ max: BA, min: TB }, { max: TA, min: TB }, { max: TA, min: BB }, { max: TA, min: TB }];
 
-// DP Splits, simplified: part sizes and destinations per (size, end) that minimise the expected
-// ops, from the per-value move costs and the BFS leaves' average costs. It ignores rr merges and
-// free reads of a chunk alone on its stack. Only the max part may go to the top of A.
-// A plan for size s never depends on N, so tools/build-data.mjs ships the tables for s ≤ 1000
-// (data/dp-plans.json); useDpTables() installs them, and anything larger is computed here.
-const dpCache = new Map();
-export function useDpTables(json) {
-  if (!json) return;
-  for (const [leaf, t] of Object.entries(json.plans)) {
-    const N = json.N, plan = new Array((N + 1) * 4), cost = Float64Array.from(t.cost);
-    for (let i = 0; i < t.plan.length; i++) { const p = t.plan[i]; if (p) plan[i] = { sizes: { max: p[0], mid: p[1], min: p[2] }, dest: { max: p[3], mid: p[4], min: p[5] } }; }
-    dpCache.set(`${N}|${leaf}`, { N, plan: (s, l) => plan[s * 4 + l], cost: (s, l) => cost[s * 4 + l] });
-  }
-}
-export function dpPlan(N, leaf) {
-  N = Math.max(N, 1);
-  for (const [k, v] of dpCache) if (+k.split('|')[1] === leaf && v.N >= N) return v;
-  const key = `${N}|${leaf}`;
-  const cost = new Float64Array((N + 1) * 4), plan = new Array((N + 1) * 4);
-  for (let s = 1; s <= Math.min(leaf, N); s++) for (let l = 0; l < 4; l++) cost[s * 4 + l] = avgLeaf(s, l);
-  const perms = l => {
-    const o = [0, 1, 2, 3].filter(x => x !== l);
-    return [[o[0], o[1], o[2]], [o[0], o[2], o[1]], [o[1], o[0], o[2]], [o[1], o[2], o[0]], [o[2], o[0], o[1]], [o[2], o[1], o[0]]]
-      .filter(([, dm, dn]) => dm !== TA && dn !== TA);
-  };
-  for (let s = leaf + 1; s <= N; s++) for (let l = 0; l < 4; l++) {
-    let best = Infinity, bp = null;
-    for (const [dx, dm, dn] of perms(l)) {
-      const cx = MC[l][dx], cm = MC[l][dm], cn = MC[l][dn];
-      for (let a = 0; a < s; a++) {
-        const fa = a * cx + cost[a * 4 + dx];
-        for (let b = 0; a + b <= s; b++) {
-          const c = s - a - b; if (c >= s || b >= s) continue;
-          const t = fa + b * cm + cost[b * 4 + dm] + c * cn + cost[c * 4 + dn];
-          if (t < best) { best = t; bp = { sizes: { max: a, mid: b, min: c }, dest: { max: dx, mid: dm, min: dn } }; }
-        }
-      }
-    }
-    cost[s * 4 + l] = best; plan[s * 4 + l] = bp;
-  }
-  const out = { N, plan: (s, l) => plan[s * 4 + l], cost: (s, l) => cost[s * 4 + l], raw: { plan, cost } };
-  dpCache.set(key, out); return out;
-}
-
 // Four-end quicksort.
 //   parts: 2 (Four Ends with halves) | 3 (Thirds Split)    pivot: equal | leaf (Pivot by Leaf Count)
-//   leaf: 1 (no Finisher) | k (BFS Leaf ≤ k)    dp: DP Splits for sizes and destinations
-// The sim plans DP Splits once for n = 500 and reuses it below that; dpN keeps that behaviour.
-export function fourEnds(m, { parts = 3, pivot = 'equal', leaf = 1, pivotLeaf = 5, dp = false, dpN = 500 } = {}) {
-  const n = m.a.length, plan = dp ? dpPlan(Math.max(n, dpN), leaf) : null;
+//   leaf: 1 (no Finisher) | k (BFS Leaf ≤ k)
+// dp: DP Splits plans the sizes and destinations: that is the study's planned quicksort
+// (engines/planned.js), with the Finisher's leaves (Beam Leaf up to 32, BFS Leaf 5, Distance Tables 4).
+export function fourEnds(m, { parts = 3, pivot = 'equal', leaf = 1, pivotLeaf = 5, dp = false } = {}) {
+  if (dp) return plannedQuick(m, { leaf: leaf >= 32 ? 'beam' : leaf >= 5 ? 5 : leaf >= 4 ? 4 : 1 });
+  const n = m.a.length;
   const norm = (l, s) => (l === BA && m.a.length === s) ? TA : (l === BB && m.b.length === s) ? TB : l;
   const peek = l => l === TA ? m.a[0] : l === BA ? m.a[m.a.length - 1] : l === TB ? m.b[0] : m.b[m.b.length - 1];
   function solveLeaf(l, lo, s) {
@@ -112,8 +71,7 @@ export function fourEnds(m, { parts = 3, pivot = 'equal', leaf = 1, pivotLeaf = 
     if (s <= 0) return;
     l = norm(l, s);
     if (s <= leaf) return solveLeaf(l, lo, s);
-    let sizes, dest;
-    if (plan) ({ sizes, dest } = plan.plan(s, l)); else [sizes, dest] = sizesFor(s, l);
+    const [sizes, dest] = sizesFor(s, l);
     const hiMin = lo + sizes.min, hiMid = hiMin + sizes.mid;
     m.phase(`split ${s} at the ${LOC[l]}`).overlay('partition', { loc: l, lo, hi: lo + s, cuts: [hiMin, hiMid] });
     for (let i = 0; i < s; i++) {

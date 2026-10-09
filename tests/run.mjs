@@ -3,10 +3,6 @@ import { readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { loadData } from '../js/core/data.js';
-import { useDpTables } from '../js/cards/engines/divide.js';
-
-useDpTables(await loadData('dp-plans'));
 const dir = dirname(fileURLToPath(import.meta.url));
 const only = process.argv[2];
 let pass = 0, fail = 0;

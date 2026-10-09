@@ -43,6 +43,7 @@ that is not listed is incompatible (greyed out, with a reason).
 | Chunks | 3 | — | anchor ~, sweep (Nearest-Member Sweep), band (`rb` Sink), retrieval (Max Retrieval), order | — |
 | Butterfly | 2 | sweep: the window rule | band (`rb` Sink, through the window rule), retrieval (Max Retrieval) | — |
 | Bucket Insertion | 3 | pick and retrieval: cheapest, within the current bucket | sweep (One-Way Sweep), band (`rb` Sink), cost (Two-Way Cost), order | — |
+| Bucket Beam | 0 | ends: Four Ends · split: DP Splits · anchor: LIS Anchor · order: Beam over Orders | — | — |
 | LSD Radix | 0 | — | — | — |
 | Ternary Radix | 0 | — | — | — |
 | MSD Radix | 0 | — | — | ✓ (built in: `sa`/`sb` on leaves of 2) |

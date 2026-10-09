@@ -22,10 +22,10 @@ export function regimeOf(r, { thresholds = SUBJECT_THRESHOLDS, metric = 'inversi
 }
 
 // Tiny stacks come first, as in any push_swap: three numbers or fewer take the hardcoded cases,
-// four or five the Oracle's search (120 orders at most: a BFS or a lookup table in C), which is
-// optimal, 8 moves for the worst order of 5 where Five Hand needs 10. No disorder regime applies
-// to them, and the subject caps them at 3 and 12 moves.
-export const TINY_MAX = 5;
+// four to seven the Oracle's search (5040 orders at most: a BFS in C, as both claude-opus study
+// builds do), which is optimal: 5 moves for the worst order of 4, 8 of 5, 10 of 6, 13 of 7. No
+// disorder regime applies to them, and the subject caps 3 and 5 numbers at 3 and 12 moves.
+export const TINY_MAX = 7;
 export const tinyCard = n => n <= 3 ? 'hardcoded-three' : 'oracle';
 // Where an input goes: the tiny seat by its size, else the flag its disorder picks.
 export function routeOf(r, opts) {

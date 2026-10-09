@@ -10,7 +10,7 @@ vocabulary ("Turk with Four-Way Cost and Peephole").
 | --- | --- | --- | --- |
 | **Algorithm** | large, coloured by family | The main card. Exactly one per hand. It decides how values move overall. | Turk, Radix, Butterfly, Four-End Quicksort |
 | **Technique** | small, coloured by category | A modifier that plugs into an Algorithm's slots. It changes a rule, a cost model, a layout or a post-pass. | LIS Anchor, Four-Way Cost, Peephole, `rb` Sink |
-| **Finisher** | small, grey | Handles small leftovers: the last 3 in A, a leaf of ≤ 5, and so on. One per hand, optional, in its own Finisher slot. | Hardcoded Three, BFS Leaf |
+| **Finisher** | small, grey | Handles small leftovers: the last 3 in A, a leaf of ≤ 5 (or ≤ 32 with Beam Leaf), and so on. One per hand, optional, in its own Finisher slot. | Hardcoded Three, BFS Leaf |
 | **Meta** | gold border | Wraps complete hands and picks the one that plays. The Table's build is the Adaptive Selector. | Adaptive Selector |
 | **Cursed** | cracked frame | Classic sorts that do **not** map well onto two stacks. Kept in the Codex to explain *why*. | Heapsort, Shell sort, Bogosort |
 
@@ -91,8 +91,8 @@ defined in [03-stats.md](03-stats.md).
 Everything happens on one page, the **Table**, laid out like a card table ([08-views.md §8.1](08-views.md#81-table-indexhtml-the-play-page)).
 The Table plays a **build**, the way the subject grades a push_swap: three **seats**, one hand per
 flag, chosen by the input's disorder (`--simple` below 0.2, `--medium` from 0.2 to 0.5,
-`--complex` from 0.5), plus the built-in **tiny seat** for 5 numbers or fewer (Hardcoded Three for
-3 or fewer, the Oracle's search for 4 or 5). Every stack goes to exactly one seat. The stack
+`--complex` from 0.5), plus the built-in **tiny seat** for 7 numbers or fewer (Hardcoded Three for
+3 or fewer, the Oracle's search for 4 to 7). Every stack goes to exactly one seat. The stack
 levels (Easy, Medium, Hard) have nothing to do with the flags.
 
 1. **Pick a stack.** The left panel lists the **stacks** to sort, from easy (Already

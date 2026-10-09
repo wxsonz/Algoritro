@@ -722,3 +722,11 @@
 .cheatuse { display: grid; align-content: center; justify-items: start; gap: 4px; padding: 6px 10px; border-radius: 12px; background: rgba(150, 70, 210, .24); color: #f3e3ff; }
 .cheatuse b { font: 400 18px/1 var(--pixel); color: #e5b8ff; }
 @media (max-width: 760px) { .cheatbar { grid-template-columns: 1fr 1fr; } }
+
+/* ---- the --bench readout under the route banner ---- */
+.routebar .rbench { margin-left: auto; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--plate-line); background: transparent; color: inherit; font: 400 14px/1.2 var(--pixel); cursor: pointer; opacity: .7; }
+.routebar .rbench.on { opacity: 1; background: var(--ink); color: var(--plate); }
+.benchline { margin: -2px 0 8px; padding: 6px 10px; border-radius: 10px; background: #1d2321; color: #c9f2d8; overflow-x: auto; }
+.benchline pre { margin: 0; font: 12px/1.45 ui-monospace, "Cascadia Mono", Menlo, monospace; white-space: pre; }
+.benchline[hidden] { display: none; }
+.boardplate.withlog > #bench { grid-column: 1; grid-row: 2; }

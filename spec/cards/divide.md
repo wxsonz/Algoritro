@@ -107,8 +107,10 @@ four stack ends are four cheap pockets.
   BFS Leaf ≤ 5 saves 142 / 657, and Pivot by Leaf Count adds 27 / 334 on top, a synergy (sim).
 
 **Slots:** 3 (split, pivot, order). Four Ends is native. Thirds Split is the default split, and
-**DP Splits** replaces it in the Legendary deck (a simplified DP saves 17 / 214 more, sim). The
-Finisher slot is empty by default; BFS Leaf is the one to play.
+**DP Splits** replaces it in the Legendary deck. The Finisher slot is empty by default: BFS Leaf
+is the one to play, and with DP Splits, **Beam Leaf**. Four-End Quicksort + DP Splits + Beam Leaf
++ both peepholes is the study's best `--complex` (claude-opus-5.5-max), ported op for op: 419.6 /
+3110.8 on its seeds 1000–1004.
 
 ---
 

@@ -5,11 +5,8 @@
 // their streams against it (study/explorer-refs/measure.py --explorer).
 import { runHand, parseDeck } from '../js/core/hand.js';
 import { generate, ranks } from '../js/core/input.js';
-import { loadData } from '../js/core/data.js';
-import { useDpTables } from '../js/cards/engines/divide.js';
 import { deckById } from '../js/cards/decks.js';
 
-useDpTables(await loadData('dp-plans'));
 const [deck, n, ...seeds] = process.argv.slice(2);
 if (!deck || !n || !seeds.length) { console.error('usage: node tools/count.mjs <deck> <n> <seed>...'); process.exit(2); }
 for (const seed of seeds) {

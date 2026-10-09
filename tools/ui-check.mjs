@@ -8,7 +8,7 @@ import { generate, ranks } from '../js/core/input.js';
 import { STACKS, SEED } from '../js/ui/stacks.js';
 import { BUILDS } from '../js/cards/decks.js';
 import { StackCache, bestPerStack, bestBuild } from '../js/core/stackcache.js';
-import { byId } from '../js/cards/index.js';
+import { byId, ALGOS } from '../js/cards/index.js';
 import { stackRoute } from '../js/ui/stacks.js';
 const SHOTS = process.env.SHOTS || tmpdir(); mkdirSync(SHOTS, { recursive: true });
 const BASE = (process.argv[2] || 'http://127.0.0.1:8765/').replace(/index\.html$/, '');
@@ -75,13 +75,13 @@ const shown = async () => ev(`Object.fromEntries([...document.querySelectorAll('
 for (let i = 0; i < 60 && Object.values(await shown()).some(v => v == null); i++) await sleep(250);
 const got = await shown(), off = STACKS.filter(b => got[b.id] !== expected[b.id]).map(b => `${b.id} ${got[b.id]} vs ${expected[b.id]}`);
 check('every stack\'s stamp matches --adaptive run outside the page', !off.length, off.join('; '));
-// The global seed: rolling it changes exactly the nine seeded stacks.
-const SEEDED = STACKS.filter(b => ['uniform', 'nearly', 'disorder', 'nearrev'].includes(b.gen) && !b.seeds).map(b => b.id);
+// The global seed: rolling it changes exactly the ten seeded stacks.
+const SEEDED = STACKS.filter(b => ['uniform', 'nearly', 'disorder', 'local', 'nearrev'].includes(b.gen) && !b.seeds).map(b => b.id);
 const before = await shown();
 await set('#gseed', 1001); await sleep(300);
 for (let i = 0; i < 60 && Object.values(await shown()).some(v => v == null); i++) await sleep(250);
 const after = await shown(), moved = STACKS.filter(b => after[b.id] !== before[b.id]).map(b => b.id);
-check('rolling the global seed changes only the nine seeded stacks', SEEDED.length === 9 && moved.every(id => SEEDED.includes(id)) && moved.length >= 5 && /gs=1001/.test(await ev('location.hash')), `${moved.length} moved: ${moved.join(', ')}`);
+check('rolling the global seed changes only the ten seeded stacks', SEEDED.length === 10 && moved.every(id => SEEDED.includes(id)) && moved.length >= 5 && /gs=1001/.test(await ev('location.hash')), `${moved.length} moved: ${moved.join(', ')}`);
 await set('#gseed', 1000); await sleep(300);
 // Browse places cards: a seat can be filled from it alone, without the hand.
 await click('#buildbar .seat[data-seat="medium"] .seatswap'); await sleep(300);
@@ -99,12 +99,12 @@ await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })
 const stampedAll = () => ev(`document.querySelectorAll('#stacks .mark.EXCELLENT, #stacks .mark.GOOD, #stacks .mark.PASS, #stacks .mark.FAIL').length`);
 const settle = async () => { for (let i = 0; i < 80 && (await ev(`[...document.querySelectorAll('#stacks .mark')].some(m => m.textContent === '…')`)); i++) await sleep(250); };
 await go('index.html', 3500);
-check('a fresh load reads 100 % and stamps every stack without measuring anything', /100 %/.test(await ev(T('nuke'))) && (await ev('window.__runs || 0')) === 0 && (await stampedAll()) === 26, `${await ev(T('nuke'))} · runs ${await ev('window.__runs || 0')}`);
+check('a fresh load reads 100 % and stamps every stack without measuring anything', /100 %/.test(await ev(T('nuke'))) && (await ev('window.__runs || 0')) === 0 && (await stampedAll()) === STACKS.length, `${await ev(T('nuke'))} · runs ${await ev('window.__runs || 0')}`);
 await ev(`${card('#techViewer .tcg.tech', 'Presorted Shortcut')}.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))`); await sleep(400); await settle();
 const ranOnce = await ev('window.__runs || 0'), keptHash = await ev('location.hash');
 await sleep(800);   // the kept results are written in batches
 await go('index.html' + keptHash, 3500); await settle();
-check('a hand the precompute lacks is measured once, then a second visit runs nothing it already ran', ranOnce > 0 && (await ev('window.__runs || 0')) === 0 && (await stampedAll()) === 26, `first ${ranOnce} runs, then ${await ev('window.__runs || 0')}`);
+check('a hand the precompute lacks is measured once, then a second visit runs nothing it already ran', ranOnce > 0 && (await ev('window.__runs || 0')) === 0 && (await stampedAll()) === STACKS.length, `first ${ranOnce} runs, then ${await ev('window.__runs || 0')}`);
 const pct = async () => +(await ev(`document.querySelector('#nuke .npct').textContent`)).replace(/\D/g, '');
 await set('#gseed', 4242); await sleep(1500);
 const before4242 = await pct();
@@ -119,7 +119,7 @@ check('☢ fills another seed in the background and stops on a second click', be
   const ceil = bestPerStack(cache, SEED), bb = bestBuild(cache, SEED, routes, { simple: [strong.simple], medium: [strong.medium], complex: [strong.complex] });
   await go('index.html', 3500);
   await click('#cheatBuild'); await sleep(300);
-  check('Cheat: best push_swap shows three seats that all meet their class target', !(await ev(`document.getElementById('cheatbar').hidden`)) && (await ev(`document.querySelectorAll('#cheatbar .cheatseat .seattarget.ok').length`)) === 3 && (await ev(`document.querySelectorAll('#stacks .brow.cheat').length`)) === 26, await ev(T('cheatbar')));
+  check('Cheat: best push_swap shows three seats that all meet their class target', !(await ev(`document.getElementById('cheatbar').hidden`)) && (await ev(`document.querySelectorAll('#cheatbar .cheatseat .seattarget.ok').length`)) === 3 && (await ev(`document.querySelectorAll('#stacks .brow.cheat').length`)) === STACKS.length, await ev(T('cheatbar')));
   const names = await ev(`[...document.querySelectorAll('#cheatbar .cheatseat .seatname')].map(x => x.textContent).join()`);
   check('its seats are the search\'s, run outside the page', names === ['simple', 'medium', 'complex'].map(k => byId[bb[k].hand.algo].name).join(), `${names} · ${['simple', 'medium', 'complex'].map(k => bb[k].hand.algo).join()}`);
   await click('#cheatStack'); await sleep(300);
@@ -171,15 +171,15 @@ check('clicking a played card takes it back', (await has('#hand .tcg[data-id="li
 await click('#stacks .brow[data-id="random-500"]'); await sleep(900);
 check('a stack on the left loads its input', (await ev(T('stackName'))) === 'Random 500' && (await ev(`document.getElementById('n').value`)) === '500', await ev(T('stackName')));
 const stamped = () => ev(`document.querySelectorAll('#stacks .mark.EXCELLENT, #stacks .mark.GOOD, #stacks .mark.PASS, #stacks .mark.FAIL').length`);
-for (let i = 0; i < 40 && (await stamped()) < 26; i++) await sleep(250);
-check('every stack gets stamped in the background', (await stamped()) === 26, await ev(`document.querySelectorAll('#stacks .mark').length`));
+for (let i = 0; i < 40 && (await stamped()) < STACKS.length; i++) await sleep(250);
+check('every stack gets stamped in the background', (await stamped()) === STACKS.length, await ev(`document.querySelectorAll('#stacks .mark').length`));
 check('there is no slot-limit switch: the Table is a sandbox', !(await has('#sandbox')));
 check('hand cards show their measured change in the corner', (await ev(`document.querySelectorAll('#hand .tcg .fxbadge').length`)) >= 5);
 check('a card that needs another says so: Lookahead-k needs a Pick', /needs a Pick: Cheapest Pick/.test(await ev(`document.querySelector('#hand .tcg[data-id="lookahead-k"] .needs')?.textContent || ''`)));
 await click('#hand .tcg[data-id="lis-anchor"]'); await sleep(3500);
 check('after a change, every stack shows what it did', (await ev(`document.querySelectorAll('#stacks .bdelta.good, #stacks .bdelta.bad').length`)) >= 3 && /better|worse/.test(await ev(T('stackSum'))), await ev(T('stackSum')));
 await click('#algoPile'); await sleep(200);
-check('the algorithm deck spreads out', !(await ev(`document.getElementById('ov-algo').hidden`)) && (await ev(`document.querySelectorAll('#algoViewer .tcg.algo').length`)) === 23);
+check('the algorithm deck spreads out', !(await ev(`document.getElementById('ov-algo').hidden`)) && (await ev(`document.querySelectorAll('#algoViewer .tcg.algo').length`)) === ALGOS.length);
 await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`); await sleep(150);
 check('Escape closes it', await ev(`document.getElementById('ov-algo').hidden`));
 check('the decks sit beside the hand, with no Draw, no book and no right column', (await has('.handzone .deckdock #algoPile')) && (await has('.handzone .deckdock #techPile')) && !(await ev(`!!document.querySelector('.rightpanel, #algoDraw, #techDraw, .book')`)));
@@ -190,9 +190,9 @@ await click('#hand .tcg .peek'); await sleep(250);
 check('Inspect shows a card up close', !(await ev(`document.getElementById('ov-inspect').hidden`)) && /Codex page/.test(await ev(T('inspectBody'))) && /The idea/.test(await ev(T('inspectBody'))));
 await shot('table-inspect.png');
 // The cards' design: covers, badges, icons, tooltips; the fire past 10; the log and the effects
-check('every stack shows its route: disorder, flag and card', (await ev(`document.querySelectorAll('#stacks .brow .route').length`)) === 26 && (await has('#stacks .brow[data-id="random-100"] .route.f-complex')) && (await has('#stacks .brow[data-id="peak-100"] .route.f-medium')) && (await has('#stacks .brow[data-id="five"] .route.f-tiny')));
+check('every stack shows its route: disorder, flag and card', (await ev(`document.querySelectorAll('#stacks .brow .route').length`)) === STACKS.length && (await has('#stacks .brow[data-id="random-100"] .route.f-complex')) && (await has('#stacks .brow[data-id="peak-100"] .route.f-medium')) && (await has('#stacks .brow[data-id="five"] .route.f-tiny')));
 check('lesson cards wear a book in the type line, and no card wears a research flask', (await ev(`[...document.querySelectorAll('#algoViewer .tcg.algo')].filter(c => c.querySelector('.tcg-type .tmark')).map(c => c.dataset.id).sort().join()`)) === 'lookahead-greedy,natural-merge' && !(await ev(`!!document.querySelector('.tmark.research')`)) && !(await ev(`!!document.querySelector('.ribbon.exp, .ribbon.lesson')`)), await ev(`[...document.querySelectorAll('#algoViewer .tcg-type .tmark')].length`));
-check('every algorithm card has its own cover', (await ev(`new Set([...document.querySelectorAll('#algoViewer .tcg.algo svg.cover')].map(s => s.innerHTML)).size`)) === 23, await ev(`document.querySelectorAll('#algoViewer svg.cover').length`));
+check('every algorithm card has its own cover', (await ev(`new Set([...document.querySelectorAll('#algoViewer .tcg.algo svg.cover')].map(s => s.innerHTML)).size`)) === ALGOS.length, await ev(`document.querySelectorAll('#algoViewer svg.cover').length`));
 check('the played card shows class, slot tier and push_swap tier', (await ev(`[...document.querySelectorAll('#played .badges .badge small')].map(b => b.textContent).join()`)) === 'class,slots,push_swap', await ev(`[...document.querySelectorAll('#played .badges .badge small')].map(b => b.textContent).join()`));
 check('Grasp and Craft carry a bulb and a hammer', (await ev(`document.querySelectorAll('#played .gem svg').length`)) === 2);
 check('tooltips are the themed kind', await has('body > .tip'));

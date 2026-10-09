@@ -159,6 +159,17 @@ const COVERS = {
     s += arrow(32, 26, 70, 22, GOLD);
     return s;
   },
+  'bucket-beam': () => {
+    // a chunk planned into three crates; one crate filled: its longest run stays (the rainbow),
+    // the rest slot in (gold outlines) in the order a beam of tries picked (the gold path)
+    let s = rect(5, 4, 22, 6, '#3a2c1a') + frame(5, 4, 22, 6, '#a07a44', 1);
+    [[2, 22], [12, 30], [22, 38]].forEach(([x, y]) => { s += line(16, 10, x + 4, y, EDGE, .8) + rect(x, y, 8, 6, '#3a2c1a') + frame(x, y, 8, 6, '#a07a44', .8); });
+    s += rect(42, 5, 50, 39, '#3a2c1a') + frame(42, 5, 50, 39, '#a07a44', 1);
+    const keep = new Set([0, 2, 3, 5, 7, 8]);
+    for (let v = 0; v < 9; v++) { const x = 45.5 + v * 5.2, h = 4 + v * 3.5; s += keep.has(v) ? rect(x, 42 - h, 3.8, h, rb(v, 9)) : frame(x, 42 - h, 3.8, h, GOLD, .7); }
+    [[32, 14], [32, 24], [32, 34]].forEach(([x, y], k) => { s += line(x, y, 52, 17, k === 1 ? GOLD : EDGE, k === 1 ? 1.2 : .6, k === 1 ? '' : '1.5 1.5'); });
+    return s;
+  },
   // ---- digit ----
   'lsd-radix': () => {
     // the bars after two passes: sorted by their last two bits, a rainbow in four runs; the bit

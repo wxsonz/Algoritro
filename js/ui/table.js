@@ -11,7 +11,6 @@ import { resolve, fits, parseDeck, deckString } from '../core/hand.js';
 import { runAdaptive, routeOf, tinyCard, TARGETS, meetsTarget, classProblems, buildTotals } from '../core/meta-run.js';
 import { FIRE, KIT_FNS, conceptWords } from '../cards/stats.js';
 import { grade, thresholds } from '../core/metrics.js';
-import { useDpTables } from '../cards/engines/divide.js';
 import { loadData } from '../core/data.js';
 import { $, el, esc, topBar, cardsData, metaData, f0, signed, gradeName, store, RARITY } from './common.js';
 import { markdown, sections } from './markdown.js';
@@ -28,7 +27,7 @@ import { PATHS } from './paths.js';
 
 let shown = null, countTimer = 0;   // the move counter's displayed value
 const SEATS = ['simple', 'medium', 'complex'];   // one hand per flag; the tiny seat is built in
-const RANGE = { simple: 'below 0.2', medium: '0.2 to 0.5', complex: '0.5 and up', tiny: '≤ 5 numbers' };
+const RANGE = { simple: 'below 0.2', medium: '0.2 to 0.5', complex: '0.5 and up', tiny: '≤ 7 numbers' };
 const SEAT_KEY = { simple: 's', medium: 'm', complex: 'c' };   // in share links
 const S = {
   build: buildOf(BUILDS.find(b => b.id === 'strong-build')),
@@ -41,8 +40,9 @@ const S = {
   path: null, step: 0,
   target: 'complex', pick: { algo: null, tech: null }, previewJob: null,   // Browse: the seat it places into, and the card it shows
   stamps: {}, stampKey: '', stampJob: null,
-  cache: new StackCache(), cacheReady: false, version: 'dev', fill: null,
-  cheat: null, cheatData: null,   // 'stack' or 'build': a best-possible line, searched in the cache   // every result kept (objective.md §10), under the code's version
+  cache: new StackCache(), cacheReady: false, version: 'dev', fill: null,   // every result kept (objective.md §10), under the code's version
+  cheat: null, cheatData: null,   // 'stack' or 'build': a best-possible line, searched in the cache
+  bench: store.get('table:bench') === 'on',   // the --bench readout under the route banner
   shownAlgo: '', handEls: new Map(), handKey: '', opener: null,
   seed: SEED,   // the global seed: every seeded stack uses it
   routes: routesAt(SEED),   // each stack's disorder and flag, at the global seed
@@ -124,7 +124,7 @@ document.addEventListener('click', e => { const b = e.target.closest('.tcg-btn.p
 new ResizeObserver(() => layoutHand()).observe($('hand'));
 matchMedia('(max-width: 760px)').addEventListener?.('change', () => layoutHand());
 
-Promise.all([cardsData(), metaData(), loadData('dp-plans').then(useDpTables).catch(() => {})]).then(([c, m]) => {
+Promise.all([cardsData(), metaData()]).then(([c, m]) => {
   DOC = c; META = m; renderAlgoViewer(); renderPlayed(); S.handKey = ''; renderHand(); renderTechViewer();
 });
 // The cache: the shipped precompute (every legal hand at the default seed), then what this browser
@@ -391,7 +391,7 @@ function renderBuild() {
     if (k === 'tiny') {
       card = [el('span', { className: 'seatcard fam-small', html: icon('small') }), el('b.seatname', {}, 'Hardcoded Three · Oracle')];
       mark = el('span.seatlock', { html: `${icon('lock')}<span>built in</span>` });
-      tip = 'The tiny seat\nBuilt in: 3 numbers or fewer take the hardcoded cases, 4 or 5 the Oracle\'s search, which is optimal.';
+      tip = 'The tiny seat\nBuilt in: 3 numbers or fewer take the hardcoded cases, 4 to 7 the Oracle\'s search, which is optimal.';
     } else {
       const h = S.build[k], a = byId[h.algo], c = seatClass(k);
       card = [el('span', { className: 'seatcard fam-' + a.family, html: icon(a.family) }), el('b.seatname', {}, a.name), h.techs.length ? el('span.seatplus', {}, `+${h.techs.length}`) : ''];
@@ -418,7 +418,23 @@ function renderRoute() {
     el('span.rarrow', { 'aria-hidden': 'true' }, '→'),
     el('span.rflag', { html: flag(route) + (route === 'tiny' ? ` ${icon('lock')}` : '') }),
     el('span.rarrow', { 'aria-hidden': 'true' }, '→'),
-    el('button', { className: 'routecard fam-' + a.family, title: `${a.name}: click to read it up close`, onclick: () => inspect('algo', a.id) }, el('span.pxi', { html: icon(a.family) }), a.name));
+    el('button', { className: 'routecard fam-' + a.family, title: `${a.name}: click to read it up close`, onclick: () => inspect('algo', a.id) }, el('span.pxi', { html: icon(a.family) }), a.name),
+    el('button', { className: 'rbench' + (S.bench ? ' on' : ''), 'aria-pressed': S.bench ? 'true' : 'false', title: 'The --bench readout, as the subject prints it on stderr: disorder, the method that ran and its class, the total, and each of the 11 moves', onclick: () => { S.bench = !S.bench; store.set('table:bench', S.bench ? 'on' : 'off'); renderRoute(); renderBench(); } }, '--bench'));
+}
+// The --bench readout (the subject's format, as the study builds print it): the disorder, the
+// strategy and the class of the method that actually ran, the total, and each move's count.
+function renderBench() {
+  const box = $('bench'), r = S.result;
+  box.hidden = !S.bench || !r || !S.input;
+  if (box.hidden) return;
+  const { route } = routeOf(S.input.ranks), a = byId[S.hand.algo], count = {};
+  for (const o of r.ops) count[o] = (count[o] || 0) + 1;
+  const row = list => '[bench] ' + list.map(o => `${o}:  ${count[o] || 0}`).join('  ');
+  box.replaceChildren(el('pre', {}, [
+    `[bench] disorder:  ${(100 * S.input.disorder).toFixed(2)}%`,
+    `[bench] strategy:  Adaptive → ${flag(route)} / ${a.name}, ${classLabel(a.claimedClass)}`,
+    `[bench] total_ops:  ${r.ops.length}`,
+    row(['sa', 'sb', 'ss', 'pa', 'pb']), row(['ra', 'rb', 'rr', 'rra', 'rrb', 'rrr'])].join('\n')));
 }
 
 // ---- play ---------------------------------------------------------------------------------
@@ -447,6 +463,7 @@ function fail(msg) { $('runError').textContent = msg; S.result = null; board.loa
 function renderAll() { renderBuild(); renderRoute(); renderPlayed(); renderSlots(); renderHand(); renderTechViewer(); markAlgoViewer(); mana(); notes(); pileInfo(); }
 
 function scoreboard() {
+  renderBench();
   const r = S.result;
   if (!r || !S.input) { $('total').textContent = '–'; $('totalShow').textContent = '–'; shown = null; $('gradeBadge').replaceChildren(); $('gradeBadge').dataset.s = ''; $('valid').textContent = ''; renderDelta(); return; }
   const n = S.input.n, ops = r.ops.length;
@@ -573,7 +590,7 @@ function linkMarks(slot, t, by) {
 function renderSlots() {
   const a = byId[S.hand.algo], R = S.resolved, box = $('slots'), nb = neededBy(); box.replaceChildren();
   if (S.seat === 'tiny') {
-    box.append(el('div.tinynote', {}, el('span.pxi', { html: icon('lock') }), el('span', {}, `The tiny seat is built in: 3 numbers or fewer take the hardcoded cases, 4 or 5 the Oracle's search, which is optimal. There is nothing to tune here.`)));
+    box.append(el('div.tinynote', {}, el('span.pxi', { html: icon('lock') }), el('span', {}, `The tiny seat is built in: 3 numbers or fewer take the hardcoded cases, 4 to 7 the Oracle's search, which is optimal. There is nothing to tune here.`)));
     $('slotInfo').textContent = `The tiny seat: ${a.name}, built in`; $('knobs').replaceChildren();
     return;
   }
@@ -872,7 +889,7 @@ function renderAlgoViewer() {
     const box = el('button', { className: 'deckbox buildbox', dataset: { build: b.id }, title: `${b.name}: a hand in every seat` },
       el('span.lid', { html: icon('meta') }), el('b.name', {}, b.name),
       ...SEATS.map(k => el('span.dk-techs', {}, `${flag(k)}: ${plain(label(b[k].algo))}${b[k].techs.length ? ` +${b[k].techs.length}` : ''}`)),
-      b.sim ? el('span.dk-num', {}, `${f0(b.sim[0])} · ${f0(b.sim[1])} moves`) : '');
+      b.sim || b.ref ? el('span.dk-num', {}, `${f0((b.sim || b.ref)[0])} · ${f0((b.sim || b.ref)[1])} moves${b.sim ? '' : ' (ref)'}`) : '');
     box.onclick = () => { S.build = buildOf(b); closeOverlay($('ov-algo')); replay(false, `${b.name} built`); };
     return box;
   }));

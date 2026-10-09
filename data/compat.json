@@ -215,6 +215,20 @@
     "sweep": "Playable, but a nearest-member sweep can pass the same value many times. That breaks the O(n√n) proof that One-Way Sweep gives."
    }
   },
+  "bucket-beam": {
+   "slots": 0,
+   "natives": {
+    "ends": "four-ends",
+    "split": "dp-splits",
+    "anchor": "lis-anchor",
+    "order": "beam-over-orders"
+   },
+   "open": [],
+   "defaults": {},
+   "finisher": null,
+   "finishers": [],
+   "caveats": {}
+  },
   "lsd-radix": {
    "slots": 0,
    "natives": {},
@@ -739,7 +753,7 @@
    "conflicts": [],
    "hosts": null,
    "always": false,
-   "unbuildable": "Reference builds only: not built here yet. It is the main open space between Four Corners and Oracle's Plan."
+   "unbuildable": null
   },
   "double-op-sharing": {
    "role": "post",

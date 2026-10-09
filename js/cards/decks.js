@@ -1,4 +1,5 @@
-// Named decks and builds (spec/05 §5.2, §5.4), with their reference numbers from spec/sim/results.md.
+// Named decks and builds (spec/05 §5.2, §5.4), with their reference numbers: "sim" from
+// spec/sim/results.md, "ref" from the study's builds (means over its seeds 1000–1004).
 const H = (algo, techs = [], extra = {}) => ({ algo, techs, sharing: true, sandbox: true, ...extra });
 
 export const DECKS = [
@@ -11,7 +12,8 @@ export const DECKS = [
   { id: 'split-second', name: 'Split Second', hand: H('quick-2way'), sim: [718, 5235], note: 'provable n log n that sees existing order, but only GOOD at n=100' },
   { id: 'long-line', name: 'Long Line', hand: H('lis-insertion', ['four-way-cost', 'rb-sink']), sim: [530, 4425], note: 'best O(n²) seed deck' },
   { id: 'four-corners', name: 'Four Corners', hand: H('four-end-quicksort', ['pivot-by-leaf-count', 'bfs-leaf', 'peephole-cancel', 'peephole-fuse']), sim: [533, 3825], ref: [528, 3824], note: 'the provable n log n champion; the sim reproduces the reference build' },
-  { id: 'oracles-plan', name: 'Oracle\'s Plan', hand: H('four-end-quicksort', ['dp-splits', 'bfs-leaf', 'peephole-cancel', 'peephole-fuse']), sim: [523, 3667], ref: [420, 3111], note: 'the Legendary deck, without Beam Leaf, which is not built yet (the study\'s build also runs a portfolio, which is not a card)' },
+  { id: 'oracles-plan', name: 'Oracle\'s Plan', hand: H('four-end-quicksort', ['dp-splits', 'beam-leaf', 'peephole-cancel', 'peephole-fuse']), ref: [419.6, 3110.8], note: 'the Legendary deck: claude-opus-5.5-max\'s --complex, ported op for op' },
+  { id: 'planned-crates', name: 'Planned Crates', hand: H('bucket-beam', ['peephole-cancel', 'peephole-fuse']), ref: [488.2, 3394.4], note: 'claude-opus-5.5-max\'s --medium, ported op for op: the planned layout, which its portfolio always picks on random input' },
 ];
 export const deckById = Object.fromEntries(DECKS.map(d => [d.id, d]));
 
@@ -23,4 +25,5 @@ export const BUILDS = [
   { id: 'provable-build', name: 'Provable build', simple: D('long-line'), medium: H('butterfly', [], { presets: { w: 'round(1.4√n)' } }), complex: D('split-second'), sim: [651, 5155] },
   { id: 'strong-build', name: 'Strong build', simple: D('long-line'), medium: D('careful-crates'), complex: D('four-corners'), sim: [566, 4038] },
   { id: 'strong-build-crates', name: 'Strong build (Crate Runner)', simple: D('long-line'), medium: D('crate-runner'), complex: D('four-corners'), sim: [566, 4485] },
+  { id: 'legendary-build', name: 'Legendary build', simple: D('long-line'), medium: D('planned-crates'), complex: D('oracles-plan') },
 ];

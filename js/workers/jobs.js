@@ -8,13 +8,11 @@ import { runHand } from '../core/hand.js';
 import { runAdaptive } from '../core/meta-run.js';
 import { generate, ranks } from '../core/input.js';
 import { distanceTable } from '../cards/algos/oracle.js';
-import { useDpTables } from '../cards/engines/divide.js';
-import { loadData } from '../core/data.js';
 import { techById } from '../cards/index.js';
 import { POSTS } from '../core/stackcache.js';
 
 let ready = null;
-export const init = () => (ready ??= loadData('dp-plans').then(useDpTables).catch(() => {}));
+export const init = () => (ready ??= Promise.resolve());
 
 const input = (j, s) => ranks(generate(j.gen || 'uniform', j.n, s, j.param));
 export async function runJob(j, progress) {

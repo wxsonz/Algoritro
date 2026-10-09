@@ -168,7 +168,7 @@ export function deckBox(d, { on = false } = {}) {
     el('b.name', {}, d.name),
     el('span.dk-algo', {}, label(h.algo)),
     el('span.dk-techs', {}, h.techs.length ? h.techs.map(id => plainName(label(id))).join(' · ') : 'no extra cards'),
-    d.sim ? el('span.dk-num', {}, `${f0(d.sim[0])} · ${f0(d.sim[1])} moves`) : '');
+    d.sim || d.ref ? el('span.dk-num', {}, `${f0((d.sim || d.ref)[0])} · ${f0((d.sim || d.ref)[1])} moves${d.sim ? '' : ' (ref)'}`) : '');
 }
 
 // ---- Backs and piles -----------------------------------------------------------------------------
