@@ -27,8 +27,14 @@ export function runPortfolio(hands, ranks) {
   return { ...best, chosen: bi, all };
 }
 // build: { simple: hand, medium: hand, complex: hand }
+// Tiny stacks come first, as in any push_swap: three numbers or fewer take the hardcoded cases,
+// five or fewer Five Hand. No disorder regime applies to them, and the subject caps them at 3
+// and 12 moves.
+const TINY = [[3, 'hardcoded-three'], [5, 'five-hand']];
 export function runAdaptive(build, ranks, opts = {}) {
   const { d, regime } = regimeOf(ranks, opts);
+  const tiny = TINY.find(([n]) => ranks.length <= n);
+  if (tiny) return { ...runHand({ algo: tiny[1], techs: [], sandbox: true }, ranks), regime: 'tiny', tinyCard: tiny[1], disorder: d };
   const res = runHand(build[regime], ranks);
   return { ...res, regime, disorder: d };
 }

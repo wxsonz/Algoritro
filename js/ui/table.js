@@ -262,7 +262,7 @@ function scoreboard() {
   if (st && st !== prevStamp) juice($('gradeBadge').firstChild, 'stampin');
   $('valid').textContent = r.valid ? '✓ sorted, checked by an independent replay' : '✗ ' + r.error; $('valid').className = 'valid small ' + (r.valid ? 'yes' : 'no');
   renderDelta(r.removed?.filter(([, k]) => k).map(([id, k]) => `${label(id)} −${k}`).join(' · '));
-  $('metaNote').textContent = S.meta === 'portfolio' ? `Portfolio: member ${r.chosen + 1} of ${r.all.length} won (${r.all.join(' / ')} moves)` : S.meta === 'adaptive' ? `Adaptive: input ${(100 * r.disorder).toFixed(2)} % messy (${METRICS[S.adaptive.metric].name}) → ${r.regime} hand` : '';
+  $('metaNote').textContent = S.meta === 'portfolio' ? `Portfolio: member ${r.chosen + 1} of ${r.all.length} won (${r.all.join(' / ')} moves)` : S.meta === 'adaptive' ? `Adaptive: input ${(100 * r.disorder).toFixed(2)} % messy (${METRICS[S.adaptive.metric].name}) → ${r.regime === 'tiny' ? `small-stack case: ${byId[r.tinyCard].name}` : `${r.regime} hand`}` : '';
 }
 function renderDelta(removed = '') {
   const D = S.delta, box = $('delta'); box.replaceChildren();

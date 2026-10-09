@@ -1,5 +1,7 @@
 import { parseManual, ranks, disorder, generate, describe, regime, nthPermutation } from '../js/core/input.js';
 import { eq, ok } from './assert.mjs';
+import { runAdaptive } from '../js/core/meta-run.js';
+import { BUILDS } from '../js/cards/decks.js';
 export const tests = [
   ['manual input follows push_swap rules', () => {
     eq(parseManual('3 -1 +7').values, [3, -1, 7]);
@@ -17,6 +19,10 @@ export const tests = [
   ['every order: the seed picks one of the n! orders', () => {
     const all = Array.from({ length: 120 }, (_, k) => generate('perm', 5, k).join());
     eq(new Set(all).size, 120); eq(nthPermutation(3, 5), [2, 1, 0]); eq(generate('perm', 3, 6), [0, 1, 2]);
+  }],
+  ['Adaptive Selector meets the subject on every order of 3 and 5', () => {
+    const build = BUILDS[0].build || BUILDS[0], worst = (n, k) => Math.max(...Array.from({ length: k }, (_, i) => { const r = runAdaptive(build, generate('perm', n, i)); ok(r.valid); return r.ops.length; }));
+    ok(worst(3, 6) <= 3); ok(worst(5, 120) <= 12); eq(runAdaptive(build, [0, 1]).ops.length, 0);
   }],
   ['the new shapes', () => {
     eq(generate('valley', 6), [5, 3, 1, 0, 2, 4]); eq(generate('interleave', 6), [0, 3, 1, 4, 2, 5]); eq(generate('interleave', 5), [0, 3, 1, 4, 2]);
