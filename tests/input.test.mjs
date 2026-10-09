@@ -22,9 +22,9 @@ export const tests = [
     const all = Array.from({ length: 120 }, (_, k) => generate('perm', 5, k).join());
     eq(new Set(all).size, 120); eq(nthPermutation(3, 5), [2, 1, 0]); eq(generate('perm', 3, 6), [0, 1, 2]);
   }],
-  ['Adaptive Selector meets the subject on every order of 3 and 5', () => {
+  ['Adaptive Selector is optimal on every order of 3 and 5', () => {
     const build = BUILDS[0].build || BUILDS[0], worst = (n, k) => Math.max(...Array.from({ length: k }, (_, i) => { const r = runAdaptive(build, generate('perm', n, i)); ok(r.valid); return r.ops.length; }));
-    ok(worst(3, 6) <= 3); ok(worst(5, 120) <= 12); eq(runAdaptive(build, [0, 1]).ops.length, 0);
+    eq(worst(3, 6), 2); eq(worst(5, 120), 8); eq(runAdaptive(build, [0, 1]).ops.length, 0);
   }],
   ['the tiny stacks know their optimum (the Oracle\'s worst order) and stamp it gold', () => {
     for (const id of ['three', 'five']) {

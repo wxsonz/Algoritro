@@ -39,9 +39,10 @@ several and keep the best.
 
 **The idea.** Measure how messy the stack is, then play the hand that suits it best.
 
-**Under the hood.** Tiny stacks come first: three numbers or fewer go to Hardcoded Three and
-five or fewer to Five Hand, whatever their disorder, so they stay within the subject's 3 and 12
-moves (worst over every order: 2 and 10). Otherwise, measure the input's disorder (inversions ÷
+**Under the hood.** Tiny stacks come first: three numbers or fewer go to Hardcoded Three, and
+four or five to the Oracle's search, whatever their disorder. That is optimal: the worst order
+of 5 takes 8 moves (Five Hand needs 10), well inside the subject's 12. In C this is a BFS over
+the 120 orders, or a table of them computed once. Otherwise, measure the input's disorder (inversions ÷
 pairs, by the subject's definition), then dispatch to a hand per range. The subject's baseline is < 0.2 → the O(n²)
 hand, < 0.5 → the O(n√n) hand, and otherwise → the O(n log n) hand. These are also the
 subject's class targets: whatever runs at disorder ≥ 0.5 must be O(n log n), and whatever
