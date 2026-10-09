@@ -12,14 +12,14 @@ import { runAdaptive, routeOf, tinyCard, TARGETS, meetsTarget, classProblems } f
 import { grade, thresholds } from '../core/metrics.js';
 import { useDpTables } from '../cards/engines/divide.js';
 import { loadData } from '../core/data.js';
-import { $, el, esc, topBar, cardsData, metaData, f0, signed, gradeName, store } from './common.js';
+import { $, el, esc, topBar, cardsData, metaData, f0, signed, gradeName, store, RARITY } from './common.js';
 import { markdown, sections } from './markdown.js';
 import { mini } from './card.js';
 import { Board } from './board.js';
 import { algoFace, techFace, plainFace, needsEl, deckBox, pile, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, CLASS_TIER, PS_TIER_TEXT } from './tcg.js';
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
-import { runAll } from './worker-client.js';
+import { run as runWorker } from './worker-client.js';
 import { STACKS, LEVELS, SEED, stamp, stampClass, goal, matchStack, stackRoute, stackById } from './stacks.js';
 import { PATHS } from './paths.js';
 
@@ -36,6 +36,7 @@ const S = {
   input: null, result: null, resolved: null, delta: null, stack: null, lastChange: '',
   family: 'all', techFilter: 'all',
   path: null, step: 0,
+  target: 'complex', pick: { algo: null, tech: null }, previewJob: null,   // Browse: the seat it places into, and the card it shows
   stamps: {}, stampKey: '', stampJob: null, known: new Map(),   // stack results per hand: handKey → stack id → result
   shownAlgo: '', handEls: new Map(), handKey: '', opener: null,
   routes: Object.fromEntries(STACKS.map(b => [b.id, stackRoute(b)])),   // each stack's disorder and flag
@@ -100,8 +101,8 @@ function closeOverlay(o = [...document.querySelectorAll('.overlay:not([hidden])'
 // The two decks: click one to spread it out.
 $('algoPileSpot').append(pile('algo', { id: 'algoPile', count: ALGOS.length, title: 'Algorithm deck: spread it out' }));
 $('techPileSpot').append(pile('tech', { id: 'techPile', count: TECHS.length, title: 'Technique deck: spread it out' }));
-$('algoPile').onclick = () => openOverlay('algo');
-$('techPile').onclick = () => openOverlay('tech');
+$('algoPile').onclick = () => openBrowse('algo');
+$('techPile').onclick = () => openBrowse('tech');
 
 // Inspect: right-click any card, or its ? button.
 document.addEventListener('contextmenu', e => { const c = e.target.closest('.tcg[data-kind]'); if (!c || c.closest('#inspectBody') || !['algo', 'tech'].includes(c.dataset.kind)) return; e.preventDefault(); inspect(c.dataset.kind, c.dataset.id); });
@@ -211,37 +212,45 @@ function sidePlate() {
   $('target').textContent = b ? goal(b) : '';
   stackList();
 }
-// Stamp every stack with its seat's hand, in a background lane. Results are kept per hand, so a
-// change re-measures only the stacks of the seat it touched, and going back to a hand is instant.
-// Every stack also shows what the last change did to it.
+// Measure one hand on one stack in a background lane. Results are kept per hand (S.known), so
+// the stamps and Browse's previews share them, and nothing is measured twice.
+function measure(h, b, lane) {
+  const hk = handKey(h), hit = S.known.get(hk)?.[b.id], a = byId[h.algo];
+  if (hit) return { promise: Promise.resolve(hit), cancel() {} };
+  if (a.maxN != null && b.n > a.maxN) return { promise: Promise.resolve({ s: '—', why: `${a.name} handles at most ${a.maxN} numbers` }), cancel() {} };
+  const job = runWorker({ kind: 'hand', hand: h, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [SEED] }, null, lane);
+  return { cancel: job.cancel, promise: job.promise.then(r => {
+    // A set of inputs is stamped by its worst one, and remembers which it was.
+    const w = r.ops.indexOf(Math.max(...r.ops)), ops = r.ops[w];
+    const rec = { s: r.invalid ? 'FAIL' : stamp(b, ops), ops, worst: b.seeds ? b.seeds[w] : null };
+    if (!S.known.has(hk)) S.known.set(hk, {});
+    return (S.known.get(hk)[b.id] = rec);
+  }) };
+}
+// Stamp every stack with its seat's hand, in a background lane. A change re-measures only the
+// stacks of the seat it touched, and going back to a hand is instant. Every stack also shows what
+// the last change did to it.
 function stampStacks() {
   const key = JSON.stringify(SEATS.map(k => handKey(S.build[k])));
   if (key === S.stampKey) return;
   const prev = Object.fromEntries(Object.entries(S.stamps).filter(([, x]) => x.ops != null).map(([id, x]) => [id, x.ops]));
   S.stampKey = key; S.stampJob?.cancel(); S.stampJob = null; S.stamps = {};
-  const todo = [], put = (b, r) => { const p = prev[b.id]; S.stamps[b.id] = { ...r, d: p != null ? r.ops - p : null }; };
+  const todo = [], put = (b, r) => { const p = prev[b.id]; S.stamps[b.id] = r.ops == null ? r : { ...r, d: p != null ? r.ops - p : null }; };
   for (const b of STACKS) {
-    const h = seatHand(S.routes[b.id].route, b.n), a = byId[h.algo], hk = handKey(h), R = resolve(h);
-    if (a.maxN != null && b.n > a.maxN) S.stamps[b.id] = { s: '—', why: `${a.name} handles at most ${a.maxN} numbers` };
-    else if (!R.ok) S.stamps[b.id] = { s: '—', why: R.errors.join(' ') };
-    else if (S.known.get(hk)?.[b.id]) put(b, S.known.get(hk)[b.id]);
-    else { S.stamps[b.id] = { s: '…', why: 'measuring' }; todo.push({ b, h, hk }); }
+    const h = seatHand(S.routes[b.id].route, b.n), R = resolve(h), hit = S.known.get(handKey(h))?.[b.id];
+    if (!R.ok) S.stamps[b.id] = { s: '—', why: R.errors.join(' ') };
+    else if (hit) put(b, hit);
+    else { S.stamps[b.id] = { s: '…', why: 'measuring' }; todo.push({ b, h }); }
   }
   refreshStamps();
   if (!todo.length) return;
   todo.sort((x, y) => x.b.n - y.b.n);   // the long ones (n=500) can take seconds for the search cards
   const mine = S.stampJob = { cancel() { this.dead = true; this.inner?.cancel(); } };
   (async () => {
-    for (const { b, h, hk } of todo) {
+    for (const { b, h } of todo) {
       if (mine.dead) return;
-      mine.inner = runAll([{ kind: 'hand', hand: h, n: b.n, gen: b.gen, param: b.param, seeds: b.seeds || [SEED] }], null, 'stacks');
-      try {
-        // A set of inputs is stamped by its worst one, and remembers which it was.
-        const [r] = await mine.inner.promise, w = r.ops.indexOf(Math.max(...r.ops)), ops = r.ops[w];
-        const rec = { s: r.invalid ? 'FAIL' : stamp(b, ops), ops, worst: b.seeds ? b.seeds[w] : null };
-        if (!S.known.has(hk)) S.known.set(hk, {});
-        S.known.get(hk)[b.id] = rec; put(b, rec);
-      }
+      mine.inner = measure(h, b, 'stacks');
+      try { put(b, await mine.inner.promise); }
       catch (e) { if (mine.dead) return; S.stamps[b.id] = { s: '—', why: e.message }; }
       if (!mine.dead) refreshStamps();
     }
@@ -278,8 +287,10 @@ function renderBuild() {
       mark = el('span', { className: 'seattarget ' + (c.ok ? 'ok' : 'bad'), title: c.why }, `O(${TARGETS[k]}) ${c.ok ? '✓' : '✕'}`);
       tip = `${flag(k)}: disorder ${RANGE[k]}\n${deckString(h).replace(/\+/g, ' + ')}`;
     }
-    box.append(el('button', { className: `seat f-${k}${on ? ' on' : ''}${sum.weak ? ' weak' : ''}`, dataset: { seat: k }, title: tip, onclick: () => pickSeat(k) },
-      el('span.seathead', {}, el('span.rflag', {}, flag(k)), el('span.seatrange', {}, RANGE[k]), mark),
+    const choose = k === 'tiny' ? '' : el('button.seatswap', { html: icon('meta'), title: `Choose the card for ${flag(k)}`, 'aria-label': `Choose the card for ${flag(k)}`, onclick: e => { e.stopPropagation(); openBrowse('algo', k); } });
+    box.append(el('div', { className: `seat f-${k}${on ? ' on' : ''}${sum.weak ? ' weak' : ''}`, role: 'button', tabIndex: 0, dataset: { seat: k }, title: tip,
+      onclick: () => pickSeat(k), onkeydown: e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pickSeat(k); } } },
+      el('span.seathead', {}, el('span.rflag', {}, flag(k)), el('span.seatrange', {}, RANGE[k]), mark, choose),
       el('span.seatbody', {}, ...card, el('span.seatsum', {}, sum.text)),
       on ? el('span.seatnow', {}, `sorting: ${S.stack ? S.stack.name : 'your stack'}`) : ''));
   }
@@ -694,12 +705,24 @@ function play(id, from = null) {
   if (ms > 1500) { busy(`${byId[id].name} is thinking: about ${Math.round(ms / 1000)} s at ${n} numbers…`); setTimeout(() => { playNow(id, from); busy(''); }, 60); return; }
   playNow(id, from);
 }
+// A new card in a hand keeps the techniques that still fit; the rest go back.
+function withCard(h, id) {
+  const keep = h.techs.filter(t => { const c = techById[t]; return c.role === 'prep' || c.role === 'post' || fits(byId[id], c).ok; });
+  return { ...h, algo: id, techs: keep, params: {}, presets: {}, finisher: undefined };
+}
+// Put a card in a seat. The seat on the mat plays it at once; another seat goes on the mat first.
+function putIn(k, id) {
+  if (k === 'tiny') return tinyLocked();
+  closeOverlay($('ov-inspect')); closeOverlay($('ov-algo'));
+  if (k === S.seat) return play(id);
+  S.build[k] = withCard(S.build[k], id);
+  S.lastChange = `${byId[id].name} in ${flag(k)}`;
+  pickSeat(k);
+}
 function playNow(id, from) {
-  const old = S.hand;
-  // Keep the cards that still fit; the rest go back with a note.
-  const keep = old.techs.filter(t => { const c = techById[t]; return c.role === 'prep' || c.role === 'post' || fits(byId[id], c).ok; });
-  const dropped = old.techs.filter(t => !keep.includes(t));
-  S.hand = { ...old, algo: id, techs: keep, params: {}, presets: {}, finisher: undefined };
+  const old = S.hand, next = withCard(old, id);
+  const dropped = old.techs.filter(t => !next.techs.includes(t));
+  S.hand = next;
   replay(false, `${byId[id].name} in ${flag(S.seat)}${dropped.length ? ` (${dropped.map(label).join(', ')} did not fit)` : ''}`);
   if (from) fly($('played').querySelector('.tcg'), from, { dur: 520 });
 }
@@ -712,14 +735,20 @@ function renderAlgoViewer() {
       el('h3.vhead', { html: `${icon(fid)}<span>${fam.name}</span><span class="dim small">${FAMILY_HINT[fid] || ''}</span>` }),
       el('div.vgrid', {}, list.map(a => {
         const c = algoFace(a, { stats: META?.cards?.[a.id] });
-        c.onclick = e => { if (e.target.closest('.tcg-btn') || c.classList.contains('off')) return; const r = c.getBoundingClientRect(); closeOverlay($('ov-algo')); play(a.id, r); };
-        c.onkeydown = e => { if (e.key === 'Enter') c.onclick(e); };
+        c.onclick = e => { if (!e.target.closest('.tcg-btn')) pickCard('algo', a.id); };
+        c.ondblclick = e => { if (!e.target.closest('.tcg-btn')) putIn(S.target, a.id); };
+        c.onkeydown = e => { if (e.key === 'Enter') pickCard('algo', a.id); };
         return c;
       }))));
   }
   $('decksView').replaceChildren(...DECKS.map(d => {
     const b = deckBox(d);
-    b.onclick = () => { if (S.seat === 'tiny') return tinyLocked(); S.hand = handOf(d.hand); closeOverlay($('ov-algo')); replay(false, `${d.name} in ${flag(S.seat)}`); };
+    b.onclick = () => {
+      const k = S.target; if (k === 'tiny') return tinyLocked();
+      closeOverlay($('ov-algo'));
+      if (k === S.seat) { S.hand = handOf(d.hand); replay(false, `${d.name} in ${flag(k)}`); }
+      else { S.build[k] = handOf(d.hand); S.lastChange = `${d.name} in ${flag(k)}`; pickSeat(k); }
+    };
     return b;
   }));
   $('buildsView').replaceChildren(...BUILDS.map(b => {
@@ -733,15 +762,15 @@ function renderAlgoViewer() {
   markAlgoViewer();
 }
 function markAlgoViewer() {
-  const n = S.input?.n;
+  const k = S.target, inTarget = k === 'tiny' ? null : S.build[k].algo;
   for (const c of $('algoViewer').querySelectorAll('.tcg.algo')) {
-    const a = byId[c.dataset.id], big = a.maxN != null && n > a.maxN;
-    c.classList.toggle('on', a.id === S.hand.algo); c.classList.toggle('off', big);
-    c.querySelector(':scope > .tcg-banner')?.remove();
-    if (big) c.append(el('div.tcg-banner', {}, `n ≤ ${a.maxN} only`));
-    c.title = big ? `${a.name} handles at most ${a.maxN} numbers: pick a smaller stack first` : a.id === S.hand.algo ? 'In play' : S.seat === 'tiny' ? 'The tiny seat is built in' : `Put ${a.name} in ${flag(S.seat)}`;
+    const a = byId[c.dataset.id], seats = SEATS.filter(x => S.build[x].algo === a.id);
+    c.classList.toggle('on', a.id === inTarget); c.classList.toggle('sel', a.id === S.pick.algo);
+    c.querySelector(':scope > .seattags')?.remove();
+    if (seats.length) c.append(el('div.seattags', {}, seats.map(x => el('span', { className: 'rflag f-' + x }, flag(x)))));   // the seats it sits in
+    c.title = `${a.name}: click to read it here${k === 'tiny' ? '' : `, double-click to put it in ${flag(k)}`}`;
   }
-  $('algoTitle').textContent = S.seat === 'tiny' ? 'Algorithm deck · the tiny seat is built in' : `Algorithm deck · choosing for ${flag(S.seat)}`;
+  $('algoTitle').textContent = k === 'tiny' ? 'Algorithm deck · the tiny seat is built in' : `Algorithm deck · choosing for ${flag(k)}`;
   const bs = JSON.stringify(SEATS.map(k => deckString(S.build[k])));
   for (const b of $('buildsView').children) b.classList.toggle('on', JSON.stringify(SEATS.map(k => deckString(BUILDS.find(x => x.id === b.dataset.build)[k]))) === bs);
   for (const s of $('algoViewer').querySelectorAll('.vsec')) s.hidden = S.family !== 'all' && s.dataset.fam !== S.family;
@@ -771,12 +800,97 @@ function renderTechViewer() {
       el('div.vgrid', {}, items.map(({ t, state, onClick }) => {
         const eff = effectOn(t, a);
         const c = techFace(t, { doc: DOC?.techniques?.[t.id], state, effect: !state.ok && !state.played ? state.reason : eff?.text, sign: eff?.sign, needs: state.ok || state.played ? needsOf(t) : [] });
-        if (onClick) { c.onclick = e => { if (e.target.closest('.tcg-btn')) return; onClick(); }; c.onkeydown = e => { if (e.key === 'Enter') onClick(); }; }
+        c.classList.toggle('sel', t.id === S.pick.tech);
+        c.onclick = e => { if (!e.target.closest('.tcg-btn')) pickCard('tech', t.id); };
+        c.onkeydown = e => { if (e.key === 'Enter') pickCard('tech', t.id); };
+        if (onClick) c.ondblclick = e => { if (!e.target.closest('.tcg-btn')) onClick(); };
         return c;
       }))));
   }
-  $('techTitle').textContent = `Technique deck · ${TECHS.length} cards · ${fitting} fit ${a.name}`;
+  $('techTitle').textContent = S.seat === 'tiny' ? `Technique deck · ${TECHS.length} cards · the tiny seat takes none` : `Technique deck · ${TECHS.length} cards · ${fitting} fit ${a.name} in ${flag(S.seat)}`;
+  if ($('ov-tech').hidden === false) renderTechPane();
   for (const b of $('techFilter').children) b.classList.toggle('on', b.dataset.f === S.techFilter);
+}
+
+// ---- Browse: a deck spread out, with a pane that explains the picked card and places it ----------
+// Opened from a seat, the algorithm deck chooses for that seat; from a deck, for the seat on the mat.
+function openBrowse(kind, seat = S.seat) {
+  S.target = seat;
+  if (kind === 'algo') { if (seat !== 'tiny') S.pick.algo = S.build[seat].algo; markAlgoViewer(); renderAlgoPane(); }
+  else renderTechPane();
+  openOverlay(kind);
+}
+function pickCard(kind, id) {
+  S.pick[kind] = id;
+  if (kind === 'algo') { markAlgoViewer(); renderAlgoPane(); }
+  else { for (const c of $('techViewer').querySelectorAll('.tcg.tech')) c.classList.toggle('sel', c.dataset.id === id); renderTechPane(); }
+}
+// Which flags a card's class can serve: the subject's targets.
+function fitRow(a) {
+  return el('div.fitrow', {}, SEATS.map(k => { const ok = meetsTarget(a.claimedClass, TARGETS[k]);
+    return el('span', { className: `fit f-${k} ${ok ? 'ok' : 'no'}`, title: ok ? `${a.name} meets ${flag(k)}'s target, O(${TARGETS[k]})` : `${flag(k)} needs O(${TARGETS[k]}) or better: ${a.name} is ${classLabel(a.claimedClass)}` }, el('span.rflag', {}, flag(k)), ok ? '✓' : '✕'); }));
+}
+function renderAlgoPane() {
+  const box = $('algoPane'), id = S.pick.algo, k = S.target;
+  S.previewJob?.cancel(); S.previewJob = null;
+  if (!id) { box.replaceChildren(el('p.small.dim', {}, 'Click a card to read it here.')); return; }
+  const a = byId[id], doc = DOC?.algorithms?.[id], sec = sections(doc?.doc || '');
+  const face = algoFace(a, { stats: META?.cards?.[id], cls: 'focus' }); face.style.setProperty('--cw', '200px');
+  const inSeat = k !== 'tiny' && S.build[k].algo === id, others = SEATS.filter(x => x !== k && S.build[x].algo !== id);
+  const mine = k === 'tiny' ? [] : STACKS.filter(b => S.routes[b.id].route === k), tooBig = a.maxN != null ? mine.filter(b => b.n > a.maxN).length : 0;
+  const rows = new Map(mine.map(b => [b.id, el('tr', {}, el('th', {}, b.name), el('td.pm', {}, '…'), el('td.pd', {}, ''))]));
+  box.replaceChildren(
+    el('div.bphead', {}, face, el('div.bpname', {}, el('b', {}, a.name), el('span.small', {}, `${FAMILIES[a.family].name} algorithm · ${RARITY[a.rarity]}`), fitRow(a))),
+    el('p.bpidea', {}, sec['The idea'] || a.tagline),
+    k === 'tiny' ? el('p.small.dim', {}, 'The tiny seat is built in. Choose a seat for this card:')
+      : el('div.bpsec', {}, el('h4', {}, inSeat ? `${flag(k)}'s ${mine.length} stacks, with it` : `${flag(k)}'s ${mine.length} stacks, if you put it in`),
+        el('table.bptable', {}, el('tbody', {}, [...rows.values()])),
+        tooBig ? el('p.small.bad', {}, `It handles at most ${a.maxN} numbers: ${tooBig} of these stacks are bigger.`) : '',
+        meetsTarget(a.claimedClass, TARGETS[k]) ? '' : el('p.small.bad', {}, `It misses ${flag(k)}'s class target: the subject wants O(${TARGETS[k]}) or better here, and ${a.name} is ${classLabel(a.claimedClass)}. The Table lets you try it anyway.`)),
+    el('div.iactions', {},
+      k === 'tiny' ? '' : inSeat ? el('span.inplay', {}, `In ${flag(k)}`) : el('button.btn.blue', { onclick: () => putIn(k, id) }, `Put in ${flag(k)}`),
+      el('button.btn.grey', { onclick: () => inspect('algo', id) }, 'Read it all'), el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →')),
+    others.length ? el('p.small.bpother', {}, 'or put it in ', ...others.flatMap((x, i) => [i ? ' · ' : '', el('button.linkish', { onclick: () => putIn(x, id) }, flag(x))])) : '');
+  if (k === 'tiny') return;
+  // Its stamps on the seat's stacks, against the card there now: from the kept results, or measured live.
+  const now = S.build[k], next = inSeat ? now : withCard(now, id), mineJob = S.previewJob = { dead: false, cancel() { this.dead = true; this.inner?.cancel(); } };
+  (async () => {
+    for (const b of mine) {
+      if (mineJob.dead) return;
+      mineJob.inner = measure(next, b, 'preview');
+      let r; try { r = await mineJob.inner.promise; } catch { return; }
+      if (mineJob.dead) return;
+      const base = inSeat ? null : S.known.get(handKey(now))?.[b.id]?.ops, row = rows.get(b.id);
+      row.querySelector('.pm').replaceChildren(r.ops == null ? el('span.dim', { title: r.why || '' }, '—') : el('span', {}, `${f0(r.ops)} `, el('span', { className: 'mark ' + stampClass(r.s) }, MARK[r.s] || '·')));
+      if (base != null && r.ops != null) { const d = r.ops - base; row.querySelector('.pd').replaceChildren(el('span', { className: d < 0 ? 'good' : d > 0 ? 'bad' : 'dim', title: `against ${byId[now.algo].name}: ${base} moves` }, d ? signed(d) : '±0')); }
+    }
+  })();
+}
+// The technique pane: what the card does on the seat on the mat, and the button that plays it.
+function renderTechPane() {
+  const box = $('techPane'), id = S.pick.tech;
+  if (!id) { box.replaceChildren(el('p.small.dim', {}, 'Click a card to read it here.')); return; }
+  const t = techById[id], a = byId[S.hand.algo], doc = DOC?.techniques?.[id], sec = sections(doc?.doc || '');
+  const f = fits(a, t), mine = S.hand.techs.includes(id) || (id === 'double-op-sharing' && S.hand.sharing), active = activeIds().has(id);
+  const native = a.natives[t.role] === id, dflt = !mine && (a.defaults[t.role] === id || (t.role === 'leaf' && S.resolved?.finisher?.id === id));
+  const eff = effectOn(t, a), hostEff = META?.techniques?.[id]?.effects?.find(e => e.host === a.id);
+  const face = techFace(t, { doc, state: { ...f, played: active && !native && !dflt, native, isDefault: dflt }, effect: eff?.text, sign: eff?.sign, needs: f.ok ? needsOf(t) : [] });
+  face.style.setProperty('--cw', '190px'); face.classList.add('focus');
+  const tiny = S.seat === 'tiny';
+  box.replaceChildren(
+    el('div.bphead', {}, face, el('div.bpname', {}, el('b', {}, plain(label(id))), el('span.small', {}, `${ROLE_NAMES[t.role]} card · ${RARITY[t.rarity]}`), el('span.small.dim', {}, `+${t.grasp ?? 0} Grasp, +${t.craft ?? 0} Craft`))),
+    el('p.bpidea', {}, sec['The idea'] || doc?.tagline || ROLE_HINT[t.role]),
+    el('div.bpsec', {}, el('h4', {}, tiny ? 'The tiny seat' : `On ${a.name} in ${flag(S.seat)}`),
+      tiny ? el('p.small', {}, 'The tiny seat is built in: it takes no technique.')
+        : native ? el('p.small', {}, `Built into ${a.name}: it is how the card works.`)
+        : dflt ? el('p.small', {}, `${a.name} comes with it. Play another ${ROLE_NAMES[t.role]} card to swap it out.`)
+        : !(f.ok || id === 'double-op-sharing') ? el('p.small', {}, f.reason ? f.reason.replace(/^[a-z]/, c => c.toUpperCase()) : 'Does not fit here.')
+        : hostEff ? deltaChips(hostEff) : el('p.small.dim', {}, 'Fits here; not measured on this card yet.'),
+      !tiny && f.ok && needsOf(t).length ? needsEl(needsOf(t)) : ''),
+    el('div.iactions', {},
+      tiny || native || dflt ? '' : mine ? el('button.btn.grey', { onclick: () => { removeTech(id); renderTechPane(); } }, 'Take it back')
+        : f.ok || id === 'double-op-sharing' ? el('button.btn.blue', { onclick: () => { addTech(id); renderTechPane(); } }, `Play on ${flag(S.seat)}`) : '',
+      el('button.btn.grey', { onclick: () => inspect('tech', id) }, 'Read it all'), el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →')));
 }
 
 // ---- inspect: a card up close, told top-down: the idea, the steps, then the technical part ----
@@ -834,7 +948,7 @@ function inspect(kind, id) {
     $('inspectTitle').textContent = a.name;
     const canPlay = S.seat !== 'tiny' && !(a.maxN != null && S.input?.n > a.maxN);
     const actions = el('div.iactions', {},
-      a.id === S.hand.algo ? el('span.inplay', {}, `In ${flag(S.seat)}`) : el('button.btn.blue', { disabled: !canPlay, title: canPlay ? '' : S.seat === 'tiny' ? 'The tiny seat is built in' : `${a.name} handles at most ${a.maxN} numbers`, onclick: () => { closeOverlay($('ov-inspect')); closeOverlay($('ov-algo')); play(id); } }, `Put in ${flag(S.seat)}`),
+      a.id === S.hand.algo ? el('span.inplay', {}, `In ${flag(S.seat)}`) : el('button.btn.blue', { disabled: !canPlay, title: canPlay ? '' : S.seat === 'tiny' ? 'The tiny seat is built in' : `${a.name} handles at most ${a.maxN} numbers`, onclick: () => putIn(S.seat, id) }, `Put in ${flag(S.seat)}`),
       el('a.btn.grey', { href: `codex.html#${id}` }, 'Codex page →'));
     const at = st?.at || {}, n1 = at[100], n5 = at[500], small = !n1 && Object.entries(at)[0];
     const t = n1 && n5 ? psTier(n1.mean, n5.mean) : null, m = modularity(a), mt = modTier(m);

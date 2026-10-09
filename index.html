@@ -92,7 +92,8 @@
         <span id="familyFilter" class="chips"></span>
         <button class="close" aria-label="Close">✕</button>
       </header>
-      <div class="sheetbody">
+      <div class="sheetbody browsebody">
+        <div class="browsegrid">
         <div id="algoViewer" class="viewer"></div>
         <h3 class="vhead">Prebuilt hands</h3>
         <p class="small dim">Named decks from the spec: click one to put it in the seat on the mat.</p>
@@ -100,6 +101,8 @@
         <h3 class="vhead">Builds</h3>
         <p class="small dim">A hand in every seat at once: a whole push_swap.</p>
         <div id="buildsView" class="deckboxes"></div>
+        </div>
+        <aside id="algoPane" class="bpane" aria-live="polite"></aside>
       </div>
     </section>
   </div>
@@ -111,7 +114,7 @@
         <span id="techFilter" class="chips"></span>
         <button class="close" aria-label="Close">✕</button>
       </header>
-      <div class="sheetbody"><div id="techViewer" class="viewer"></div></div>
+      <div class="sheetbody browsebody"><div class="browsegrid"><div id="techViewer" class="viewer"></div></div><aside id="techPane" class="bpane" aria-live="polite"></aside></div>
     </section>
   </div>
 

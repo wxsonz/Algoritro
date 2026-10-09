@@ -18,6 +18,12 @@
   `--adaptive` run outside the page (a UI check). The algorithm deck gains the named builds;
   share links carry all three hands, and old `#deck=` links fill every seat. The Meta slot,
   Portfolio and the Adaptive Selector's setup are gone: the seats replace them.
+- **Step 4, Browse.** The decks are a mini Codex that places cards. Clicking a card shows it in a
+  pane: its idea, its fit for each flag's class target, and its stamps on the seat's stacks
+  against the card there now (live, or from the kept results). **Put in `--seat`**, **Play on
+  `--seat`** and **Take it back** place it; each seat has a button that opens the deck choosing
+  for it, and a double-click places a card at once. Stamps and previews share one measure, so
+  nothing is measured twice.
 - **Playback lays out only the board.** Every move was laying out the whole page, stack list and
   hand included: containment on the board plate did nothing, because Chrome never lets a grid
   item be a layout boundary. The board now sits in a plain block. Layout during playback went

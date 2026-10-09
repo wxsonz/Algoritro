@@ -36,17 +36,17 @@ const total = async () => +(await ev(T('total')));
 // Table
 await go('index.html#deck=lsd-radix&n=100&gen=uniform&seed=42');
 check('LSD Radix from the hash: 1084', (await total()) === 1084, await ev(T('total')));
-await ev(`${card('#techViewer .tcg.tech', 'Peephole Cancel')}.click()`); await sleep(300);
+await ev(`${card('#techViewer .tcg.tech', 'Peephole Cancel')}.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))`); await sleep(300);
 check('Peephole Cancel trims radix and the delta strip says so', (await total()) < 1084 && /Peephole Cancel: −\d+ moves/.test(await ev(T('delta'))), await ev(T('delta')));
 check('an old one-hand link fills every seat, and the hash follows the seat on the mat', /s=lsd-radix&m=lsd-radix&c=lsd-radix\+peephole-cancel&/.test(await ev('location.hash')), await ev('location.hash'));
-await ev(`${card('#algoViewer .tcg.algo', 'Turk')}.click()`); await sleep(500);
+await ev(`${card('#algoViewer .tcg.algo', 'Turk')}.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))`); await sleep(500);
 check('playing Turk keeps the post card', (await ev('location.hash')).includes('c=turk+peephole-cancel'), await ev('location.hash'));
 check('Turk slots: native pick, default anchor and cost, Finisher', /Cheapest Pick/.test(await ev(T('slots'))) && /Keep Three/.test(await ev(T('slots'))) && /Hardcoded Three/.test(await ev(T('slots'))));
 const turkOps = await total();
-await ev(`${card('#techViewer .tcg.tech', 'Two-Way Cost')}.click()`); await sleep(300);
+await ev(`${card('#techViewer .tcg.tech', 'Two-Way Cost')}.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))`); await sleep(300);
 check('swapping a default: Four-Way Cost → Two-Way Cost', /Four-Way Cost → Two-Way Cost/.test(await ev(T('delta'))), await ev(T('delta')));
 check('an incompatible card is greyed with a reason', /no retrieval role/.test(await ev(`${card('#techViewer .tcg.tech', 'Max Retrieval')}.title`)));
-await ev(`${card('#techViewer .tcg.tech', 'Two-Way Cost')}.click()`); await sleep(300);
+await ev(`${card('#techViewer .tcg.tech', 'Two-Way Cost')}.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))`); await sleep(300);
 check('removing it restores the default', (await total()) === turkOps, `${await total()} vs ${turkOps}`);
 check('the side tools are gone (Learn, Stats, Compare, Share)', !(await ev(`!!document.querySelector('#pin, #copyDeck, #ov-learn, #ov-stats, #compare, [data-open]')`)));
 // The build: three seats and the tiny seat; every stack goes to one by size and disorder
@@ -72,6 +72,18 @@ const shown = async () => ev(`Object.fromEntries([...document.querySelectorAll('
 for (let i = 0; i < 60 && Object.values(await shown()).some(v => v == null); i++) await sleep(250);
 const got = await shown(), off = STACKS.filter(b => got[b.id] !== expected[b.id]).map(b => `${b.id} ${got[b.id]} vs ${expected[b.id]}`);
 check('every stack\'s stamp matches --adaptive run outside the page', !off.length, off.join('; '));
+// Browse places cards: a seat can be filled from it alone, without the hand.
+await click('#buildbar .seat[data-seat="medium"] .seatswap'); await sleep(300);
+check('a seat\'s button opens the algorithm deck choosing for that seat', !(await ev(`document.getElementById('ov-algo').hidden`)) && /choosing for --medium/.test(await ev(T('algoTitle'))), await ev(T('algoTitle')));
+await click('#algoViewer .tcg.algo[data-id="butterfly"]'); await sleep(300);
+check('clicking a card shows it in the pane, with its fit for each flag', /Butterfly/.test(await ev(T('algoPane'))) && (await ev(`!!document.querySelector('#algoPane .fitrow .fit.ok')`)) && /Put in --medium/.test(await ev(T('algoPane'))));
+await ev(`[...document.querySelectorAll('#algoPane button')].find(b => /Put in --medium/.test(b.textContent)).click()`); await sleep(800);
+check('Put in --medium fills the seat and puts it on the mat', (await ev(`document.querySelector('#buildbar .seat.on')?.dataset.seat`)) === 'medium' && /Butterfly/.test(await ev(`document.querySelector('#buildbar .seat[data-seat="medium"] .seatname').textContent`)) && (await ev(`document.getElementById('ov-algo').hidden`)));
+await click('#techPile'); await sleep(200);
+await click('#techViewer .tcg.tech[data-id="second-max-lookahead"]'); await sleep(300);
+await ev(`[...document.querySelectorAll('#techPane button')].find(b => /Play on --medium/.test(b.textContent))?.click()`); await sleep(500);
+check('the technique pane plays a card on the seat on the mat', /Second-Max/.test(await ev(T('slots'))), (await ev(T('slots'))).slice(0, 120));
+await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`); await sleep(150);
 // Paths
 await go('index.html#deck=simple-insertion&n=100&gen=uniform&seed=42&path=insertion-ladder&step=0');   // as a Codex link opens it
 check('Path: Insertion Ladder starts on Simple Insertion, in every seat', /Path: Insertion Ladder/.test(await ev(T('pathPanel'))) && (await ev('location.hash')).includes('s=simple-insertion&m=simple-insertion&c=simple-insertion&'), await ev('location.hash'));

@@ -64,9 +64,17 @@ The main page, laid out like a card table. It follows [02-game-design.md §2.4](
 - **The route banner** above the board names the stack, why it goes where it goes (its
   disorder, or its size for the tiny seat), the flag, and the card; clicking the card opens
   Inspect. On the tiny seat the slots say it is built in, and the hand is empty.
-- **Decks.** The two decks sit to the right of the hand. Clicking a pile spreads it in an
-  overlay: algorithm cards by family, which go in the seat on the mat, with the prebuilt hands
-  (into that seat) and the named builds (a hand in every seat); technique cards by role. There is no Draw: a random card does not fit a sandbox. A slow card says it
+- **Decks and Browse.** The two decks sit to the right of the hand. Clicking a pile spreads it
+  in an overlay, **Browse**: algorithm cards by family, with the prebuilt hands and the named
+  builds (a hand in every seat); technique cards by role. Clicking a card shows it in a pane
+  beside the grid: its idea in plain words, which flags its class can serve (✓ or ✕ for
+  `--simple`, `--medium`, `--complex`), and its stamps on the seat's stacks against the card
+  there now, from the kept results or measured live. The pane's button places it: **Put in
+  `--medium`** for an algorithm, **Play on `--medium`** or **Take it back** for a technique.
+  Each seat has a button that opens the algorithm deck choosing for that seat; the deck pile
+  chooses for the seat on the mat. A double-click places a card at once. Cards in the deck wear
+  the flags of the seats they sit in, and a card that misses a seat's class target can still go
+  in, with a warning. There is no Draw: a random card does not fit a sandbox. A slow card says it
   is thinking before it runs. The Codex is in the top bar, so the Table has no book of it.
 - **Inspect.** Click the played card, right-click any card, or press its **?**, to see it up
   close on the felt, in panels read top to bottom: **The idea** in plain words, **Step by

@@ -660,3 +660,35 @@
   .seatbody { flex-wrap: wrap; }
   .seatsum { flex-basis: 100%; margin-left: 0; }
 }
+
+/* ---- Browse: a deck spread out, with a pane that explains the picked card and places it ---- */
+.browsebody { display: grid; grid-template-columns: minmax(0, 1fr) clamp(330px, 27vw, 440px); gap: 18px; align-items: start; }
+.browsegrid { min-width: 0; }
+.bpane { position: sticky; top: 0; display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: var(--plate); color: var(--ink); box-shadow: 0 5px 0 var(--shadow); max-height: calc(100vh - 150px); overflow: auto; font-size: 14px; }
+.bphead { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.bpname { display: grid; gap: 6px; min-width: 0; }
+.bpname b { font: 400 24px/1 var(--pixel); }
+.bpidea { margin: 0; font-size: 15px; line-height: 1.45; font-weight: 600; }
+.bpsec h4 { margin: 0 0 6px; font: 400 17px/1 var(--pixel); }
+.bptable { width: 100%; border-collapse: collapse; }
+.bptable th, .bptable td { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
+.bptable td { text-align: right; white-space: nowrap; font: 400 16px/1 var(--pixel); }
+.bptable .mark { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: #fff; font: 700 10px/1 system-ui, sans-serif; vertical-align: -2px; }
+.bptable .good { color: #2b8a3e; } .bptable .bad { color: #c92a2a; }
+.bpane .bad { color: #c92a2a; }
+.bpother { margin: 0; }
+.table-page .linkish { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.fitrow { display: flex; flex-wrap: wrap; gap: 4px; }
+.fit { display: inline-flex; align-items: center; gap: 3px; font: 400 14px/1 var(--pixel); }
+.fit.ok { color: #2b8a3e; } .fit.no { color: #c92a2a; } .fit.no .rflag { opacity: .55; }
+/* a picked card, and the seats a card sits in */
+.viewer .tcg.sel .tcg-body { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #5ad1ff, 0 8px 18px rgba(0, 0, 0, .3); }
+.tcg > .seattags { position: absolute; z-index: 3; left: 50%; bottom: -9px; display: flex; gap: 3px; transform: translateX(-50%); white-space: nowrap; pointer-events: none; }
+.table-page .seatswap { flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin-left: 2px; padding: 0; border: 0; border-radius: 7px; background: rgba(0, 0, 0, .25); color: inherit; cursor: pointer; }
+.table-page .seat.on .seatswap { background: var(--plate-2); }
+.table-page .seatswap:hover { background: var(--fc); color: #fff; border: 0; }
+.seatswap svg { width: 14px; height: 14px; display: block; }
+@media (max-width: 900px) {
+  .browsebody { grid-template-columns: minmax(0, 1fr); }
+  .bpane { position: static; order: -1; max-height: none; }
+}
