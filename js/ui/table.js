@@ -15,7 +15,7 @@ import { $, el, esc, css, topBar, cardsData, metaData, f0, pct, signed, gradeNam
 import { markdown, sections } from './markdown.js';
 import { mini } from './card.js';
 import { Board } from './board.js';
-import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, codexBook, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, PS_TIER_TEXT } from './tcg.js';
+import { algoFace, techFace, plainFace, metaFace, needsEl, META_CARDS, deckBox, pile, codexBook, bindCardFx, ROLE_NAMES, ROLE_HINT, psTier, modularity, modTier, classLabel, CLASS_TIER, PS_TIER_TEXT } from './tcg.js';
 import { icon } from './pixel.js';
 import { bindTips } from './tip.js';
 import { runAll } from './worker-client.js';
@@ -762,7 +762,7 @@ function inspect(kind, id) {
     const at = st?.at || {}, n1 = at[100], n5 = at[500], small = !n1 && Object.entries(at)[0];
     const t = n1 && n5 ? psTier(n1.mean, n5.mean) : null, m = modularity(a), mt = modTier(m);
     const score = panel('scorecard wide', 'curve', 'Scorecard', el('div.scores', {},
-      el('div.srow', {}, el('b.sbadge.cls', { html: classLabel(a.claimedClass).replace('²', '<sup>2</sup>') }), el('p', {}, el('strong', {}, 'Class. '), CLASS_WORDS[a.claimedClass] || '', ' ', PROOF_WORDS[a.proof] || '')),
+      el('div.srow', {}, el('b', { className: `sbadge cls tier-${CLASS_TIER[a.claimedClass] || 'small'}`, html: classLabel(a.claimedClass).replace('²', '<sup>2</sup>') }), el('p', {}, el('strong', {}, 'Class. '), CLASS_WORDS[a.claimedClass] || '', ' ', PROOF_WORDS[a.proof] || '')),
       el('div.srow', {}, el('b', { className: 'sbadge tier-' + mt }, mt), el('p', {}, el('strong', {}, 'Slots. '), a.slots ? `${a.slots} technique slot${a.slots === 1 ? '' : 's'}` : 'No technique slots', a.finishers?.length ? ' and a Finisher to swap' : '', `. ${m >= 3 ? 'Lots to tune.' : m ? 'A little to tune.' : 'Nothing to tune but its knobs.'}`)),
       el('div.srow', {}, el('b', { className: 'sbadge tier-' + (t || 'small') }, t || (a.maxN ? `≤${a.maxN}` : '–')), el('p', {}, el('strong', {}, 'push_swap. '),
         t ? `${f0(n1.mean)} moves on average at 100 (worst ${f0(n1.max)}) and ${f0(n5.mean)} at 500 (worst ${f0(n5.max)}). ${PS_TIER_TEXT[t]}`

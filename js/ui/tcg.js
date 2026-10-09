@@ -39,7 +39,9 @@ const rim = r => r === 'legendary' ? el('span.rim') : '';
 const lockSeal = () => el('span.lockseal', { html: icon('lock'), 'aria-label': 'built in' });
 
 // ---- the three badges of an Algorithm card --------------------------------------------------
-const CLASS_COLOUR = { '1': '#6b7a90', 'n log n': '#2c9f5b', 'n√n': '#12959b', 'n²': '#d97a1c', heuristic: '#8a5cd6', exponential: '#c92a2a' };
+// A class wears the tier colours, best growth first. O(1) only plays tiny stacks, so like the
+// push_swap tier of those cards it stays slate: it is not comparable.
+export const CLASS_TIER = { 'n log n': 'S', 'n√n': 'A', 'n²': 'B', heuristic: 'C', exponential: 'D', '1': 'small' };
 const PROOF = { yes: 'with a simple worst-case proof', avg: 'on average; the worst case is unproven or worse', no: 'but the claim does not hold' };
 export const classLabel = c => c === '1' ? 'O(1)' : c === 'heuristic' ? 'search' : c === 'exponential' ? 'O(2ⁿ)' : `O(${c})`;
 // The same, with real superscripts: the pixel font has no ² or ⁿ.
@@ -62,7 +64,7 @@ export const PS_TIER_TEXT = {
 };
 function classBadge(a) {
   const t = classLabel(a.claimedClass);
-  return el('div.badge.cls', { style: { '--bc': CLASS_COLOUR[a.claimedClass] || '#6b7a90' }, title: `Complexity class: ${t}\nClaimed ${PROOF[a.proof] || ''}.` },
+  return el('div', { className: `badge cls tier-${CLASS_TIER[a.claimedClass] || 'small'}`, title: `Complexity class: ${t}\nClaimed ${PROOF[a.proof] || ''}.` },
     el('small', {}, 'class'), el('b', { className: t.length > 6 ? 'long' : '', html: classHtml(a.claimedClass) }));
 }
 function slotBadge(a) {

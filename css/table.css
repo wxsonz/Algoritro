@@ -566,7 +566,7 @@
   display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 4px 6px; border-radius: 10px; text-align: center; color: #fff; white-space: nowrap;
   background: #6b7a90; font: 400 28px/1 var(--pixel); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .22), 0 3px 0 rgba(0, 0, 0, .25);
 }
-.sbadge.cls { background: var(--ac); font-size: 20px; }
+.sbadge.cls { font-size: 20px; }
 .sbadge sup { font-size: .6em; vertical-align: .5em; line-height: 0; }
 .sbadge { position: relative; overflow: hidden; }
 .sbadge.tier-S { background: linear-gradient(135deg, #fff6c4, #ffd23f 30%, #e8a400 62%, #fff0a0); color: #4a3000; box-shadow: inset 0 -4px 0 rgba(120, 70, 0, .3), 0 3px 0 rgba(0, 0, 0, .25), 0 0 14px rgba(255, 200, 40, .75); }
