@@ -631,7 +631,8 @@
 .nuke .rad { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #ffd43b; color: #2b2a12; font: 700 17px/1 system-ui, sans-serif; }
 .nuke .npct { min-width: 4.2ch; padding: 2px 5px 1px; border-radius: 6px; background: rgba(255, 224, 102, .16); text-align: right; }
 .nuke.full { border-color: #69db7c; color: #b2f2bb; } .nuke.full .rad { background: #69db7c; }
-.nuke.running .rad { animation: nukespin 2s linear infinite; }
+.nuke .rad svg { width: 18px; height: 18px; display: block; }
+.nuke.running .rad svg { animation: nukespin 2s linear infinite; transform-origin: 50% 50%; }
 @keyframes nukespin { to { transform: rotate(1turn); } }
 @media (max-width: 760px) { .nuke .ntext { display: none; } }
 

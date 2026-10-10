@@ -72,7 +72,7 @@ const seedBox = el('input', { type: 'number', min: 0, step: 1, value: SEED, id: 
 seedBox.onchange = () => setSeed(Math.max(0, Math.floor(+seedBox.value || 0)));
 bar.insertBefore(el('div.toptools', {}, el('label.gseed', {}, el('span', {}, 'seed'), seedBox,
   el('button.roll', { type: 'button', title: 'Roll a new seed', 'aria-label': 'Roll a new seed', onclick: () => setSeed(Math.floor(Math.random() * 1e6)) }, '🎲')),
-  el('button', { id: 'nuke', className: 'nuke', type: 'button', onclick: () => nuke() }, el('span.rad', { 'aria-hidden': 'true' }, '☢'), el('span.ntext', {}, 'PRECOMPUTE'), el('span.npct', {}, '…'))), $('theme'));
+  el('button', { id: 'nuke', className: 'nuke', type: 'button', onclick: () => nuke() }, el('span.rad', { 'aria-hidden': 'true', html: '<svg viewBox="-12 -12 24 24"><circle r="2.2" fill="currentColor"/>' + [90, 210, 330].map(a => `<path d="M0 0 L${(10 * Math.cos((a - 30) * Math.PI / 180)).toFixed(2)} ${(-10 * Math.sin((a - 30) * Math.PI / 180)).toFixed(2)} A10 10 0 0 0 ${(10 * Math.cos((a + 30) * Math.PI / 180)).toFixed(2)} ${(-10 * Math.sin((a + 30) * Math.PI / 180)).toFixed(2)} Z" fill="currentColor" transform="scale(1)"/>`).join('') + '<circle r="3.6" fill="none" stroke="#ffd43b" stroke-width="1.4"/></svg>' }), el('span.ntext', {}, 'PRECOMPUTE'), el('span.npct', {}, '…'))), $('theme'));
 const board = new Board($('board'), { dock: $('console'), log: $('movelog') });
 bindCardFx();
 bindTips();
